@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <StartupObject>BinanceP2pMonitor.Program</StartupObject>
     <PackageId>Zaiets.binance.p2p.monitor</PackageId>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
     <Description>Real-time Binance P2P price monitoring in .NET - WebSocket feeds, Telegram alerts, spread analysis, SQLite history</Description>
     <PackageTags>binance p2p crypto monitoring websocket telegram sqlite spread</PackageTags>
