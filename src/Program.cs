@@ -50,8 +50,39 @@ class Program
                 services.AddScoped<IPriceHistoryService, PriceHistoryService>();
                 services.AddScoped<IWebSocketService, WebSocketService>();
 
-                // Register hosted service
+                // Register caching
+                services.AddSingleton<ICache, MemoryCache>();
+
+                // Register event bus
+                services.AddSingleton<IEventBus, EventBus>();
+
+                // Register CLI infrastructure
+                services.AddSingleton<CommandParser>();
+                services.AddSingleton<CommandFactory>();
+                services.AddSingleton<ConsoleOutputWriter>();
+
+                // Register HTTP client and integration services
+                services.AddHttpClient();
+                services.AddSingleton<HttpClientFactory>();
+                services.AddSingleton<TelegramNotificationClient>();
+
+                // Register rate limiter
+                services.AddSingleton(new RateLimiter(100, TimeSpan.FromMinutes(1)));
+
+                // Register output formatters
+                services.AddSingleton<IOutputFormatter, JsonOutputFormatter>();
+                services.AddSingleton<IOutputFormatter, TableOutputFormatter>();
+                services.AddSingleton<IOutputFormatter, CsvOutputFormatter>();
+
+                // Register infrastructure utilities
+                services.AddSingleton<ConfigurationValidator>();
+                services.AddSingleton<DataExporter>();
+                services.AddSingleton<PerformanceMetrics>();
+
+                // Register hosted services
                 services.AddHostedService<MonitoringHostedService>();
+                services.AddHostedService<StatisticsCollectorWorker>();
+                services.AddHostedService<DatabaseCleanupWorker>();
 
                 // Register logging
                 services.AddLogging(builder =>
@@ -67,6 +98,16 @@ class Program
             // Initialize database
             var dbContext = host.Services.GetRequiredService<DatabaseContext>();
             dbContext.Initialize();
+
+            // Register commands after host is built
+            var commandFactory = host.Services.GetRequiredService<CommandFactory>();
+            commandFactory.RegisterCommand("monitor", typeof(MonitorCommand));
+            commandFactory.RegisterCommand("status", typeof(StatusCommand));
+            commandFactory.RegisterCommand("help", typeof(HelpCommand));
+            commandFactory.RegisterCommand("alert", typeof(AlertCommand));
+            commandFactory.RegisterCommand("history", typeof(HistoryCommand));
+            commandFactory.RegisterCommand("export", typeof(ExportCommand));
+            commandFactory.RegisterCommand("version", typeof(VersionCommand));
 
             await host.RunAsync();
         }
