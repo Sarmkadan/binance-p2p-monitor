@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -95,7 +96,7 @@ public class PriceRepository : IPriceRepository
                 while (reader.Read())
                 {
                     var price = MapToPriceAsync(reader).Result;
-                    if (price != null)
+                    if (price is not null)
                         prices.Add(price);
                 }
                 return prices;
@@ -128,7 +129,7 @@ public class PriceRepository : IPriceRepository
                 while (reader.Read())
                 {
                     var price = MapToPriceAsync(reader).Result;
-                    if (price != null)
+                    if (price is not null)
                         prices.Add(price);
                 }
                 return prices;
@@ -161,7 +162,7 @@ public class PriceRepository : IPriceRepository
                 while (reader.Read())
                 {
                     var price = MapToPriceAsync(reader).Result;
-                    if (price != null)
+                    if (price is not null)
                         prices.Add(price);
                 }
                 return prices;
@@ -180,7 +181,7 @@ public class PriceRepository : IPriceRepository
     {
         try
         {
-            if (price == null || !price.IsValid())
+            if (price is null || !price.IsValid())
                 throw new InvalidPriceException("Price data is invalid");
 
             const string sql = @"
@@ -208,7 +209,7 @@ public class PriceRepository : IPriceRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql, parameters);
-                return result != null ? Convert.ToInt32(result) : 0;
+                return result is not null ? Convert.ToInt32(result) : 0;
             });
         }
         catch (Exception ex)
@@ -224,7 +225,7 @@ public class PriceRepository : IPriceRepository
     {
         try
         {
-            if (price == null || price.Id <= 0 || !price.IsValid())
+            if (price is null || price.Id <= 0 || !price.IsValid())
                 throw new InvalidPriceException("Price data is invalid");
 
             const string sql = @"
@@ -291,7 +292,7 @@ public class PriceRepository : IPriceRepository
                 while (reader.Read())
                 {
                     var price = MapToPriceAsync(reader).Result;
-                    if (price != null)
+                    if (price is not null)
                         prices.Add(price);
                 }
                 return prices;
@@ -326,7 +327,7 @@ public class PriceRepository : IPriceRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql, parameters);
-                return result != null && result != DBNull.Value ? Convert.ToDecimal(result) : (decimal?)null;
+                return result is not null && result != DBNull.Value ? Convert.ToDecimal(result) : (decimal?)null;
             });
         }
         catch (Exception ex)

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -80,7 +81,7 @@ public class Price
     /// </summary>
     public bool IsDifferentFrom(Price other, decimal changeThreshold = 0.5m)
     {
-        if (other == null)
+        if (other is null)
             return true;
 
         var buyDiff = Math.Abs(BuyPrice - other.BuyPrice) / other.BuyPrice * 100;

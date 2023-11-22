@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -37,7 +38,7 @@ public class PriceHistoryService : IPriceHistoryService
     {
         try
         {
-            if (price == null || !price.IsValid())
+            if (price is null || !price.IsValid())
                 throw new InvalidPriceException("Price data is invalid for recording");
 
             var history = new PriceHistory

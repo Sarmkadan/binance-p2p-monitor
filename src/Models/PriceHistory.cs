@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -103,7 +104,7 @@ public class PriceHistory
     /// </summary>
     public decimal CompareTo(PriceHistory other)
     {
-        if (other == null || other.BuyPrice == 0)
+        if (other is null || other.BuyPrice == 0)
             return 0;
 
         return ((BuyPrice - other.BuyPrice) / other.BuyPrice) * 100;
