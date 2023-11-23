@@ -181,7 +181,7 @@ public class PriceHistoryService : IPriceHistoryService
             var trend = await GetPriceTrendAsync(asset, fiat, hours);
 
             var records = history.ToList();
-            var spreadValues = records.Select(r => r.SpreadPercentage ?? 0).ToList();
+            var spreadValues = records.Select(r => r.SpreadPercentage).ToList();
 
             return new Dictionary<string, object>
             {

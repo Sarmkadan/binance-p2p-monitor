@@ -46,7 +46,7 @@ public class HttpClientFactory
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync(ct);
-            var result = JsonConvert.DeserializeObject<T>(content);
+            var result = JsonSerializer.Deserialize<T>(content);
 
             return result;
         }
@@ -65,14 +65,14 @@ public class HttpClientFactory
         try
         {
             _logger.LogDebug("POST request to {Url}", url);
-            var json = JsonConvert.SerializeObject(data);
+            var json = JsonSerializer.Serialize(data);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync(url, content, ct);
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadAsStringAsync(ct);
-            var result = JsonConvert.DeserializeObject<T>(responseContent);
+            var result = JsonSerializer.Deserialize<T>(responseContent);
 
             return result;
         }

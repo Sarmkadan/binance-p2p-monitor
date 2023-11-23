@@ -10,6 +10,8 @@ namespace BinanceP2pMonitor.Formatters;
 /// </summary>
 public class JsonOutputFormatter : IOutputFormatter
 {
+    private static readonly System.Text.Json.JsonSerializerOptions _indented = new() { WriteIndented = true };
+
     public string FormatType => "json";
 
     public string Format(object? data)
@@ -19,11 +21,11 @@ public class JsonOutputFormatter : IOutputFormatter
 
         try
         {
-            return JsonConvert.SerializeObject(data, Formatting.Indented);
+            return JsonSerializer.Serialize(data, _indented);
         }
         catch (Exception ex)
         {
-            return JsonConvert.SerializeObject(new { error = ex.Message });
+            return JsonSerializer.Serialize(new { error = ex.Message });
         }
     }
 
@@ -31,12 +33,11 @@ public class JsonOutputFormatter : IOutputFormatter
     {
         try
         {
-            var list = data.ToList();
-            return JsonConvert.SerializeObject(list, Formatting.Indented);
+            return JsonSerializer.Serialize(data.ToList(), _indented);
         }
         catch (Exception ex)
         {
-            return JsonConvert.SerializeObject(new { error = ex.Message });
+            return JsonSerializer.Serialize(new { error = ex.Message });
         }
     }
 
@@ -44,12 +45,11 @@ public class JsonOutputFormatter : IOutputFormatter
     {
         try
         {
-            var list = data.ToList();
-            return JsonConvert.SerializeObject(new { headers = headers, data = list }, Formatting.Indented);
+            return JsonSerializer.Serialize(new { headers, data = data.ToList() }, _indented);
         }
         catch (Exception ex)
         {
-            return JsonConvert.SerializeObject(new { error = ex.Message });
+            return JsonSerializer.Serialize(new { error = ex.Message });
         }
     }
 }

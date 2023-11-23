@@ -3,6 +3,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Text.Json.Serialization;
+
 namespace BinanceP2pMonitor.Infrastructure;
 
 /// <summary>
@@ -10,22 +12,22 @@ namespace BinanceP2pMonitor.Infrastructure;
 /// </summary>
 public class ApiResponse<T>
 {
-    [JsonProperty("success")]
+    [JsonPropertyName("success")]
     public bool Success { get; set; }
 
-    [JsonProperty("data")]
+    [JsonPropertyName("data")]
     public T? Data { get; set; }
 
-    [JsonProperty("message")]
+    [JsonPropertyName("message")]
     public string? Message { get; set; }
 
-    [JsonProperty("errors")]
+    [JsonPropertyName("errors")]
     public List<string> Errors { get; set; } = new();
 
-    [JsonProperty("timestamp")]
+    [JsonPropertyName("timestamp")]
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
-    [JsonProperty("request_id")]
+    [JsonPropertyName("request_id")]
     public string RequestId { get; set; } = Guid.NewGuid().ToString();
 
     /// <summary>
