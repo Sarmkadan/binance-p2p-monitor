@@ -4,7 +4,7 @@
 // =============================================================================
 
 using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace BinanceP2pMonitor.Models;
 
@@ -94,7 +94,7 @@ public class Price
     /// </summary>
     public string ToJson()
     {
-        return JsonConvert.SerializeObject(this, Formatting.Indented);
+        return JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
     }
 
     /// <summary>
@@ -104,7 +104,7 @@ public class Price
     {
         try
         {
-            return JsonConvert.DeserializeObject<Price>(json);
+            return JsonSerializer.Deserialize<Price>(json);
         }
         catch
         {
