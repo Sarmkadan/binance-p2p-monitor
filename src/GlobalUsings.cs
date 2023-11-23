@@ -9,6 +9,7 @@ global using System.Linq;
 global using System.Threading;
 global using System.Threading.Tasks;
 global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.DependencyInjection;
 global using System.Text.Json;
 global using BinanceP2pMonitor.Configuration;
