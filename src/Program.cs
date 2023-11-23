@@ -49,6 +49,7 @@ class Program
                 services.AddScoped<ISpreadAnalysisService, SpreadAnalysisService>();
                 services.AddScoped<IPriceHistoryService, PriceHistoryService>();
                 services.AddScoped<IWebSocketService, WebSocketService>();
+                services.AddScoped<IHistoricalSpreadAnalysisService, HistoricalSpreadAnalysisService>();
 
                 // Register caching
                 services.AddSingleton<ICache, MemoryCache>();
