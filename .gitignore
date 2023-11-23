@@ -18,6 +18,7 @@ bld/
 .vs/
 .vscode/
 .idea/
+*.DotSettings.user
 
 # Visual Studio Code
 *.code-workspace
@@ -33,6 +34,7 @@ bld/
 *.nupkg
 *.snupkg
 .nuget/
+packages/
 
 # Entity Framework
 *.edmx.diagram
@@ -48,6 +50,7 @@ bld/
 # Configuration files with secrets
 appsettings.local.json
 appsettings.secrets.json
+appsettings.Development.json
 .env
 .env.local
 
