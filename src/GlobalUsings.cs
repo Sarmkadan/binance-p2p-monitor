@@ -10,7 +10,7 @@ global using System.Threading;
 global using System.Threading.Tasks;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.DependencyInjection;
-global using Newtonsoft.Json;
+global using System.Text.Json;
 global using BinanceP2pMonitor.Configuration;
 global using BinanceP2pMonitor.Constants;
 global using BinanceP2pMonitor.Exceptions;

@@ -1,3 +1,7 @@
+[![Build](https://github.com/sarmkadan/binance-p2p-monitor/actions/workflows/build.yml/badge.svg)](https://github.com/sarmkadan/binance-p2p-monitor/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
+
 # binance-p2p-monitor
 
 **Real-time Binance P2P price monitoring in .NET** — WebSocket feeds, Telegram alerts, spread analysis, and SQLite history.

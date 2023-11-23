@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using BinanceP2pMonitor.Services;
 using BinanceP2pMonitor.Models;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace BinanceP2pMonitor.Examples;
 
@@ -115,7 +115,7 @@ class PriceExporterExample
             })
         };
 
-        var json = JsonConvert.SerializeObject(data, Formatting.Indented);
+        var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
         await File.WriteAllTextAsync(filename, json);
         Console.WriteLine($"  ✓ {history.Count()} records exported");
     }
