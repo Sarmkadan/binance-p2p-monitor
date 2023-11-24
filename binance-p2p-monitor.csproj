@@ -7,10 +7,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <OutputType>Exe</OutputType>
     <StartupObject>BinanceP2pMonitor.Program</StartupObject>
+    <PackageId>Zaiets.binance.p2p.monitor</PackageId>
+    <Version>1.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
-    <RepositoryUrl>https://github.com/sarmkadan/binance-p2p-monitor</RepositoryUrl>
+    <Description>Real-time Binance P2P price monitoring in .NET - WebSocket feeds, Telegram alerts, spread analysis, SQLite history</Description>
+    <PackageTags>binance p2p crypto monitoring websocket telegram sqlite spread</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/sarmkadan/binance-p2p-monitor</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sarmkadan/binance-p2p-monitor</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
