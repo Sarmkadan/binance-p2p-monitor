@@ -10,6 +10,10 @@ namespace BinanceP2pMonitor.Utilities;
 /// </summary>
 public static class PriceCalculator
 {
+    // Pre-computed format strings avoid per-call string allocation for common decimal places.
+    private static readonly string[] _fixedFormats =
+        Enumerable.Range(0, 10).Select(i => $"F{i}").ToArray();
+
     /// <summary>
     /// Calculates percentage change between two prices
     /// </summary>
@@ -69,50 +73,75 @@ public static class PriceCalculator
     /// </summary>
     public static string FormatPrice(decimal price, string? currencySymbol = null, int decimalPlaces = 2)
     {
-        var formatted = price.ToString($"F{decimalPlaces}");
-        return string.IsNullOrWhiteSpace(currencySymbol) ? formatted : $"{currencySymbol}{formatted}";
+        var format = (uint)decimalPlaces < (uint)_fixedFormats.Length
+            ? _fixedFormats[decimalPlaces]
+            : $"F{decimalPlaces}";
+
+        var formatted = price.ToString(format);
+        return string.IsNullOrWhiteSpace(currencySymbol)
+            ? formatted
+            : string.Concat(currencySymbol, formatted);
     }
 
     /// <summary>
-    /// Calculates moving average of prices
+    /// Calculates moving average of prices over the most recent <paramref name="period"/> samples.
+    /// Uses direct index arithmetic to avoid LINQ iterator overhead.
     /// </summary>
     public static decimal CalculateMovingAverage(IEnumerable<decimal> prices, int period)
     {
-        // Fix: Add null check for collection parameter
         if (prices == null)
             throw new ArgumentNullException(nameof(prices), "Prices collection cannot be null");
 
         if (period <= 0)
             throw new ArgumentOutOfRangeException(nameof(period), period, "Period must be greater than zero");
 
-        var priceList = prices.ToList();
+        var list = prices is IReadOnlyList<decimal> r ? r : prices.ToList();
+        return MovingAverageCore(list, period);
+    }
 
-        if (priceList.Count == 0)
+    private static decimal MovingAverageCore(IReadOnlyList<decimal> list, int period)
+    {
+        int count = list.Count;
+        if (count == 0)
             return 0;
 
-        if (priceList.Count < period)
-            return priceList.Average();
+        int effectivePeriod = count < period ? count : period;
+        int start = count - effectivePeriod;
 
-        return priceList.TakeLast(period).Average();
+        decimal sum = 0;
+        for (int i = start; i < count; i++)
+            sum += list[i];
+
+        return sum / effectivePeriod;
     }
 
     /// <summary>
-    /// Calculates standard deviation of prices
+    /// Calculates standard deviation of prices using two-pass loop arithmetic
+    /// to avoid multiple LINQ enumerations.
     /// </summary>
     public static decimal CalculateStandardDeviation(IEnumerable<decimal> prices)
     {
-        // Fix: Add null check for collection parameter
         if (prices == null)
             throw new ArgumentNullException(nameof(prices), "Prices collection cannot be null");
 
-        var priceList = prices.ToList();
+        var list = prices is IReadOnlyList<decimal> r ? r : prices.ToList();
+        int count = list.Count;
 
-        if (priceList.Count < 2)
+        if (count < 2)
             return 0;
 
-        var mean = priceList.Average();
-        var variance = priceList.Sum(p => (p - mean) * (p - mean)) / priceList.Count;
+        decimal sum = 0;
+        for (int i = 0; i < count; i++)
+            sum += list[i];
+        decimal mean = sum / count;
 
-        return (decimal)Math.Sqrt((double)variance);
+        decimal variance = 0;
+        for (int i = 0; i < count; i++)
+        {
+            decimal diff = list[i] - mean;
+            variance += diff * diff;
+        }
+
+        return (decimal)Math.Sqrt((double)(variance / count));
     }
 }

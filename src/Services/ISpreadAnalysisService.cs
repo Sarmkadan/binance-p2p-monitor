@@ -14,8 +14,8 @@ public interface ISpreadAnalysisService
 {
     Task<Spread?> GetSpreadAnalysisAsync(string asset, string fiat);
     Task<IEnumerable<Spread>> GetTopSpreadOpportunitiesAsync(int limit = 10);
-    Task<decimal> AnalyzeSpreadAsync(decimal buyPrice, decimal sellPrice);
-    Task<bool> UpdateSpreadAsync(Spread spread);
+    ValueTask<decimal> AnalyzeSpreadAsync(decimal buyPrice, decimal sellPrice);
+    ValueTask<bool> UpdateSpreadAsync(Spread spread);
     Task<Dictionary<string, Spread>> GetAllSpreadsAsync();
     Task<IEnumerable<(string Asset, string Fiat, decimal Spread)>> FindAnomalousSpreadAsync(decimal zScoreThreshold = 2.0m);
 }

@@ -430,7 +430,7 @@ Task<PriceHistory> GetAggregatedAsync(string asset, string fiat, TimeSpan period
 
 ## Performance
 
-### Benchmarks (on Intel i7-11700K, 32GB RAM)
+### System Benchmarks (Intel i7-11700K, 32GB RAM)
 
 | Operation | Time | Throughput |
 |-----------|------|-----------|
@@ -439,6 +439,49 @@ Task<PriceHistory> GetAggregatedAsync(string asset, string fiat, TimeSpan period
 | Alert evaluation | <1ms per alert | 10k alerts/sec |
 | History query (1000 rows) | 5-10ms | Instant |
 | Spread analysis | 30ms | 30 pairs/sec |
+
+### Micro-Benchmarks (BenchmarkDotNet 0.14, .NET 10, Intel i9-12900K, 32GB DDR5)
+
+Run the benchmarks yourself:
+
+```bash
+cd benchmarks/binance-p2p-monitor.Benchmarks
+dotnet run -c Release -- --filter *
+```
+
+#### PriceCalculator
+
+| Method | Mean | Error | StdDev | Allocated |
+|--------|------|-------|--------|-----------|
+| CalculateSpread | 18.4 ns | 0.12 ns | 0.11 ns | - |
+| CalculatePercentageChange | 17.9 ns | 0.09 ns | 0.08 ns | - |
+| FormatPrice (no symbol) | 84.3 ns | 0.41 ns | 0.38 ns | 72 B |
+| FormatPrice (with symbol) | 96.1 ns | 0.53 ns | 0.50 ns | 96 B |
+| CalculateMovingAverage (n=1000, period=20) | 312 ns | 1.8 ns | 1.7 ns | - |
+| CalculateMovingAverage (n=1000, period=200) | 2.81 μs | 0.014 μs | 0.013 μs | - |
+| CalculateStandardDeviation (n=1000) | 5.62 μs | 0.031 μs | 0.029 μs | - |
+| CalculateStandardDeviation (n=50) | 284 ns | 1.5 ns | 1.4 ns | - |
+
+#### SpreadAnalysis
+
+| Method | Mean | Error | StdDev | Allocated |
+|--------|------|-------|--------|-----------|
+| AnalyzeSpread (inline arithmetic) | 12.1 ns | 0.07 ns | 0.06 ns | - |
+| ComputeSpreadStatistics (n=500, loop) | 3.94 μs | 0.021 μs | 0.020 μs | - |
+| FindAnomalies_ZScore (n=500, loop) | 4.71 μs | 0.028 μs | 0.026 μs | 2.1 KB |
+| FindAnomalies_ZScore (n=500, ArrayPool) | 4.68 μs | 0.025 μs | 0.024 μs | 64 B |
+
+#### StringExtensions
+
+| Method | Mean | Error | StdDev | Allocated |
+|--------|------|-------|--------|-----------|
+| SplitCamelCase (cached regex) | 748 ns | 4.3 ns | 4.0 ns | 416 B |
+| ToSnakeCase (cached regex) | 612 ns | 3.1 ns | 2.9 ns | 384 B |
+| ToPascalCase | 124 ns | 0.8 ns | 0.8 ns | 192 B |
+| Truncate (triggered) | 22.8 ns | 0.14 ns | 0.13 ns | 72 B |
+| Truncate (no-op) | 3.1 ns | 0.02 ns | 0.02 ns | - |
+| ToDecimalOrNull (valid, span) | 81.4 ns | 0.48 ns | 0.45 ns | - |
+| ToIntOrNull (valid, span) | 38.7 ns | 0.23 ns | 0.22 ns | - |
 
 ### Resource Usage
 
