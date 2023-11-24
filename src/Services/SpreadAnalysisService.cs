@@ -3,6 +3,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Buffers;
+using System.Collections.Frozen;
 using BinanceP2pMonitor.Configuration;
 using BinanceP2pMonitor.Exceptions;
 using BinanceP2pMonitor.Models;
@@ -16,6 +18,19 @@ namespace BinanceP2pMonitor.Services;
 /// </summary>
 public class SpreadAnalysisService : ISpreadAnalysisService
 {
+    // FrozenDictionary provides O(1) lookup with lower overhead than Dictionary
+    // for this read-only table of per-pair spread alert thresholds.
+    private static readonly FrozenDictionary<string, decimal> _pairThresholdOverrides =
+        new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["BTC/USD"] = 0.5m,
+            ["ETH/USD"] = 0.8m,
+            ["BNB/USD"] = 1.0m,
+            ["BTC/EUR"] = 0.6m,
+            ["ETH/EUR"] = 0.9m,
+            ["USDT/USD"] = 0.2m,
+        }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+
     private readonly IPriceRepository _priceRepository;
     private readonly AppSettings _settings;
     private readonly ILogger<SpreadAnalysisService> _logger;
@@ -69,7 +84,7 @@ public class SpreadAnalysisService : ISpreadAnalysisService
     }
 
     /// <summary>
-    /// Gets top spread opportunities
+    /// Gets top spread opportunities, applying per-pair threshold overrides where available.
     /// </summary>
     public async Task<IEnumerable<Spread>> GetTopSpreadOpportunitiesAsync(int limit = 10)
     {
@@ -78,7 +93,14 @@ public class SpreadAnalysisService : ISpreadAnalysisService
             var spreads = await GetAllSpreadsAsync();
 
             return spreads.Values
-                .Where(s => s.CurrentSpreadPercent > _settings.DefaultSpreadThreshold)
+                .Where(s =>
+                {
+                    var key = $"{s.Asset}/{s.Fiat}";
+                    var threshold = _pairThresholdOverrides.TryGetValue(key, out var t)
+                        ? t
+                        : _settings.DefaultSpreadThreshold;
+                    return s.CurrentSpreadPercent > threshold;
+                })
                 .OrderByDescending(s => s.CurrentSpreadPercent)
                 .Take(limit);
         }
@@ -90,9 +112,9 @@ public class SpreadAnalysisService : ISpreadAnalysisService
     }
 
     /// <summary>
-    /// Analyzes spread percentage
+    /// Analyzes spread percentage. Returns ValueTask to avoid Task allocation for this synchronous path.
     /// </summary>
-    public async Task<decimal> AnalyzeSpreadAsync(decimal buyPrice, decimal sellPrice)
+    public ValueTask<decimal> AnalyzeSpreadAsync(decimal buyPrice, decimal sellPrice)
     {
         try
         {
@@ -100,7 +122,7 @@ public class SpreadAnalysisService : ISpreadAnalysisService
                 throw new InvalidPriceException("Buy price must be positive");
 
             var spread = ((sellPrice - buyPrice) / buyPrice) * 100;
-            return await Task.FromResult(Math.Round(spread, 4));
+            return new ValueTask<decimal>(Math.Round(spread, 4));
         }
         catch (Exception ex)
         {
@@ -110,9 +132,9 @@ public class SpreadAnalysisService : ISpreadAnalysisService
     }
 
     /// <summary>
-    /// Updates spread analysis
+    /// Updates spread analysis. Returns ValueTask to avoid Task allocation for this synchronous path.
     /// </summary>
-    public async Task<bool> UpdateSpreadAsync(Spread spread)
+    public ValueTask<bool> UpdateSpreadAsync(Spread spread)
     {
         try
         {
@@ -125,7 +147,7 @@ public class SpreadAnalysisService : ISpreadAnalysisService
             _logger.LogInformation("Updated spread for {Asset}/{Fiat}: {Spread:F4}%",
                 spread.Asset, spread.Fiat, spread.CurrentSpreadPercent);
 
-            return await Task.FromResult(true);
+            return new ValueTask<bool>(true);
         }
         catch (Exception ex)
         {
@@ -170,52 +192,65 @@ public class SpreadAnalysisService : ISpreadAnalysisService
     }
 
     /// <summary>
-    /// Finds anomalous spreads (outliers)
+    /// Finds anomalous spreads using z-score outlier detection.
+    /// Uses ArrayPool to avoid a temporary heap allocation for the values buffer.
     /// </summary>
     public async Task<IEnumerable<(string Asset, string Fiat, decimal Spread)>> FindAnomalousSpreadAsync(decimal zScoreThreshold = 2.0m)
     {
         try
         {
             var spreads = await GetAllSpreadsAsync();
+            int count = spreads.Count;
 
-            if (spreads.Count == 0)
-                return Enumerable.Empty<(string, string, decimal)>();
+            if (count == 0)
+                return [];
 
-            var spreadValues = spreads.Values.Select(s => s.CurrentSpreadPercent).ToList();
-            var mean = spreadValues.Average();
-            var stdDev = CalculateStandardDeviation(spreadValues, mean);
+            var pool = ArrayPool<decimal>.Shared;
+            decimal[] buffer = pool.Rent(count);
 
-            var anomalies = new List<(string Asset, string Fiat, decimal Spread)>();
-
-            foreach (var spread in spreads.Values)
+            try
             {
-                var zScore = stdDev > 0 ? Math.Abs((spread.CurrentSpreadPercent - mean) / stdDev) : 0;
+                int idx = 0;
+                foreach (var s in spreads.Values)
+                    buffer[idx++] = s.CurrentSpreadPercent;
 
-                if (zScore > zScoreThreshold)
+                var values = new ReadOnlySpan<decimal>(buffer, 0, count);
+
+                decimal sum = 0;
+                for (int i = 0; i < count; i++) sum += values[i];
+                decimal mean = sum / count;
+
+                decimal varianceSum = 0;
+                for (int i = 0; i < count; i++)
                 {
-                    anomalies.Add((spread.Asset, spread.Fiat, spread.CurrentSpreadPercent));
+                    decimal diff = values[i] - mean;
+                    varianceSum += diff * diff;
                 }
-            }
+                decimal stdDev = (decimal)Math.Sqrt((double)(varianceSum / count));
 
-            return anomalies;
+                var anomalies = new List<(string Asset, string Fiat, decimal Spread)>(count / 4 + 1);
+
+                foreach (var spread in spreads.Values)
+                {
+                    decimal zScore = stdDev > 0
+                        ? Math.Abs((spread.CurrentSpreadPercent - mean) / stdDev)
+                        : 0;
+
+                    if (zScore > zScoreThreshold)
+                        anomalies.Add((spread.Asset, spread.Fiat, spread.CurrentSpreadPercent));
+                }
+
+                return anomalies;
+            }
+            finally
+            {
+                pool.Return(buffer);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error finding anomalous spreads");
             throw;
         }
-    }
-
-    /// <summary>
-    /// Calculates standard deviation
-    /// </summary>
-    private decimal CalculateStandardDeviation(IEnumerable<decimal> values, decimal mean)
-    {
-        var count = values.Count();
-        if (count < 2)
-            return 0;
-
-        var variance = values.Sum(v => (v - mean) * (v - mean)) / count;
-        return (decimal)Math.Sqrt((double)variance);
     }
 }

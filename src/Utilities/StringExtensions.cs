@@ -3,6 +3,9 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Globalization;
+using System.Text.RegularExpressions;
+
 namespace BinanceP2pMonitor.Utilities;
 
 /// <summary>
@@ -10,6 +13,17 @@ namespace BinanceP2pMonitor.Utilities;
 /// </summary>
 public static class StringExtensions
 {
+    // Compiled once at startup; avoids per-call regex interpretation overhead.
+    private static readonly Regex _camelCaseRegex = new(
+        @"([a-z](?=[A-Z])|[A-Z](?=[A-Z][a-z]))",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant,
+        TimeSpan.FromMilliseconds(100));
+
+    private static readonly Regex _snakeCaseRegex = new(
+        @"(?<!^)([A-Z])",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant,
+        TimeSpan.FromMilliseconds(100));
+
     /// <summary>
     /// Safely truncates string to maximum length with optional suffix
     /// </summary>
@@ -30,24 +44,15 @@ public static class StringExtensions
     /// </summary>
     public static string SplitCamelCase(this string str)
     {
-        var result = System.Text.RegularExpressions.Regex.Replace(
-            str,
-            "([a-z](?=[A-Z])|[A-Z](?=[A-Z][a-z]))",
-            "$1 ");
-
-        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(result);
+        var result = _camelCaseRegex.Replace(str, "$1 ");
+        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(result);
     }
 
     /// <summary>
     /// Converts PascalCase to snake_case
     /// </summary>
     public static string ToSnakeCase(this string str)
-    {
-        return System.Text.RegularExpressions.Regex.Replace(
-            str,
-            "(?<!^)([A-Z])",
-            "_$1").ToLowerInvariant();
-    }
+        => _snakeCaseRegex.Replace(str, "_$1").ToLowerInvariant();
 
     /// <summary>
     /// Converts snake_case to PascalCase
@@ -75,23 +80,27 @@ public static class StringExtensions
     }
 
     /// <summary>
-    /// Safely parses string to decimal
+    /// Safely parses string to decimal. Uses ReadOnlySpan overload to avoid redundant string allocation.
     /// </summary>
     public static decimal? ToDecimalOrNull(this string? str)
     {
-        return string.IsNullOrWhiteSpace(str)
-            ? null
-            : decimal.TryParse(str, out var result) ? result : null;
+        if (string.IsNullOrWhiteSpace(str))
+            return null;
+        return decimal.TryParse(str.AsSpan(), NumberStyles.Any, CultureInfo.InvariantCulture, out var result)
+            ? result
+            : null;
     }
 
     /// <summary>
-    /// Safely parses string to int
+    /// Safely parses string to int. Uses ReadOnlySpan overload to avoid redundant string allocation.
     /// </summary>
     public static int? ToIntOrNull(this string? str)
     {
-        return string.IsNullOrWhiteSpace(str)
-            ? null
-            : int.TryParse(str, out var result) ? result : null;
+        if (string.IsNullOrWhiteSpace(str))
+            return null;
+        return int.TryParse(str.AsSpan(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var result)
+            ? result
+            : null;
     }
 
     /// <summary>
