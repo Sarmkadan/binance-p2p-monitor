@@ -143,6 +143,13 @@ public class PriceMonitoringService : IPriceMonitoringService
     /// </summary>
     public async Task<Dictionary<string, decimal>> GetSpreadAnalysisAsync(string asset, string fiat)
     {
+        // Fix: Validate input parameters
+        if (string.IsNullOrWhiteSpace(asset))
+            throw new ArgumentException($"Parameter '{nameof(asset)}' cannot be null or empty", nameof(asset));
+            
+        if (string.IsNullOrWhiteSpace(fiat))
+            throw new ArgumentException($"Parameter '{nameof(fiat)}' cannot be null or empty", nameof(fiat));
+
         try
         {
             var price = await GetCurrentPriceAsync(asset, fiat);

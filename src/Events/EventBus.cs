@@ -21,7 +21,12 @@ public class EventBus : IEventBus
 
     public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken ct = default) where TEvent : IEvent
     {
+        if (@event == null)
+            throw new ArgumentNullException(nameof(@event), $"Event of type {typeof(TEvent).Name} cannot be null");
+
         var eventType = typeof(TEvent);
+        List<Delegate> handlersSnapshot;
+
         _lock.EnterReadLock();
         try
         {
@@ -31,27 +36,30 @@ public class EventBus : IEventBus
                 return;
             }
 
-            _logger.LogInformation("Publishing event: {EventType} ({EventId})", @event.EventType, @event.EventId);
-
-            var tasks = new List<Task>();
-            foreach (var handler in handlers.Cast<Func<TEvent, CancellationToken, Task>>())
-            {
-                try
-                {
-                    tasks.Add(handler(@event, ct));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error executing event handler for {EventType}", eventType.Name);
-                }
-            }
-
-            await Task.WhenAll(tasks);
+            // Fix: Copy handlers to avoid holding the read lock during async execution
+            handlersSnapshot = handlers.ToList();
         }
         finally
         {
             _lock.ExitReadLock();
         }
+
+        _logger.LogInformation("Publishing event: {EventType} ({EventId})", @event.EventType, @event.EventId);
+
+        var tasks = new List<Task>();
+        foreach (var handler in handlersSnapshot.Cast<Func<TEvent, CancellationToken, Task>>())
+        {
+            try
+            {
+                tasks.Add(handler(@event, ct));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error executing event handler for {EventType}", eventType.Name);
+            }
+        }
+
+        await Task.WhenAll(tasks);
     }
 
     public async Task PublishManyAsync<TEvent>(IEnumerable<TEvent> events, CancellationToken ct = default) where TEvent : IEvent

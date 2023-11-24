@@ -78,7 +78,17 @@ public static class PriceCalculator
     /// </summary>
     public static decimal CalculateMovingAverage(IEnumerable<decimal> prices, int period)
     {
+        // Fix: Add null check for collection parameter
+        if (prices == null)
+            throw new ArgumentNullException(nameof(prices), "Prices collection cannot be null");
+
+        if (period <= 0)
+            throw new ArgumentOutOfRangeException(nameof(period), period, "Period must be greater than zero");
+
         var priceList = prices.ToList();
+
+        if (priceList.Count == 0)
+            return 0;
 
         if (priceList.Count < period)
             return priceList.Average();
@@ -91,6 +101,10 @@ public static class PriceCalculator
     /// </summary>
     public static decimal CalculateStandardDeviation(IEnumerable<decimal> prices)
     {
+        // Fix: Add null check for collection parameter
+        if (prices == null)
+            throw new ArgumentNullException(nameof(prices), "Prices collection cannot be null");
+
         var priceList = prices.ToList();
 
         if (priceList.Count < 2)
