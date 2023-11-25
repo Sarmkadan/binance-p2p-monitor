@@ -20,6 +20,7 @@ A production-grade monitoring tool for Binance P2P traders who need reliable, lo
 - [API Reference](#api-reference)
 - [Performance](#performance)
 - [Troubleshooting](#troubleshooting)
+- [Related Projects](#related-projects)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -554,6 +555,40 @@ dotnet run -c Release -- --filter *
 3. Increase `DatabaseCommandTimeoutSeconds`
 4. Archive old price history
 5. Consider upgrading to SSD
+
+## Related Projects
+
+- [telegram-bot-framework-dotnet](https://github.com/sarmkadan/telegram-bot-framework-dotnet) - Opinionated Telegram bot framework for .NET - commands, menus, state machine, middleware
+- [redis-cache-patterns](https://github.com/sarmkadan/redis-cache-patterns) - Production-ready Redis caching patterns for .NET - cache-aside, write-through, distributed lock
+
+### Integration Examples
+
+**Using with telegram-bot-framework-dotnet** — expose live P2P spread data as bot commands:
+
+```csharp
+services.AddTelegramBotFramework(opt => opt.Token = config["TelegramBotToken"])
+    .AddCommand<MonitorBotCommand>("/monitor")
+    .AddCommand<AlertBotCommand>("/alert");
+
+// /monitor BTC — replies with live spread
+public async Task ExecuteAsync(IBotContext ctx)
+{
+    var spread = await _spreadService.AnalyzePairAsync(ctx.Args[0], "USD");
+    await ctx.ReplyAsync($"{ctx.Args[0]}/USD spread: {spread.SpreadPercentage:F2}%");
+}
+```
+
+**Using with redis-cache-patterns** — share the price cache across multiple monitor instances:
+
+```csharp
+services.AddRedisCachePatterns(opt => opt.ConnectionString = config["Redis"])
+    .UseCacheAside<Price>(ttl: TimeSpan.FromSeconds(30));
+
+// Cache miss falls through to Binance API; hit returns cached price in <1 ms
+var price = await _cache.GetOrSetAsync(
+    $"p2p:{asset}:{fiat}",
+    () => _monitoringService.GetPriceAsync(asset, fiat));
+```
 
 ## Contributing
 
