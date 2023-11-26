@@ -365,7 +365,7 @@ git log --oneline -5
 
 - 🌐 [Project Website](https://github.com/Sarmkadan/binance-p2p-monitor)
 - 💼 [Author Portfolio](https://sarmkadan.com)
-- 📧 [Contact](mailto:vladyslav.zaiets@amdaris.com)
+- 📧 [Contact](https://sarmkadan.com)
 - 💬 [Telegram](https://t.me/sarmkadan)
 
 ---

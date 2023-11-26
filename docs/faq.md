@@ -350,7 +350,7 @@ dotnet test --filter "ClassName=AlertServiceTests"
 - Dedicated support
 - Consulting
 
-Contact: vladyslav.zaiets@amdaris.com
+Contact: [vladyslav.zaiets](https://sarmkadan.com)
 
 ### Q: How often is the project updated?
 
