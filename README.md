@@ -20,6 +20,7 @@ A production-grade monitoring tool for Binance P2P traders who need reliable, lo
 - [API Reference](#api-reference)
 - [Performance](#performance)
 - [Troubleshooting](#troubleshooting)
+- [Testing](#testing)
 - [Related Projects](#related-projects)
 - [Contributing](#contributing)
 - [License](#license)
@@ -555,6 +556,35 @@ dotnet run -c Release -- --filter *
 3. Increase `DatabaseCommandTimeoutSeconds`
 4. Archive old price history
 5. Consider upgrading to SSD
+
+## Testing
+
+Run the full test suite:
+
+```bash
+dotnet test
+```
+
+Run with coverage:
+
+```bash
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+Run only a specific test class:
+
+```bash
+dotnet test --filter "FullyQualifiedName~SpreadAnalysisServiceTests"
+```
+
+Run the benchmarks:
+
+```bash
+cd benchmarks/binance-p2p-monitor.Benchmarks
+dotnet run -c Release -- --filter *
+```
+
+Tests are located in `tests/binance-p2p-monitor.Tests/` and cover services, repositories, utilities, and CLI commands using xUnit and FluentAssertions.
 
 ## Related Projects
 
