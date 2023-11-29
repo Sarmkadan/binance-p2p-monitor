@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -130,7 +131,7 @@ public class AlertRepository : IAlertRepository
     {
         try
         {
-            if (alert == null || !alert.IsValid())
+            if (alert is null || !alert.IsValid())
                 throw new InvalidAlertException("Alert data is invalid");
 
             const string sql = @"
@@ -160,7 +161,7 @@ public class AlertRepository : IAlertRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql, parameters);
-                return result != null ? Convert.ToInt32(result) : 0;
+                return result is not null ? Convert.ToInt32(result) : 0;
             });
         }
         catch (Exception ex)
@@ -173,7 +174,7 @@ public class AlertRepository : IAlertRepository
     {
         try
         {
-            if (alert == null || alert.Id <= 0)
+            if (alert is null || alert.Id <= 0)
                 throw new InvalidAlertException("Alert data is invalid");
 
             const string sql = @"
@@ -237,7 +238,7 @@ public class AlertRepository : IAlertRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql, new Dictionary<string, object> { { "UserId", userId } });
-                return result != null ? Convert.ToInt32(result) : 0;
+                return result is not null ? Convert.ToInt32(result) : 0;
             });
         }
         catch (Exception ex)

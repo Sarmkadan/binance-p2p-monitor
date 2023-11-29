@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -60,7 +61,7 @@ public class SpreadAnalysisService : ISpreadAnalysisService
                 return cachedSpread;
 
             var price = await _priceRepository.GetLatestByAssetAndFiatAsync(asset, fiat);
-            if (price == null)
+            if (price is null)
                 return null;
 
             var spread = new Spread
@@ -138,7 +139,7 @@ public class SpreadAnalysisService : ISpreadAnalysisService
     {
         try
         {
-            if (spread == null || !spread.IsValid())
+            if (spread is null || !spread.IsValid())
                 throw new InvalidPriceException("Spread data is invalid");
 
             var key = $"{spread.Asset}/{spread.Fiat}";
