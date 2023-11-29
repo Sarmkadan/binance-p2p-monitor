@@ -9,50 +9,64 @@ using System.ComponentModel.DataAnnotations;
 namespace BinanceP2pMonitor.Models;
 
 /// <summary>
-/// Represents spread analysis data between buy and sell prices
+/// Represents spread analysis data for a specific asset/fiat pair on Binance P2P.
+/// Tracks the percentage difference between the best buy and sell prices,
+/// with rolling statistics (average, min, max, standard deviation) over time.
 /// </summary>
 public class Spread
 {
+    /// <summary>Database primary key.</summary>
     [Key]
     public int Id { get; set; }
 
+    /// <summary>Cryptocurrency asset (e.g., "USDT", "BTC").</summary>
     [Required]
     [StringLength(20)]
     public string Asset { get; set; } = string.Empty;
 
+    /// <summary>Fiat currency (e.g., "UAH", "USD").</summary>
     [Required]
     [StringLength(10)]
     public string Fiat { get; set; } = string.Empty;
 
+    /// <summary>Current spread as a percentage of the buy price.</summary>
     [Required]
     [Range(0, double.MaxValue)]
     public decimal CurrentSpreadPercent { get; set; }
 
+    /// <summary>Running average spread percentage across all samples.</summary>
     [Required]
     [Range(0, double.MaxValue)]
     public decimal AverageSpreadPercent { get; set; }
 
+    /// <summary>Lowest observed spread percentage.</summary>
     [Required]
     [Range(0, double.MaxValue)]
     public decimal MinSpreadPercent { get; set; }
 
+    /// <summary>Highest observed spread percentage.</summary>
     [Required]
     [Range(0, double.MaxValue)]
     public decimal MaxSpreadPercent { get; set; }
 
+    /// <summary>Total number of spread observations collected.</summary>
     [Required]
     [Range(1, long.MaxValue)]
     public long SampleCount { get; set; }
 
+    /// <summary>UTC timestamp of the last spread sample.</summary>
     [Required]
     public DateTime LastUpdatedAt { get; set; }
 
+    /// <summary>UTC timestamp when tracking started for this pair.</summary>
     [Required]
     public DateTime CreatedAt { get; set; }
 
+    /// <summary>Standard deviation of spread values for volatility analysis.</summary>
     [Range(0, double.MaxValue)]
     public decimal StandardDeviation { get; set; }
 
+    /// <summary>Percentile rank (0-100) of the current spread relative to historical data.</summary>
     [Range(0, 100)]
     public decimal PercentileRank { get; set; }
 
