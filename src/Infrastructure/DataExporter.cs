@@ -27,7 +27,7 @@ public class DataExporter
         {
             _logger.LogInformation("Exporting data to JSON: {FilePath}", filePath);
             var json = JsonSerializer.Serialize(data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(filePath, json, ct);
+            await File.WriteAllTextAsync(filePath, json, ct).ConfigureAwait(false);
             _logger.LogInformation("Exported to {FilePath}", filePath);
         }
         catch (Exception ex)
@@ -49,7 +49,7 @@ public class DataExporter
             var rowList = rows.ToList();
             if (!rowList.Any())
             {
-                await File.WriteAllTextAsync(filePath, string.Empty, ct);
+                await File.WriteAllTextAsync(filePath, string.Empty, ct).ConfigureAwait(false);
                 return;
             }
 
@@ -64,7 +64,7 @@ public class DataExporter
                 csv.AppendLine(string.Join(",", values));
             }
 
-            await File.WriteAllTextAsync(filePath, csv.ToString(), ct);
+            await File.WriteAllTextAsync(filePath, csv.ToString(), ct).ConfigureAwait(false);
             _logger.LogInformation("Exported {Count} rows to {FilePath}", rowList.Count, filePath);
         }
         catch (Exception ex)
