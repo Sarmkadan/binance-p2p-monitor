@@ -38,7 +38,7 @@ class HistoricalAnalysisExample
             var fiat = "USD";
 
             // Fetch historical data
-            var history = await historyService.GetHistoryAsync(asset, fiat, limit: 1000);
+            var history = await historyService.GetHistoryAsync(asset, fiat, limit: 1000).ConfigureAwait(false);
 
             if (!history.Any())
             {

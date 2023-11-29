@@ -46,11 +46,11 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 
     public async Task<bool> UpdatePriceAsync(Price price)
     {
-        var result = await _innerService.UpdatePriceAsync(price);
+        var result = await _innerService.UpdatePriceAsync(price).ConfigureAwait(false);
         if (result)
         {
-            await _cache.RemoveAsync($"price_{price.Asset}_{price.Fiat}");
-            await _cache.RemoveAsync("all_prices");
+            await _cache.RemoveAsync($"price_{price.Asset}_{price.Fiat}").ConfigureAwait(false);
+            await _cache.RemoveAsync("all_prices").ConfigureAwait(false);
             _logger.LogDebug("Cache invalidated for {Asset}/{Fiat}", price.Asset, price.Fiat);
         }
         return result;
@@ -67,7 +67,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 
     public async Task<IEnumerable<Price>> GetPricesWithSignificantChangeAsync(decimal changePercentThreshold)
     {
-        return await _innerService.GetPricesWithSignificantChangeAsync(changePercentThreshold);
+        return await _innerService.GetPricesWithSignificantChangeAsync(changePercentThreshold).ConfigureAwait(false);
     }
 
     public async Task<Dictionary<string, decimal>> GetSpreadAnalysisAsync(string asset, string fiat)
@@ -81,12 +81,12 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 
     public async Task StartMonitoringAsync(CancellationToken cancellationToken)
     {
-        await _innerService.StartMonitoringAsync(cancellationToken);
+        await _innerService.StartMonitoringAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task StopMonitoringAsync()
     {
-        await _cache.ClearAsync();
-        await _innerService.StopMonitoringAsync();
+        await _cache.ClearAsync().ConfigureAwait(false);
+        await _innerService.StopMonitoringAsync().ConfigureAwait(false);
     }
 }
