@@ -219,14 +219,92 @@ public class WebSocketService : IWebSocketService, IDisposable
     {
         try
         {
-            // TODO: Parse JSON and extract price data
-            // For now, this is a placeholder
-            _logger.LogDebug("Received WebSocket message: {Message}", json);
+            var message = JsonSerializer.Deserialize<BinanceTickerMessage>(json);
+
+            if (message == null || string.IsNullOrWhiteSpace(message.s))
+            {
+                _logger.LogWarning("Received malformed WebSocket message: {Message}", json);
+                return;
+            }
+
+            // Extract Asset and Fiat from the symbol
+            string asset;
+            string fiat;
+            var symbol = message.s.ToUpper();
+
+            // Common fiat currencies are 3 or 4 characters long
+            if (symbol.EndsWith("USDT"))
+            {
+                fiat = "USDT";
+                asset = symbol.Replace("USDT", "");
+            }
+            else if (symbol.EndsWith("BUSD"))
+            {
+                fiat = "BUSD";
+                asset = symbol.Replace("BUSD", "");
+            }
+            else if (symbol.EndsWith("DAI"))
+            {
+                fiat = "DAI";
+                asset = symbol.Replace("DAI", "");
+            }
+            else if (symbol.EndsWith("EUR"))
+            {
+                fiat = "EUR";
+                asset = symbol.Replace("EUR", "");
+            }
+            else if (symbol.EndsWith("RUB"))
+            {
+                fiat = "RUB";
+                asset = symbol.Replace("RUB", "");
+            }
+            else if (symbol.EndsWith("GBP"))
+            {
+                fiat = "GBP";
+                asset = symbol.Replace("GBP", "");
+            }
+            else if (symbol.Length > 3) // Assume last 3 chars are fiat if not matched above
+            {
+                fiat = symbol.Substring(symbol.Length - 3);
+                asset = symbol.Substring(0, symbol.Length - 3);
+            }
+            else
+            {
+                _logger.LogWarning("Could not parse asset and fiat from symbol: {Symbol}", symbol);
+                return;
+            }
+
+
+            var eventArgs = new PriceUpdateEventArgs
+            {
+                Asset = asset,
+                Fiat = fiat,
+                BuyPrice = message.b,
+                SellPrice = message.a,
+                UpdateTime = DateTimeOffset.FromUnixTimeMilliseconds(message.E).UtcDateTime
+            };
+
+            OnPriceUpdateRaised(eventArgs);
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Error parsing WebSocket JSON message: {Message}", json);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing WebSocket message");
+            _logger.LogError(ex, "Error processing WebSocket message: {Message}", json);
         }
+    }
+
+    /// <summary>
+    /// Represents a simplified Binance ticker message for deserialization.
+    /// </summary>
+    private class BinanceTickerMessage
+    {
+        public string s { get; set; } = string.Empty; // Symbol
+        public decimal b { get; set; } // Best bid price
+        public decimal a { get; set; } // Best ask price
+        public long E { get; set; } // Event time in milliseconds
     }
 
     /// <summary>
