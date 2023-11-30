@@ -21,6 +21,7 @@ public class PriceMonitoringService : IPriceMonitoringService
     private readonly IPriceRepository _priceRepository;
     private readonly IPriceHistoryService _historyService;
     private readonly IAlertService _alertService;
+    private readonly ISpreadAnalysisService _spreadAnalysisService;
     private readonly AppSettings _settings;
     private readonly ILogger<PriceMonitoringService> _logger;
     private bool _isMonitoring;
@@ -29,12 +30,14 @@ public class PriceMonitoringService : IPriceMonitoringService
         IPriceRepository priceRepository,
         IPriceHistoryService historyService,
         IAlertService alertService,
+        ISpreadAnalysisService spreadAnalysisService,
         AppSettings settings,
         ILogger<PriceMonitoringService> logger)
     {
         _priceRepository = priceRepository ?? throw new ArgumentNullException(nameof(priceRepository));
         _historyService = historyService ?? throw new ArgumentNullException(nameof(historyService));
         _alertService = alertService ?? throw new ArgumentNullException(nameof(alertService));
+        _spreadAnalysisService = spreadAnalysisService ?? throw new ArgumentNullException(nameof(spreadAnalysisService));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -142,31 +145,11 @@ public class PriceMonitoringService : IPriceMonitoringService
     /// <summary>
     /// Analyzes spread for a trading pair
     /// </summary>
-    public async Task<Dictionary<string, decimal>> GetSpreadAnalysisAsync(string asset, string fiat)
+    public async Task<Spread?> GetSpreadAnalysisAsync(string asset, string fiat)
     {
-        // Fix: Validate input parameters
-        if (string.IsNullOrWhiteSpace(asset))
-            throw new ArgumentException($"Parameter '{nameof(asset)}' cannot be null or empty", nameof(asset));
-            
-        if (string.IsNullOrWhiteSpace(fiat))
-            throw new ArgumentException($"Parameter '{nameof(fiat)}' cannot be null or empty", nameof(fiat));
-
         try
         {
-            var price = await GetCurrentPriceAsync(asset, fiat).ConfigureAwait(false);
-            if (price is null)
-                return new Dictionary<string, decimal>();
-
-            var spread = price.CalculateSpread();
-            var avgPrice = await GetAveragePriceAsync(asset, fiat, 24).ConfigureAwait(false);
-
-            return new Dictionary<string, decimal>
-            {
-                { "CurrentSpread", spread },
-                { "BuyPrice", price.BuyPrice },
-                { "SellPrice", price.SellPrice },
-                { "SpreadPercentage", spread }
-            };
+            return await _spreadAnalysisService.GetSpreadAnalysisAsync(asset, fiat).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
