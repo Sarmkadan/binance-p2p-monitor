@@ -6,6 +6,7 @@
 
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using BinanceP2pMonitor.Exceptions;
 using Microsoft.Extensions.Logging;
 
@@ -52,16 +53,14 @@ public class WebSocketService : IWebSocketService, IDisposable
             _isConnected = true;
             _logger.LogInformation("WebSocket connected successfully");
 
-            // Hotfix: Re-subscribe to all previously subscribed pairs after reconnection
+            // Re-subscribe to all previously subscribed pairs after reconnection
             foreach (var pairKey in _subscribedPairs.ToList())
             {
-                // Reconstruct asset and fiat from pairKey
-                // Assuming pairKey is always assetfiat (e.g., btcusdt)
-                if (pairKey.Length >= 6) // Minimum length for assetfiat (e.g., BTCUSDT)
+                var parsedPair = ParsePairKey(pairKey);
+                if (parsedPair.HasValue)
                 {
-                    var asset = pairKey.Substring(0, pairKey.Length - 4); // Assuming fiat is always 4 chars (USDT, BUSD, etc.)
-                    var fiat = pairKey.Substring(pairKey.Length - 4);
-                    _logger.LogInformation("Re-subscribing to {Asset}/{Fiat} after reconnection", asset.ToUpper(), fiat.ToUpper());
+                    var (asset, fiat) = parsedPair.Value;
+                    _logger.LogInformation("Re-subscribing to {Asset}/{Fiat} after reconnection", asset, fiat);
                     var subscriptionMessage = new
                     {
                         method = "SUBSCRIBE",
@@ -335,6 +334,38 @@ public class WebSocketService : IWebSocketService, IDisposable
     protected virtual void OnPriceUpdateRaised(PriceUpdateEventArgs args)
     {
         OnPriceUpdate?.Invoke(this, args);
+    }
+
+    private (string Asset, string Fiat)? ParsePairKey(string pairKey)
+    {
+        var symbol = pairKey.ToUpper();
+
+        // Common fiat currencies, ordered by length to prioritize longer matches
+        if (symbol.EndsWith("USDT"))
+            return (symbol.Replace("USDT", ""), "USDT");
+        if (symbol.EndsWith("BUSD"))
+            return (symbol.Replace("BUSD", ""), "BUSD");
+        if (symbol.EndsWith("DAI"))
+            return (symbol.Replace("DAI", ""), "DAI");
+        if (symbol.EndsWith("EUR"))
+            return (symbol.Replace("EUR", ""), "EUR");
+        if (symbol.EndsWith("RUB"))
+            return (symbol.Replace("RUB", ""), "RUB");
+        if (symbol.EndsWith("GBP"))
+            return (symbol.Replace("GBP", ""), "GBP");
+        
+        // Fallback for 3-character fiats if not matched above and symbol is long enough
+        if (symbol.Length > 3)
+        {
+            var potentialFiat = symbol.Substring(symbol.Length - 3);
+            // This is a more generalized assumption, might need to be refined based on actual data
+            // For now, assume if it's 3 chars and not a known asset prefix, it's fiat
+            // A more robust solution might involve a predefined list of fiats
+            return (symbol.Substring(0, symbol.Length - 3), potentialFiat);
+        }
+
+        _logger.LogWarning("Could not parse asset and fiat from pair key: {PairKey}", pairKey);
+        return null;
     }
 
     public void Dispose()
