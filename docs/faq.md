@@ -28,6 +28,56 @@
 
 ## Configuration
 
+### Q: How do I configure multiple trading pairs with different spread thresholds per pair?
+
+**A:** Define all pairs you want to watch in `MonitoredAssets` and `MonitoredFiats`, then create one alert per pair with the threshold you need:
+
+```json
+{
+  "AppSettings": {
+    "MonitoredAssets": ["USDT"],
+    "MonitoredFiats": ["UAH", "USD"],
+    "DefaultSpreadThreshold": 1.5
+  }
+}
+```
+
+Then create per-pair alerts via the CLI (different thresholds per pair):
+
+```bash
+# Alert when USDT/UAH spread exceeds 2 %
+dotnet run -- alert --create \
+  --asset USDT --fiat UAH \
+  --type spread_anomaly --threshold 2.0 --user trader1
+
+# Alert when USDT/USD spread exceeds 0.5 %
+dotnet run -- alert --create \
+  --asset USDT --fiat USD \
+  --type spread_anomaly --threshold 0.5 --user trader1
+```
+
+Or programmatically:
+
+```csharp
+await alertService.CreateAlertAsync(new PriceAlert
+{
+    Asset = "USDT", Fiat = "UAH",
+    AlertType = AlertType.HighSpreadAlert,
+    Threshold = 2.0m,
+    UserId = userId
+});
+
+await alertService.CreateAlertAsync(new PriceAlert
+{
+    Asset = "USDT", Fiat = "USD",
+    AlertType = AlertType.HighSpreadAlert,
+    Threshold = 0.5m,
+    UserId = userId
+});
+```
+
+Each alert is evaluated independently so each pair fires at its own threshold.
+
 ### Q: How often should I monitor prices?
 
 **A:** Recommended intervals:
@@ -269,10 +319,32 @@ done
 
 ### Q: Can I trigger custom actions on alerts?
 
-**A:** Not directly, but you can:
-1. Export alert history periodically
-2. Parse JSON to trigger webhooks
-3. Integrate with IFTTT or automation platform
+**A:** Yes — use the built-in webhook integration. Set `WebhookUrl` and enable it in `appsettings.json`:
+
+```json
+{
+  "AppSettings": {
+    "EnableWebhookNotifications": true,
+    "WebhookUrl": "https://your-service.example.com/hooks/p2p-alert"
+  }
+}
+```
+
+When a spread threshold is crossed the monitor will HTTP POST a JSON payload:
+
+```json
+{
+  "event": "price_alert",
+  "asset": "USDT",
+  "fiat": "UAH",
+  "buyPrice": 38.50,
+  "sellPrice": 39.20,
+  "alertReason": "Spread exceeded threshold",
+  "timestamp": "2024-01-15T12:30:00+00:00"
+}
+```
+
+Webhook and Telegram notifications are independent — both can be active at the same time.
 
 ## Development & Contribution
 
