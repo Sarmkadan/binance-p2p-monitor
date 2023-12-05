@@ -17,11 +17,16 @@ namespace BinanceP2pMonitor.Services;
 /// </summary>
 public class WebSocketService : IWebSocketService, IDisposable
 {
+    private static readonly TimeSpan KeepaliveInterval = TimeSpan.FromMinutes(20);
+    private static readonly TimeSpan ReconnectBaseDelay = TimeSpan.FromSeconds(5);
+    private const int MaxReconnectAttempts = 10;
+
     private readonly ILogger<WebSocketService> _logger;
     private ClientWebSocket? _webSocket;
     private bool _isConnected;
     private readonly HashSet<string> _subscribedPairs;
     private CancellationTokenSource? _cancellationTokenSource;
+    private Timer? _keepaliveTimer;
 
     public event EventHandler<PriceUpdateEventArgs>? OnPriceUpdate;
 
@@ -43,7 +48,9 @@ public class WebSocketService : IWebSocketService, IDisposable
             if (IsConnected)
                 return;
 
+            _webSocket?.Dispose();
             _webSocket = new ClientWebSocket();
+            _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = new CancellationTokenSource();
 
             // Connect to Binance WebSocket endpoint
@@ -72,14 +79,75 @@ public class WebSocketService : IWebSocketService, IDisposable
                 }
             }
 
+            // Start keepalive pings to prevent server-side timeout (~30 min)
+            StartKeepaliveTimer();
+
             // Start listening for messages
             _ = ListenForMessagesAsync(_cancellationTokenSource.Token);
         }
         catch (Exception ex)
         {
             _isConnected = false;
+            _logger.LogError(ex, "Failed to connect to WebSocket");
             throw new ApiException("Failed to connect to WebSocket", null, "WEBSOCKET_CONNECT_FAILED");
         }
+    }
+
+    /// <summary>
+    /// Starts a periodic keepalive timer that sends pings to prevent server-side timeout
+    /// </summary>
+    private void StartKeepaliveTimer()
+    {
+        _keepaliveTimer?.Dispose();
+        _keepaliveTimer = new Timer(async _ =>
+        {
+            if (!IsConnected)
+                return;
+            try
+            {
+                var pingMessage = System.Text.Json.JsonSerializer.Serialize(new { ping = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() });
+                await SendMessageAsync(pingMessage).ConfigureAwait(false);
+                _logger.LogDebug("WebSocket keepalive ping sent");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "WebSocket keepalive ping failed");
+            }
+        }, null, KeepaliveInterval, KeepaliveInterval);
+    }
+
+    /// <summary>
+    /// Attempts to reconnect with exponential backoff after an unexpected disconnect
+    /// </summary>
+    private async Task ReconnectAsync(CancellationToken cancellationToken)
+    {
+        for (int attempt = 1; attempt <= MaxReconnectAttempts; attempt++)
+        {
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
+            var delay = TimeSpan.FromSeconds(ReconnectBaseDelay.TotalSeconds * Math.Pow(2, attempt - 1));
+            _logger.LogWarning("WebSocket reconnect attempt {Attempt}/{Max} in {Delay}s...",
+                attempt, MaxReconnectAttempts, (int)delay.TotalSeconds);
+
+            try
+            {
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                await ConnectAsync().ConfigureAwait(false);
+                _logger.LogInformation("WebSocket reconnected successfully on attempt {Attempt}", attempt);
+                return;
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WebSocket reconnect attempt {Attempt} failed", attempt);
+            }
+        }
+
+        _logger.LogError("WebSocket failed to reconnect after {Max} attempts", MaxReconnectAttempts);
     }
 
     /// <summary>
@@ -89,6 +157,9 @@ public class WebSocketService : IWebSocketService, IDisposable
     {
         try
         {
+            _keepaliveTimer?.Dispose();
+            _keepaliveTimer = null;
+
             if (_webSocket?.State == WebSocketState.Open)
             {
                 _cancellationTokenSource?.Cancel();
@@ -194,19 +265,47 @@ public class WebSocketService : IWebSocketService, IDisposable
                         var json = Encoding.UTF8.GetString(buffer, 0, result.Count);
                         ProcessMessage(json);
                     }
+                    else if (result.MessageType == WebSocketMessageType.Binary)
+                    {
+                        _logger.LogDebug("Received binary WebSocket frame, ignoring");
+                    }
                     else if (result.MessageType == WebSocketMessageType.Close)
                     {
-                        await DisconnectAsync().ConfigureAwait(false);
+                        _isConnected = false;
+                        _logger.LogWarning("WebSocket server closed the connection (status: {Status}, description: {Description}). Reconnecting...",
+                            result.CloseStatus, result.CloseStatusDescription);
+
+                        _keepaliveTimer?.Dispose();
+                        _keepaliveTimer = null;
+
+                        if (!cancellationToken.IsCancellationRequested)
+                            _ = ReconnectAsync(cancellationToken);
+
+                        break;
                     }
                 }
                 catch (OperationCanceledException)
                 {
                     break;
                 }
+                catch (WebSocketException wsEx)
+                {
+                    _isConnected = false;
+                    _logger.LogError(wsEx, "WebSocket connection lost unexpectedly. Reconnecting...");
+
+                    _keepaliveTimer?.Dispose();
+                    _keepaliveTimer = null;
+
+                    if (!cancellationToken.IsCancellationRequested)
+                        _ = ReconnectAsync(cancellationToken);
+
+                    break;
+                }
             }
         }
         catch (Exception ex)
         {
+            _isConnected = false;
             _logger.LogError(ex, "Error listening to WebSocket messages");
         }
     }
@@ -370,6 +469,7 @@ public class WebSocketService : IWebSocketService, IDisposable
 
     public void Dispose()
     {
+        _keepaliveTimer?.Dispose();
         _webSocket?.Dispose();
         _cancellationTokenSource?.Dispose();
         GC.SuppressFinalize(this);
