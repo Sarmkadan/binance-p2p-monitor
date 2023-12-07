@@ -98,16 +98,13 @@ public class PriceMonitoringService : IPriceMonitoringService
                 var triggeredAlerts = await _alertService.CheckTriggersAsync(price).ConfigureAwait(false);
 
                 // Publish PriceUpdatedEvent
-                var priceUpdatedEvent = new PriceUpdatedEvent(
-                    price.Asset,
-                    price.Fiat,
-                    price.BuyPrice,
-                    price.SellPrice,
-                    price.BuyChangePercent,
-                    price.SellChangePercent,
-                    price.Timestamp,
-                    price.Metadata
-                );
+                var priceUpdatedEvent = new PriceUpdatedEvent
+                {
+                    Asset = price.Asset,
+                    Fiat = price.Fiat,
+                    BuyPrice = price.BuyPrice,
+                    SellPrice = price.SellPrice,
+                };
                 await _eventBus.PublishAsync(priceUpdatedEvent).ConfigureAwait(false);
 
                 _logger.LogInformation("Updated price {Asset}/{Fiat}: Buy={Buy:F8}, Sell={Sell:F8}",

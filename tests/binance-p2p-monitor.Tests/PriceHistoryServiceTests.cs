@@ -72,7 +72,7 @@ public class PriceHistoryServiceTests
     {
         _repoMock
             .Setup(r => r.GetHistoryByAssetAndFiatAsync("BTC", "USD", 24))
-            .ReturnsAsync(PriceHistory[]());
+            .ReturnsAsync(Array.Empty<PriceHistory>());
 
         var service = CreateService();
         var trend = await service.GetPriceTrendAsync("BTC", "USD", 24).ConfigureAwait(false);
@@ -85,7 +85,7 @@ public class PriceHistoryServiceTests
     {
         _repoMock
             .Setup(r => r.GetHistoryByAssetAndFiatAsync("BTC", "USD", 24))
-            .ReturnsAsync(PriceHistory[]());
+            .ReturnsAsync(Array.Empty<PriceHistory>());
 
         var service = CreateService();
         var (high, low, avg) = await service.GetPriceStatsAsync("BTC", "USD", 24).ConfigureAwait(false);

@@ -12,7 +12,7 @@ namespace BinanceP2pMonitor.CLI;
 public class CommandContext
 {
     public string CommandName { get; set; } = string.Empty;
-    public string[] Arguments { get; set; } = string[]();
+    public string[] Arguments { get; set; } = Array.Empty<string>();
     public Dictionary<string, string> Options { get; set; } = new();
     public Dictionary<string, string> Flags { get; set; } = new();
     public IServiceProvider ServiceProvider { get; set; } = null!;

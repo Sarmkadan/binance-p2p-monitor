@@ -183,7 +183,7 @@ public class HistoricalSpreadAnalysisService : IHistoricalSpreadAnalysisService
             if (percentile is < 0 or > 100)
                 throw new ArgumentOutOfRangeException(nameof(percentile), "Percentile must be between 0 and 100");
 
-            var history = (await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours)).ToList().ConfigureAwait(false);
+            var history = (await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours).ConfigureAwait(false)).ToList();
 
             if (history.Count == 0)
                 return 0;

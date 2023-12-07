@@ -217,7 +217,7 @@ public class ValidationHelperTests
     [Fact]
     public void IsValidCollection_EmptyList_ReturnsFalse()
     {
-        var result = ValidationHelper.IsValidCollection(int[]());
+        var result = ValidationHelper.IsValidCollection(Array.Empty<int>());
 
         result.Should().BeFalse();
     }
