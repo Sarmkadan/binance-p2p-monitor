@@ -64,15 +64,19 @@ public class DatabaseCleanupWorker : BackgroundService
 
         var cutoffDate = DateTime.UtcNow.AddDays(-_appSettings.HistoryRetentionDays);
 
-        // Delete old price history records
-        var deletedCount = 0;
-        _logger.LogInformation("Deleted {Count} old history records (older than {CutoffDate})", deletedCount, cutoffDate);
+        await historyRepository.DeleteOldRecordsAsync(_appSettings.HistoryRetentionDays).ConfigureAwait(false);
 
-        // Count total records
-        _logger.LogInformation("Database cleanup completed. Current record count: ~{EstimatedCount}",
-            _appSettings.MaxHistoryRecords);
+        var remainingCount = await historyRepository.GetTotalHistoryCountAsync().ConfigureAwait(false);
 
-        // Log database size
-        _logger.LogDebug("Database maintenance completed successfully");
+        // Enforce maximum record cap as a secondary safeguard
+        if (remainingCount > _appSettings.MaxHistoryRecords)
+        {
+            _logger.LogWarning("History record count ({Count}) exceeds MaxHistoryRecords ({Max}). " +
+                "Consider reducing HistoryRetentionDays or increasing MaxHistoryRecords.",
+                remainingCount, _appSettings.MaxHistoryRecords);
+        }
+
+        _logger.LogInformation("Database cleanup completed. Records older than {CutoffDate} deleted. Current count: {Count}",
+            cutoffDate, remainingCount);
     }
 }
