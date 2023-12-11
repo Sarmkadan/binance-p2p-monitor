@@ -33,6 +33,12 @@ public class AppSettings
     public bool EnableAutoCleanup { get; set; } = true;
 
     /// <summary>
+    /// Hour of the day (0–23, UTC) at which the daily price summary is sent via Telegram.
+    /// Set to -1 to disable the daily summary.
+    /// </summary>
+    public int DailySummaryHourUtc { get; set; } = 9;
+
+    /// <summary>
     /// Optional HTTP endpoint that receives a JSON POST on every triggered alert.
     /// Leave empty to disable webhook delivery.
     /// </summary>
