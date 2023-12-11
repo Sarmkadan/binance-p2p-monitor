@@ -1,6 +1,8 @@
+![CI](https://github.com/sarmkadan/binance-p2p-monitor/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/github/license/sarmkadan/binance-p2p-monitor)
+![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 [![Build](https://github.com/sarmkadan/binance-p2p-monitor/actions/workflows/build.yml/badge.svg)](https://github.com/sarmkadan/binance-p2p-monitor/actions/workflows/build.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
+[![Docker](https://github.com/sarmkadan/binance-p2p-monitor/actions/workflows/docker.yml/badge.svg)](https://github.com/sarmkadan/binance-p2p-monitor/actions/workflows/docker.yml)
 
 # binance-p2p-monitor
 
