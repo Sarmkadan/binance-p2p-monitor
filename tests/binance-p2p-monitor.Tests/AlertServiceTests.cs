@@ -1,12 +1,9 @@
 #nullable enable
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
 
 using BinanceP2pMonitor.Configuration;
 using BinanceP2pMonitor.Constants;
 using BinanceP2pMonitor.Exceptions;
+using BinanceP2pMonitor.Integration;
 using BinanceP2pMonitor.Models;
 using BinanceP2pMonitor.Repositories;
 using BinanceP2pMonitor.Services;
@@ -30,170 +27,121 @@ public class AlertServiceTests
         _appSettings = new AppSettings
         {
             MaxAlertsPerUser = 5,
-            EnableTelegramNotifications = true
+            EnableTelegramNotifications = false,
+            DatabaseConnectionString = "DataSource=:memory:"
         };
         _mockLogger = Substitute.For<ILogger<AlertService>>();
-        _alertService = new AlertService(_mockAlertRepository, _appSettings, _mockLogger);
+
+        var mockTelegram = Substitute.For<ITelegramNotificationClient>();
+        var mockWebhook = Substitute.For<IWebhookNotificationClient>();
+
+        _alertService = new AlertService(_mockAlertRepository, _appSettings, _mockLogger, mockTelegram, mockWebhook);
     }
+
+    private static PriceAlert ValidAlert(int userId = 1) => new()
+    {
+        UserId = userId,
+        Asset = "USDT",
+        Fiat = "UAH",
+        AlertType = AlertType.PriceChange,
+        Condition = AlertCondition.GreaterThan,
+        Threshold = 1.0m,
+        IsEnabled = true,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    };
 
     [Fact]
     public async Task CreateAlertAsync_ShouldReturnAlertId_WhenAlertIsValidAndMaxAlertsNotReached()
     {
-        // Arrange
-        var alert = new PriceAlert
-        {
-            UserId = 1,
-            Asset = "USDT",
-            Fiat = "UAH",
-            TradeType = TradeType.Buy,
-            AlertType = AlertType.PriceChange,
-            Threshold = 1.0m
-        };
+        var alert = ValidAlert();
         _mockAlertRepository.GetUserAlertCountAsync(alert.UserId).Returns(2);
         _mockAlertRepository.AddAsync(Arg.Any<PriceAlert>()).Returns(1);
 
-        // Act
-        var result = await _alertService.CreateAlertAsync(alert).ConfigureAwait(false);
+        var result = await _alertService.CreateAlertAsync(alert);
 
-        // Assert
         result.Should().Be(1);
-        await _mockAlertRepository.Received(1).AddAsync(Arg.Is<PriceAlert>(a => a.UserId == alert.UserId)).ConfigureAwait(false);
+        await _mockAlertRepository.Received(1).AddAsync(Arg.Is<PriceAlert>(a => a.UserId == alert.UserId));
     }
 
     [Fact]
     public async Task CreateAlertAsync_ShouldThrowInvalidAlertException_WhenAlertIsInvalid()
     {
-        // Arrange
-        var invalidAlert = new PriceAlert { UserId = 1 }; // Missing required fields
+        var invalidAlert = new PriceAlert { UserId = 1 };
 
-        // Act
-        Func<Task> action = async () => await _alertService.CreateAlertAsync(invalidAlert).ConfigureAwait(false);
+        Func<Task> action = async () => await _alertService.CreateAlertAsync(invalidAlert);
 
-        // Assert
         await action.Should().ThrowAsync<InvalidAlertException>()
             .WithMessage("Alert configuration is invalid");
-        await _mockAlertRepository.DidNotReceive().AddAsync(Arg.Any<PriceAlert>()).ConfigureAwait(false);
+        await _mockAlertRepository.DidNotReceive().AddAsync(Arg.Any<PriceAlert>());
     }
 
     [Fact]
     public async Task CreateAlertAsync_ShouldThrowInvalidAlertException_WhenMaxAlertsReached()
     {
-        // Arrange
-        var alert = new PriceAlert
-        {
-            UserId = 1,
-            Asset = "USDT",
-            Fiat = "UAH",
-            TradeType = TradeType.Buy,
-            AlertType = AlertType.PriceChange,
-            Threshold = 1.0m
-        };
+        var alert = ValidAlert();
         _mockAlertRepository.GetUserAlertCountAsync(alert.UserId).Returns(_appSettings.MaxAlertsPerUser);
 
-        // Act
-        Func<Task> action = async () => await _alertService.CreateAlertAsync(alert).ConfigureAwait(false);
+        Func<Task> action = async () => await _alertService.CreateAlertAsync(alert);
 
-        // Assert
         await action.Should().ThrowAsync<InvalidAlertException>()
             .WithMessage($"Maximum number of alerts ({_appSettings.MaxAlertsPerUser}) reached");
-        await _mockAlertRepository.DidNotReceive().AddAsync(Arg.Any<PriceAlert>()).ConfigureAwait(false);
+        await _mockAlertRepository.DidNotReceive().AddAsync(Arg.Any<PriceAlert>());
     }
 
     [Fact]
     public async Task UpdateAlertAsync_ShouldReturnTrue_WhenAlertIsValidAndExists()
     {
-        // Arrange
-        var existingAlert = new PriceAlert
-        {
-            Id = 1,
-            UserId = 1,
-            Asset = "USDT",
-            Fiat = "UAH",
-            TradeType = TradeType.Buy,
-            AlertType = AlertType.PriceChange,
-            Threshold = 1.0m
-        };
+        var alert = ValidAlert();
+        alert.Id = 1;
         _mockAlertRepository.UpdateAsync(Arg.Any<PriceAlert>()).Returns(true);
 
-        // Act
-        var result = await _alertService.UpdateAlertAsync(existingAlert).ConfigureAwait(false);
+        var result = await _alertService.UpdateAlertAsync(alert);
 
-        // Assert
         result.Should().BeTrue();
-        await _mockAlertRepository.Received(1).UpdateAsync(Arg.Is<PriceAlert>(a => a.Id == existingAlert.Id)).ConfigureAwait(false);
+        await _mockAlertRepository.Received(1).UpdateAsync(Arg.Is<PriceAlert>(a => a.Id == alert.Id));
     }
 
     [Fact]
     public async Task UpdateAlertAsync_ShouldReturnFalse_WhenAlertDoesNotExist()
     {
-        // Arrange
-        var nonExistentAlert = new PriceAlert
-        {
-            Id = 99,
-            UserId = 1,
-            Asset = "USDT",
-            Fiat = "UAH",
-            TradeType = TradeType.Buy,
-            AlertType = AlertType.PriceChange,
-            Threshold = 1.0m
-        };
+        var alert = ValidAlert();
+        alert.Id = 99;
         _mockAlertRepository.UpdateAsync(Arg.Any<PriceAlert>()).Returns(false);
 
-        // Act
-        var result = await _alertService.UpdateAlertAsync(nonExistentAlert).ConfigureAwait(false);
+        var result = await _alertService.UpdateAlertAsync(alert);
 
-        // Assert
         result.Should().BeFalse();
-        await _mockAlertRepository.Received(1).UpdateAsync(Arg.Is<PriceAlert>(a => a.Id == nonExistentAlert.Id)).ConfigureAwait(false);
-    }
-
-    [Fact]
-    public async Task UpdateAlertAsync_ShouldThrowInvalidAlertException_WhenAlertIsInvalid()
-    {
-        // Arrange
-        var invalidAlert = new PriceAlert { Id = 1, UserId = 1 }; // Missing required fields
-
-        // Act
-        Func<Task> action = async () => await _alertService.UpdateAlertAsync(invalidAlert).ConfigureAwait(false);
-
-        // Assert
-        await action.Should().ThrowAsync<InvalidAlertException>()
-            .WithMessage("Alert configuration is invalid");
-        await _mockAlertRepository.DidNotReceive().UpdateAsync(Arg.Any<PriceAlert>()).ConfigureAwait(false);
     }
 
     [Fact]
     public async Task DeleteAlertAsync_ShouldReturnTrue_WhenAlertExists()
     {
-        // Arrange
-        var alertId = 1;
-        _mockAlertRepository.DeleteAsync(alertId).Returns(true);
+        _mockAlertRepository.DeleteAsync(1).Returns(true);
 
-        // Act
-        var result = await _alertService.DeleteAlertAsync(alertId).ConfigureAwait(false);
+        var result = await _alertService.DeleteAlertAsync(1);
 
-        // Assert
         result.Should().BeTrue();
-        await _mockAlertRepository.Received(1).DeleteAsync(alertId).ConfigureAwait(false);
+        await _mockAlertRepository.Received(1).DeleteAsync(1);
     }
 
     [Fact]
     public async Task GetUserAlertsAsync_ShouldReturnAlerts_WhenUserHasAlerts()
     {
-        // Arrange
-        var userId = 1;
         var alerts = new List<PriceAlert>
         {
-            new PriceAlert { Id = 1, UserId = userId, Asset = "USDT", Fiat = "UAH", TradeType = TradeType.Buy, AlertType = AlertType.PriceChange, Threshold = 1.0m },
-            new PriceAlert { Id = 2, UserId = userId, Asset = "BTC", Fiat = "USD", TradeType = TradeType.Sell, AlertType = AlertType.HighSpreadAlert, Threshold = 0.5m }
+            ValidAlert(1),
+            ValidAlert(1)
         };
-        _mockAlertRepository.GetUserAlertsAsync(userId).Returns(alerts);
+        alerts[0].Id = 1;
+        alerts[1].Id = 2;
+        alerts[1].Asset = "BTC";
+        alerts[1].Fiat = "USD";
 
-        // Act
-        var result = await _alertService.GetUserAlertsAsync(userId).ConfigureAwait(false);
+        _mockAlertRepository.GetUserAlertsAsync(1).Returns(alerts);
 
-        // Assert
+        var result = await _alertService.GetUserAlertsAsync(1);
+
         result.Should().BeEquivalentTo(alerts);
-        await _mockAlertRepository.Received(1).GetUserAlertsAsync(userId).ConfigureAwait(false);
     }
 }

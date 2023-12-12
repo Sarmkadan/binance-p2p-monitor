@@ -62,7 +62,7 @@ public class CommandParser
                     context.Flags[key] = "true";
                 }
             }
-            else if (!arg.StartsWith("-"))
+            else if (!arg.StartsWith("-") || (arg.Length > 1 && char.IsDigit(arg[1])))
             {
                 positionalArgs.Add(arg);
             }

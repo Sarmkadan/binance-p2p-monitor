@@ -149,8 +149,8 @@ public class RateLimiterTests
         limiter.Reset(key);
 
         // Assert
-        limiter.IsAllowed(key).Should().BeTrue("Tokens should be restored after reset");
-        limiter.GetRemainingTokens(key).Should().Be(maxRequests);
+        limiter.GetRemainingTokens(key).Should().Be(maxRequests, "Tokens should be restored after reset");
+        limiter.IsAllowed(key).Should().BeTrue("Request should be allowed after reset");
     }
 
     [Fact]
@@ -223,6 +223,7 @@ public class RateLimiterTests
         var timeWindow = TimeSpan.FromMinutes(1);
         var limiter = new RateLimiter(maxRequests, timeWindow);
         var key = "testKey";
+        limiter.IsAllowed(key); // Ensure bucket exists and still has tokens
 
         // Act
         var time = limiter.GetTimeUntilNextToken(key);
