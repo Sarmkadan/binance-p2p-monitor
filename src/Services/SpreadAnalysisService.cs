@@ -1,9 +1,4 @@
 #nullable enable
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
-
 using System.Buffers;
 using System.Collections.Frozen;
 using BinanceP2pMonitor.Configuration;
