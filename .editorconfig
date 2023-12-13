@@ -169,6 +169,11 @@ dotnet_naming_symbols.private_symbols.applicable_kinds = property,method,field,e
 dotnet_naming_symbols.private_symbols.applicable_accessibilities = private,internal
 dotnet_naming_symbols.private_symbols.required_modifiers =
 
+# xUnit analyzer suppressions in test projects
+[tests/**/*.cs]
+dotnet_diagnostic.xUnit1030.severity = none
+dotnet_diagnostic.xUnit1012.severity = none
+
 # .NET formatting rules
 [*.cs]
 dotnet_sort_system_directives_first = true

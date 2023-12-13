@@ -4,7 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Data.SQLite;
+
 using BinanceP2pMonitor.Data;
 using BinanceP2pMonitor.Exceptions;
 using BinanceP2pMonitor.Models;
@@ -339,7 +339,7 @@ public class PriceRepository : IPriceRepository
     /// <summary>
     /// Maps SQLite reader to Price object
     /// </summary>
-    private async Task<Price?> MapToPriceAsync(SQLiteDataReader reader)
+    private async Task<Price?> MapToPriceAsync(SqliteDataReader reader)
     {
         return await Task.FromResult(new Price
         {

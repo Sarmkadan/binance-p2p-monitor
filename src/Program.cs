@@ -39,7 +39,7 @@ class Program
 
                 // Register database
                 services.AddSingleton<DatabaseContext>();
-                services.AddScoped<IDbConnection>(_ => new SQLiteConnection(appSettings.DatabaseConnectionString));
+                services.AddScoped<IDbConnection>(_ => new SqliteConnection(appSettings.DatabaseConnectionString));
 
                 // Register repositories
                 services.AddScoped<IPriceRepository, PriceRepository>();
@@ -68,9 +68,9 @@ class Program
 
                 // Register HTTP client and integration services
                 services.AddHttpClient();
-                services.AddSingleton<HttpClientFactory>();
-                services.AddSingleton<TelegramNotificationClient>();
-                services.AddSingleton<WebhookNotificationClient>();
+                services.AddSingleton<BinanceP2pMonitor.Integration.HttpClientFactory>();
+                services.AddSingleton<ITelegramNotificationClient, TelegramNotificationClient>();
+                services.AddSingleton<IWebhookNotificationClient, WebhookNotificationClient>();
 
                 // Register rate limiter
                 services.AddSingleton(new RateLimiter(100, TimeSpan.FromMinutes(1)));

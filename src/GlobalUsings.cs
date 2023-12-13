@@ -32,4 +32,4 @@ global using BinanceP2pMonitor.Services;
 global using Telegram.Bot;
 global using Telegram.Bot.Types.Enums;
 global using System.Data;
-global using System.Data.SQLite;
+global using Microsoft.Data.Sqlite;
