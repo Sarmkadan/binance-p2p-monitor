@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -38,7 +39,7 @@ public class AlertService : IAlertService
     {
         try
         {
-            if (alert == null || !alert.IsValid())
+            if (alert is null || !alert.IsValid())
                 throw new InvalidAlertException("Alert configuration is invalid");
 
             var userAlertCount = await GetActiveAlertCountAsync(alert.UserId);
@@ -65,7 +66,7 @@ public class AlertService : IAlertService
     {
         try
         {
-            if (alert == null || alert.Id <= 0 || !alert.IsValid())
+            if (alert is null || alert.Id <= 0 || !alert.IsValid())
                 throw new InvalidAlertException("Alert configuration is invalid");
 
             alert.UpdatedAt = DateTime.UtcNow;
@@ -117,7 +118,7 @@ public class AlertService : IAlertService
     {
         try
         {
-            if (currentPrice == null || !currentPrice.IsValid())
+            if (currentPrice is null || !currentPrice.IsValid())
                 return Enumerable.Empty<PriceAlert>();
 
             var alerts = await _alertRepository.GetAlertsByAssetAndFiatAsync(currentPrice.Asset, currentPrice.Fiat);
@@ -203,7 +204,7 @@ public class AlertService : IAlertService
         try
         {
             var alert = await _alertRepository.GetByIdAsync(alertId);
-            if (alert == null)
+            if (alert is null)
                 throw new ResourceNotFoundException($"Alert {alertId} not found");
 
             var testMessage = $"Test notification for {alert.GetDescription()}";
