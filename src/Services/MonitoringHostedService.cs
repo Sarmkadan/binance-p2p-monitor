@@ -53,13 +53,13 @@ public class MonitoringHostedService : BackgroundService
                 try
                 {
                     // Get and update all monitored prices
-                    var prices = await _priceMonitoringService.GetAllCurrentPricesAsync();
+                    var prices = await _priceMonitoringService.GetAllCurrentPricesAsync().ConfigureAwait(false);
 
                     foreach (var price in prices)
                     {
                         try
                         {
-                            await _priceMonitoringService.UpdatePriceAsync(price);
+                            await _priceMonitoringService.UpdatePriceAsync(price).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {
@@ -70,12 +70,12 @@ public class MonitoringHostedService : BackgroundService
                     // Perform periodic cleanup
                     if ((DateTime.UtcNow - _lastCleanupTime).TotalHours >= 1)
                     {
-                        await PerformCleanupAsync();
+                        await PerformCleanupAsync().ConfigureAwait(false);
                         _lastCleanupTime = DateTime.UtcNow;
                     }
 
                     // Wait for next monitoring interval
-                    await Task.Delay(_settings.MonitoringIntervalSeconds * 1000, stoppingToken);
+                    await Task.Delay(_settings.MonitoringIntervalSeconds * 1000, stoppingToken).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -85,7 +85,7 @@ public class MonitoringHostedService : BackgroundService
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error in monitoring service loop");
-                    await Task.Delay(5000, stoppingToken); // Brief delay before retry
+                    await Task.Delay(5000, stoppingToken).ConfigureAwait(false); // Brief delay before retry
                 }
             }
 
@@ -110,11 +110,11 @@ public class MonitoringHostedService : BackgroundService
             if (_settings.EnableAutoCleanup)
             {
                 // Clean up old history records
-                var success = await _historyService.CleanupOldHistoryAsync(_settings.HistoryRetentionDays);
+                var success = await _historyService.CleanupOldHistoryAsync(_settings.HistoryRetentionDays).ConfigureAwait(false);
 
                 if (success)
                 {
-                    var totalCount = await _historyService.GetHistoryCountAsync();
+                    var totalCount = await _historyService.GetHistoryCountAsync().ConfigureAwait(false);
                     _logger.LogInformation("Cleanup completed. Total history records: {Count}", totalCount);
                 }
             }
@@ -131,7 +131,7 @@ public class MonitoringHostedService : BackgroundService
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Monitoring hosted service stopping");
-        await _priceMonitoringService.StopMonitoringAsync();
-        await base.StopAsync(cancellationToken);
+        await _priceMonitoringService.StopMonitoringAsync().ConfigureAwait(false);
+        await base.StopAsync(cancellationToken).ConfigureAwait(false);
     }
 }

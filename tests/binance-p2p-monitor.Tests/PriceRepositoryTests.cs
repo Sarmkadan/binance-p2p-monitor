@@ -90,11 +90,11 @@ public class PriceRepositoryTests : IDisposable
         var price = CreateTestPrice();
 
         // Act
-        var id = await _priceRepository.AddAsync(price);
+        var id = await _priceRepository.AddAsync(price).ConfigureAwait(false);
 
         // Assert
         id.Should().BeGreaterThan(0);
-        var storedPrice = await _priceRepository.GetByIdAsync(id);
+        var storedPrice = await _priceRepository.GetByIdAsync(id).ConfigureAwait(false);
         storedPrice.Should().NotBeNull();
         storedPrice!.Asset.Should().Be(price.Asset);
     }
@@ -104,10 +104,10 @@ public class PriceRepositoryTests : IDisposable
     {
         // Arrange
         var price = CreateTestPrice();
-        var id = await _priceRepository.AddAsync(price);
+        var id = await _priceRepository.AddAsync(price).ConfigureAwait(false);
 
         // Act
-        var storedPrice = await _priceRepository.GetByIdAsync(id);
+        var storedPrice = await _priceRepository.GetByIdAsync(id).ConfigureAwait(false);
 
         // Assert
         storedPrice.Should().NotBeNull();
@@ -118,7 +118,7 @@ public class PriceRepositoryTests : IDisposable
     public async Task GetByIdAsync_ShouldReturnNull_WhenPriceDoesNotExist()
     {
         // Act
-        var storedPrice = await _priceRepository.GetByIdAsync(999);
+        var storedPrice = await _priceRepository.GetByIdAsync(999).ConfigureAwait(false);
 
         // Assert
         storedPrice.Should().BeNull();
@@ -130,12 +130,12 @@ public class PriceRepositoryTests : IDisposable
         // Arrange
         var asset = "USDT";
         var fiat = "UAH";
-        await _priceRepository.AddAsync(CreateTestPrice(asset, fiat, buyPrice: 38.0m, timestamp: DateTime.UtcNow.AddMinutes(-5)));
+        await _priceRepository.AddAsync(CreateTestPrice(asset, fiat, buyPrice: 38.0m, timestamp: DateTime.UtcNow.AddMinutes(-5))).ConfigureAwait(false);
         var latestPrice = CreateTestPrice(asset, fiat, buyPrice: 38.5m, timestamp: DateTime.UtcNow);
-        await _priceRepository.AddAsync(latestPrice);
+        await _priceRepository.AddAsync(latestPrice).ConfigureAwait(false);
 
         // Act
-        var result = await _priceRepository.GetLatestByAssetAndFiatAsync(asset, fiat);
+        var result = await _priceRepository.GetLatestByAssetAndFiatAsync(asset, fiat).ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -147,16 +147,16 @@ public class PriceRepositoryTests : IDisposable
     {
         // Arrange
         var price = CreateTestPrice();
-        var id = await _priceRepository.AddAsync(price);
-        var storedPrice = await _priceRepository.GetByIdAsync(id);
+        var id = await _priceRepository.AddAsync(price).ConfigureAwait(false);
+        var storedPrice = await _priceRepository.GetByIdAsync(id).ConfigureAwait(false);
         storedPrice!.BuyPrice = 39.0m;
 
         // Act
-        var result = await _priceRepository.UpdateAsync(storedPrice);
+        var result = await _priceRepository.UpdateAsync(storedPrice).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        var updatedPrice = await _priceRepository.GetByIdAsync(id);
+        var updatedPrice = await _priceRepository.GetByIdAsync(id).ConfigureAwait(false);
         updatedPrice!.BuyPrice.Should().Be(39.0m);
     }
 
@@ -165,14 +165,14 @@ public class PriceRepositoryTests : IDisposable
     {
         // Arrange
         var price = CreateTestPrice();
-        var id = await _priceRepository.AddAsync(price);
+        var id = await _priceRepository.AddAsync(price).ConfigureAwait(false);
 
         // Act
-        var result = await _priceRepository.DeleteAsync(id);
+        var result = await _priceRepository.DeleteAsync(id).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        var deletedPrice = await _priceRepository.GetByIdAsync(id);
+        var deletedPrice = await _priceRepository.GetByIdAsync(id).ConfigureAwait(false);
         deletedPrice.Should().BeNull();
     }
 
@@ -182,11 +182,11 @@ public class PriceRepositoryTests : IDisposable
         // Arrange
         var asset = "USDT";
         var fiat = "UAH";
-        await _priceRepository.AddAsync(CreateTestPrice(asset, fiat, buyPrice: 38.0m, sellPrice: 38.0m, timestamp: DateTime.UtcNow.AddHours(-1)));
-        await _priceRepository.AddAsync(CreateTestPrice(asset, fiat, buyPrice: 39.0m, sellPrice: 39.0m, timestamp: DateTime.UtcNow.AddHours(-2)));
+        await _priceRepository.AddAsync(CreateTestPrice(asset, fiat, buyPrice: 38.0m, sellPrice: 38.0m, timestamp: DateTime.UtcNow.AddHours(-1))).ConfigureAwait(false);
+        await _priceRepository.AddAsync(CreateTestPrice(asset, fiat, buyPrice: 39.0m, sellPrice: 39.0m, timestamp: DateTime.UtcNow.AddHours(-2))).ConfigureAwait(false);
         
         // Act
-        var avgPrice = await _priceRepository.GetAveragePriceAsync(asset, fiat, 24);
+        var avgPrice = await _priceRepository.GetAveragePriceAsync(asset, fiat, 24).ConfigureAwait(false);
 
         // Assert
         avgPrice.Should().Be(38.5m);

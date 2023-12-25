@@ -89,7 +89,7 @@ public class HistoricalSpreadAnalysisService : IHistoricalSpreadAnalysisService
             }
 
             var sortedSpreads = history.Select(h => h.SpreadPercentage).OrderBy(s => s).ToList();
-            var currentSpreadData = await _spreadAnalysisService.GetSpreadAnalysisAsync(asset, fiat);
+            var currentSpreadData = await _spreadAnalysisService.GetSpreadAnalysisAsync(asset, fiat).ConfigureAwait(false);
             var currentSpread = currentSpreadData?.CurrentSpreadPercent ?? sortedSpreads.Last();
 
             var mean = sortedSpreads.Average();
@@ -141,7 +141,7 @@ public class HistoricalSpreadAnalysisService : IHistoricalSpreadAnalysisService
         try
         {
             var analysisTasks = pairs.Select(p => AnalyzeHistoricalSpreadAsync(p.Asset, p.Fiat, ct: ct));
-            var results = await Task.WhenAll(analysisTasks);
+            var results = await Task.WhenAll(analysisTasks).ConfigureAwait(false);
 
             var anomalies = results
                 .Where(r => r is not null && Math.Abs(r.ZScore) >= zScoreThreshold)
@@ -156,7 +156,7 @@ public class HistoricalSpreadAnalysisService : IHistoricalSpreadAnalysisService
                 Threshold = _settings.DefaultSpreadThreshold
             }, ct));
 
-            await Task.WhenAll(alertTasks);
+            await Task.WhenAll(alertTasks).ConfigureAwait(false);
 
             if (anomalies.Count > 0)
                 _logger.LogWarning(
@@ -183,7 +183,7 @@ public class HistoricalSpreadAnalysisService : IHistoricalSpreadAnalysisService
             if (percentile is < 0 or > 100)
                 throw new ArgumentOutOfRangeException(nameof(percentile), "Percentile must be between 0 and 100");
 
-            var history = (await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours)).ToList();
+            var history = (await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours)).ToList().ConfigureAwait(false);
 
             if (history.Count == 0)
                 return 0;
