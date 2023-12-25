@@ -60,7 +60,7 @@ public class EventBus : IEventBus
             }
         }
 
-        await Task.WhenAll(tasks);
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     public async Task PublishManyAsync<TEvent>(IEnumerable<TEvent> events, CancellationToken ct = default) where TEvent : IEvent
@@ -69,7 +69,7 @@ public class EventBus : IEventBus
         _logger.LogInformation("Publishing {Count} events", eventList.Count);
 
         var tasks = eventList.Select(@event => PublishAsync(@event, ct));
-        await Task.WhenAll(tasks);
+        await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     public void Subscribe<TEvent>(Func<TEvent, CancellationToken, Task> handler) where TEvent : IEvent

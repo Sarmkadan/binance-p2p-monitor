@@ -71,7 +71,7 @@ Examples:
 
             _output.WriteSection("Current Prices");
 
-            var prices = await _priceService.GetAllCurrentPricesAsync();
+            var prices = await _priceService.GetAllCurrentPricesAsync().ConfigureAwait(false);
             var priceList = prices.ToList();
 
             if (!priceList.Any())

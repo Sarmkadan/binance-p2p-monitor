@@ -50,7 +50,7 @@ public class PriceMonitoringServiceTests
         _mockPriceRepository.GetLatestByAssetAndFiatAsync(asset, fiat).Returns(expectedPrice);
 
         // Act
-        var result = await _priceMonitoringService.GetCurrentPriceAsync(asset, fiat);
+        var result = await _priceMonitoringService.GetCurrentPriceAsync(asset, fiat).ConfigureAwait(false);
 
         // Assert
         result.Should().BeEquivalentTo(expectedPrice);
@@ -65,7 +65,7 @@ public class PriceMonitoringServiceTests
         _mockPriceRepository.GetLatestByAssetAndFiatAsync(asset, fiat).Returns((Price?)null);
 
         // Act
-        var result = await _priceMonitoringService.GetCurrentPriceAsync(asset, fiat);
+        var result = await _priceMonitoringService.GetCurrentPriceAsync(asset, fiat).ConfigureAwait(false);
 
         // Assert
         result.Should().BeNull();
@@ -80,13 +80,13 @@ public class PriceMonitoringServiceTests
         _mockAlertService.CheckTriggersAsync(Arg.Any<Price>()).Returns(new List<PriceAlert>());
 
         // Act
-        var result = await _priceMonitoringService.UpdatePriceAsync(price);
+        var result = await _priceMonitoringService.UpdatePriceAsync(price).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        await _mockPriceRepository.Received(1).AddAsync(Arg.Is<Price>(p => p.Asset == price.Asset));
-        await _mockPriceHistoryService.Received(1).RecordPriceAsync(Arg.Is<Price>(p => p.Asset == price.Asset));
-        await _mockAlertService.Received(1).CheckTriggersAsync(Arg.Is<Price>(p => p.Asset == price.Asset));
+        await _mockPriceRepository.Received(1).AddAsync(Arg.Is<Price>(p => p.Asset == price.Asset)).ConfigureAwait(false);
+        await _mockPriceHistoryService.Received(1).RecordPriceAsync(Arg.Is<Price>(p => p.Asset == price.Asset)).ConfigureAwait(false);
+        await _mockAlertService.Received(1).CheckTriggersAsync(Arg.Is<Price>(p => p.Asset == price.Asset)).ConfigureAwait(false);
     }
 
     [Fact]
@@ -96,12 +96,12 @@ public class PriceMonitoringServiceTests
         var invalidPrice = new Price { Asset = "USDT", BuyPrice = -1.0m }; // Invalid BuyPrice
 
         // Act
-        Func<Task> action = async () => await _priceMonitoringService.UpdatePriceAsync(invalidPrice);
+        Func<Task> action = async () => await _priceMonitoringService.UpdatePriceAsync(invalidPrice).ConfigureAwait(false);
 
         // Assert
         await action.Should().ThrowAsync<InvalidPriceException>()
             .WithMessage("Invalid price data");
-        await _mockPriceRepository.DidNotReceive().AddAsync(Arg.Any<Price>());
+        await _mockPriceRepository.DidNotReceive().AddAsync(Arg.Any<Price>()).ConfigureAwait(false);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public class PriceMonitoringServiceTests
         _mockPriceRepository.GetAveragePriceAsync(asset, fiat, 24).Returns(expectedAverage);
 
         // Act
-        var result = await _priceMonitoringService.GetAveragePriceAsync(asset, fiat, 24);
+        var result = await _priceMonitoringService.GetAveragePriceAsync(asset, fiat, 24).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(expectedAverage);
@@ -133,7 +133,7 @@ public class PriceMonitoringServiceTests
         var changePercentThreshold = 3.0m;
 
         // Act
-        var result = await _priceMonitoringService.GetPricesWithSignificantChangeAsync(changePercentThreshold);
+        var result = await _priceMonitoringService.GetPricesWithSignificantChangeAsync(changePercentThreshold).ConfigureAwait(false);
 
         // Assert
         result.Should().ContainSingle(p => p.Asset == "USDT");
@@ -148,9 +148,9 @@ public class PriceMonitoringServiceTests
     public async Task GetSpreadAnalysisAsync_ShouldThrowArgumentException_WhenAssetOrFiatIsNullOrWhiteSpace(string asset, string fiat)
     {
         // Act
-        Func<Task> action = async () => await _priceMonitoringService.GetSpreadAnalysisAsync(asset, fiat);
+        Func<Task> action = async () => await _priceMonitoringService.GetSpreadAnalysisAsync(asset, fiat).ConfigureAwait(false);
 
         // Assert
-        await action.Should().ThrowAsync<ArgumentException>();
+        await action.Should().ThrowAsync<ArgumentException>().ConfigureAwait(false);
     }
 }

@@ -59,7 +59,7 @@ class RealTimeMonitorExample
             // Keep monitoring until Ctrl+C
             while (true)
             {
-                await Task.Delay(1000);
+                await Task.Delay(1000).ConfigureAwait(false);
             }
         }
         catch (Exception ex)
