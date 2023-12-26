@@ -26,6 +26,7 @@ public class AppSettings
     public int HistoryRetentionDays { get; set; } = 30;
     public int MaxHistoryRecords { get; set; } = 100000;
     public int DatabaseCommandTimeoutSeconds { get; set; } = 30;
+    public int SpreadAnalysisHistoryHours { get; set; } = 24;
 
     public bool EnableWebSocket { get; set; } = true;
     public bool EnableTelegramNotifications { get; set; } = true;
@@ -70,6 +71,9 @@ public class AppSettings
 
         if (HistoryRetentionDays < 1)
             errors.Add("HistoryRetentionDays must be at least 1");
+            
+        if (SpreadAnalysisHistoryHours < 1)
+            errors.Add("SpreadAnalysisHistoryHours must be at least 1");
 
         if (DefaultPriceChangeThreshold < 0)
             errors.Add("DefaultPriceChangeThreshold cannot be negative");
