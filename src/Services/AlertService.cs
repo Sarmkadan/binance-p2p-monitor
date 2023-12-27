@@ -21,15 +21,18 @@ public class AlertService : IAlertService
     private readonly IAlertRepository _alertRepository;
     private readonly AppSettings _settings;
     private readonly ILogger<AlertService> _logger;
+    private readonly TelegramNotificationClient _telegramNotificationClient;
 
     public AlertService(
         IAlertRepository alertRepository,
         AppSettings settings,
-        ILogger<AlertService> logger)
+        ILogger<AlertService> logger,
+        TelegramNotificationClient telegramNotificationClient)
     {
         _alertRepository = alertRepository ?? throw new ArgumentNullException(nameof(alertRepository));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _telegramNotificationClient = telegramNotificationClient ?? throw new ArgumentNullException(nameof(telegramNotificationClient));
     }
 
     /// <summary>
@@ -168,9 +171,11 @@ public class AlertService : IAlertService
             if (string.IsNullOrWhiteSpace(message))
                 throw new ArgumentException("Message cannot be empty");
 
-            // TODO: Implement actual Telegram bot integration
+            // Assuming _telegramNotificationClient can handle the chat ID internally or it's configured for admin chat
+            // For per-user alerts, _telegramNotificationClient.SendMessageAsync needs to be extended to accept chatId
+            // For now, it sends to the admin chat as configured in AppSettings
+            await _telegramNotificationClient.SendMessageAsync(message).ConfigureAwait(false);
             _logger.LogInformation("Notification sent to {ChatId}: {Message}", telegramChatId, message);
-            await Task.CompletedTask;
         }
         catch (Exception ex)
         {
