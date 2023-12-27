@@ -18,7 +18,7 @@ public interface IPriceMonitoringService
     Task<bool> UpdatePriceAsync(Price price);
     Task<decimal?> GetAveragePriceAsync(string asset, string fiat, int hours);
     Task<IEnumerable<Price>> GetPricesWithSignificantChangeAsync(decimal changePercentThreshold);
-    Task<Dictionary<string, decimal>> GetSpreadAnalysisAsync(string asset, string fiat);
+    Task<Spread?> GetSpreadAnalysisAsync(string asset, string fiat);
     Task StartMonitoringAsync(CancellationToken cancellationToken);
     Task StopMonitoringAsync();
 }
