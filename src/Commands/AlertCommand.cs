@@ -13,6 +13,7 @@ public class AlertCommand : ICommand
 {
     private readonly IAlertService _alertService;
     private readonly ConsoleOutputWriter _output;
+    private readonly AppSettings _appSettings;
     private readonly ILogger<AlertCommand> _logger;
 
     public string Name => "alert";
@@ -21,10 +22,12 @@ public class AlertCommand : ICommand
     public AlertCommand(
         IAlertService alertService,
         ConsoleOutputWriter output,
+        AppSettings appSettings,
         ILogger<AlertCommand> logger)
     {
         _alertService = alertService;
         _output = output;
+        _appSettings = appSettings;
         _logger = logger;
     }
 
@@ -76,6 +79,39 @@ Examples:
                 errors.Add("--fiat is required for create");
             if (!context.HasOption("type"))
                 errors.Add("--type is required for create");
+            if (!context.HasOption("threshold"))
+                errors.Add("--threshold is required for create");
+            if (!context.HasOption("condition"))
+                errors.Add("--condition is required for create");
+
+            if (context.HasOption("threshold") && !decimal.TryParse(context.GetOption("threshold"), out _))
+                errors.Add("Invalid value for --threshold. Must be a number.");
+
+            if (context.HasOption("type") && !Enum.TryParse<AlertType>(context.GetOption("type"), true, out _))
+                errors.Add($"Invalid value for --type. Valid types are: {string.Join(", ", Enum.GetNames(typeof(AlertType)))}");
+
+            if (context.HasOption("condition") && !Enum.TryParse<AlertCondition>(context.GetOption("condition"), true, out _))
+                errors.Add($"Invalid value for --condition. Valid conditions are: {string.Join(", ", Enum.GetNames(typeof(AlertCondition)))}");
+        }
+        else if (subcommand == "delete")
+        {
+            var alertIdString = context.Arguments.Skip(1).FirstOrDefault();
+            if (string.IsNullOrEmpty(alertIdString))
+            {
+                errors.Add("Alert ID is required for delete.");
+            }
+            else if (!int.TryParse(alertIdString, out _))
+            {
+                errors.Add($"Invalid alert ID: {alertIdString}. Must be an integer.");
+            }
+        }
+        else if (subcommand == "test")
+        {
+            var alertIdString = context.Arguments.Skip(1).FirstOrDefault();
+            if (!string.IsNullOrEmpty(alertIdString) && !int.TryParse(alertIdString, out _))
+            {
+                errors.Add($"Invalid alert ID: {alertIdString}. Must be an integer for test if provided.");
+            }
         }
 
         return errors;
@@ -100,8 +136,15 @@ Examples:
         try
         {
             _output.WriteSection("Active Price Alerts");
-            // Fetch and display alerts
-            _output.WriteInfo("(No alerts configured)");
+            var alerts = await _alertService.GetUserAlertsAsync(1); // Assuming UserId = 1 for CLI for now
+            if (alerts.Any())
+            {
+                _output.WriteTable(alerts);
+            }
+            else
+            {
+                _output.WriteInfo("(No alerts configured)");
+            }
             return 0;
         }
         catch (Exception ex)
@@ -116,14 +159,60 @@ Examples:
     {
         try
         {
-            var asset = context.GetOption("asset", "");
-            var fiat = context.GetOption("fiat", "");
-            var type = context.GetOption("type", "");
+            var asset = context.GetOption("asset", string.Empty);
+            var fiat = context.GetOption("fiat", string.Empty);
+            var typeString = context.GetOption("type", string.Empty);
+            var thresholdString = context.GetOption("threshold", string.Empty);
+            var conditionString = context.GetOption("condition", string.Empty);
+            var notes = context.GetOption("notes", string.Empty);
 
-            _output.WriteInfo($"Creating alert for {asset}/{fiat}");
-            // Create alert logic
-            _output.WriteSuccess("Alert created successfully");
+            if (string.IsNullOrWhiteSpace(asset) || string.IsNullOrWhiteSpace(fiat) ||
+                string.IsNullOrWhiteSpace(typeString) || string.IsNullOrWhiteSpace(thresholdString) ||
+                string.IsNullOrWhiteSpace(conditionString))
+            {
+                _output.WriteError("Asset, Fiat, Type, Threshold, and Condition are required for creating an alert.");
+                return 1;
+            }
+
+            if (!Enum.TryParse(typeString, true, out AlertType alertType))
+            {
+                _output.WriteError($"Invalid alert type: {typeString}. Valid types are: {string.Join(", ", Enum.GetNames(typeof(AlertType)))}");
+                return 1;
+            }
+
+            if (!decimal.TryParse(thresholdString, out decimal threshold))
+            {
+                _output.WriteError($"Invalid threshold value: {thresholdString}. Must be a number.");
+                return 1;
+            }
+
+            if (!Enum.TryParse(conditionString, true, out AlertCondition condition))
+            {
+                _output.WriteError($"Invalid condition: {conditionString}. Valid conditions are: {string.Join(", ", Enum.GetNames(typeof(AlertCondition)))}");
+                return 1;
+            }
+
+            var alert = new PriceAlert
+            {
+                Asset = asset,
+                Fiat = fiat,
+                AlertType = alertType,
+                Threshold = threshold,
+                Condition = condition,
+                UserId = 1, // Assuming UserId = 1 for CLI for now
+                IsEnabled = true,
+                Notes = notes
+            };
+
+            var alertId = await _alertService.CreateAlertAsync(alert).ConfigureAwait(false);
+            _output.WriteSuccess($"Alert created successfully with ID: {alertId}");
             return 0;
+        }
+        catch (InvalidAlertException ex)
+        {
+            _logger.LogError(ex, "Invalid alert configuration");
+            _output.WriteError($"Error: {ex.Message}");
+            return 1;
         }
         catch (Exception ex)
         {
@@ -137,17 +226,37 @@ Examples:
     {
         try
         {
-            var alertId = context.Arguments.Skip(1).FirstOrDefault();
-            if (string.IsNullOrEmpty(alertId))
+            var alertIdString = context.Arguments.Skip(1).FirstOrDefault();
+            if (string.IsNullOrEmpty(alertIdString))
             {
-                _output.WriteError("Alert ID is required");
+                _output.WriteError("Alert ID is required.");
                 return 1;
             }
 
-            _output.WriteInfo($"Deleting alert {alertId}");
-            // Delete alert logic
-            _output.WriteSuccess("Alert deleted successfully");
-            return 0;
+            if (!int.TryParse(alertIdString, out int alertId))
+            {
+                _output.WriteError($"Invalid alert ID: {alertIdString}. Must be an integer.");
+                return 1;
+            }
+
+            _output.WriteInfo($"Attempting to delete alert {alertId}...");
+            var deleted = await _alertService.DeleteAlertAsync(alertId).ConfigureAwait(false);
+            if (deleted)
+            {
+                _output.WriteSuccess($"Alert {alertId} deleted successfully.");
+                return 0;
+            }
+            else
+            {
+                _output.WriteError($"Alert {alertId} not found or could not be deleted.");
+                return 1;
+            }
+        }
+        catch (ResourceNotFoundException ex)
+        {
+            _logger.LogError(ex, "Alert not found");
+            _output.WriteError($"Error: {ex.Message}");
+            return 1;
         }
         catch (Exception ex)
         {
@@ -161,9 +270,42 @@ Examples:
     {
         try
         {
-            _output.WriteInfo("Sending test notification...");
-            _output.WriteSuccess("Test notification sent");
-            return 0;
+            var alertIdString = context.Arguments.Skip(1).FirstOrDefault();
+            if (!string.IsNullOrEmpty(alertIdString))
+            {
+                if (!int.TryParse(alertIdString, out int alertId))
+                {
+                    _output.WriteError($"Invalid alert ID: {alertIdString}. Must be an integer.");
+                    return 1;
+                }
+
+                _output.WriteInfo($"Sending test notification for alert {alertId}...");
+                var success = await _alertService.TestAlertAsync(alertId).ConfigureAwait(false);
+                if (success)
+                {
+                    _output.WriteSuccess($"Test notification sent for alert {alertId}");
+                    return 0;
+                }
+                else
+                {
+                    _output.WriteError($"Failed to send test notification for alert {alertId}");
+                    return 1;
+                }
+            }
+            else
+            {
+                _output.WriteInfo("Sending generic test notification to admin chat...");
+                // Assuming telegramChatId needs to be parsed from string
+                if (string.IsNullOrEmpty(_appSettings.TelegramAdminChatId) || !long.TryParse(_appSettings.TelegramAdminChatId, out long adminChatId))
+                {
+                    _output.WriteError("Telegram admin chat ID is not configured or is invalid in AppSettings.");
+                    return 1;
+                }
+                
+                await _alertService.SendNotificationAsync(adminChatId, "Test notification from Binance P2P Monitor.").ConfigureAwait(false);
+                _output.WriteSuccess("Generic test notification sent to admin chat.");
+                return 0;
+            }
         }
         catch (Exception ex)
         {
