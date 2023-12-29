@@ -15,6 +15,7 @@ public class MonitorCommand : ICommand
     private readonly ISpreadAnalysisService _spreadService;
     private readonly IEventBus _eventBus;
     private readonly ConsoleOutputWriter _output;
+    private readonly IEnumerable<IOutputFormatter> _formatters;
     private readonly ILogger<MonitorCommand> _logger;
     private readonly AppSettings _appSettings;
 
@@ -26,6 +27,7 @@ public class MonitorCommand : ICommand
         ISpreadAnalysisService spreadService,
         IEventBus eventBus,
         ConsoleOutputWriter output,
+        IEnumerable<IOutputFormatter> formatters,
         ILogger<MonitorCommand> logger,
         AppSettings appSettings)
     {
@@ -33,6 +35,7 @@ public class MonitorCommand : ICommand
         _spreadService = spreadService;
         _eventBus = eventBus;
         _output = output;
+        _formatters = formatters;
         _logger = logger;
         _appSettings = appSettings;
     }
@@ -85,12 +88,22 @@ Examples:
         _output.WriteHeader("P2P Price Monitor");
 
         var interval = int.Parse(context.GetOption("interval", _appSettings.MonitoringIntervalSeconds.ToString()));
-        var asset = context.GetOption("asset");
-        var fiat = context.GetOption("fiat");
+        var assetFilter = context.GetOption("asset");
+        var fiatFilter = context.GetOption("fiat");
+        var format = context.GetOption("format", "table");
+
+        var tableFormatter = _formatters.FirstOrDefault(f => f.FormatType.Equals("table", StringComparison.OrdinalIgnoreCase)) as TableOutputFormatter;
+        var specificFormatter = _formatters.FirstOrDefault(f => f.FormatType.Equals(format, StringComparison.OrdinalIgnoreCase));
+
+        if (tableFormatter is null || specificFormatter is null)
+        {
+            _output.WriteError("Could not find required output formatters.");
+            return 1;
+        }
 
         _output.WriteInfo($"Starting monitoring with {interval}s interval");
-        if (!string.IsNullOrEmpty(asset) && !string.IsNullOrEmpty(fiat))
-            _output.WriteInfo($"Monitoring {asset}/{fiat}");
+        if (!string.IsNullOrEmpty(assetFilter) && !string.IsNullOrEmpty(fiatFilter))
+            _output.WriteInfo($"Monitoring {assetFilter}/{fiatFilter}");
 
         var cts = new CancellationTokenSource();
         Console.CancelKeyPress += (s, e) =>
@@ -101,25 +114,13 @@ Examples:
 
         try
         {
-            // Subscribe to price updates
             _eventBus.Subscribe<PriceUpdatedEvent>(async (@event, ct) =>
             {
-                _output.WriteSection($"Price Update: {@event.Asset}/{@event.Fiat}");
-                _output.WriteKeyValue("Buy Price", $"{@event.BuyPrice:F8}");
-                _output.WriteKeyValue("Sell Price", $"{@event.SellPrice:F8}");
-                _output.WriteKeyValue("Buy Offers", @event.BuyOfferCount.ToString());
-                _output.WriteKeyValue("Sell Offers", @event.SellOfferCount.ToString());
-
-                if (@event.PreviousBuyPrice > 0)
-                {
-                    var changePercent = ((@event.BuyPrice - @event.PreviousBuyPrice) / @event.PreviousBuyPrice * 100);
-                    _output.WriteKeyValue("Change", $"{changePercent:+0.00;-0.00;0}%");
-                }
-
+                // This event is primarily for internal logic, not direct console output
+                // Console output is handled by the periodic refresh in the loop below
                 await Task.CompletedTask;
             });
 
-            // Subscribe to spread alerts
             _eventBus.Subscribe<SpreadAlertTriggeredEvent>(async (@event, ct) =>
             {
                 _output.WriteWarning($"Spread Alert: {@event.Asset}/{@event.Fiat} - {(@event.SpreadPercentage):F2}%");
@@ -128,10 +129,61 @@ Examples:
 
             _output.WriteBlankLine();
             _output.WriteInfo("Press Ctrl+C to stop monitoring");
+            
+            // Explicitly start the monitoring service which subscribes to WebSockets
+            await _priceService.StartMonitoringAsync(cts.Token);
 
-            // Monitor loop
             while (!cts.Token.IsCancellationRequested)
             {
+                Console.Clear();
+                _output.WriteHeader("P2P Price Monitor - Live Data");
+                _output.WriteInfo($"Last Updated: {DateTime.Now:HH:mm:ss}");
+                _output.WriteBlankLine();
+
+                var prices = await _priceService.GetAllCurrentPricesAsync().ConfigureAwait(false);
+                var displayData = new List<object>();
+
+                foreach (var price in prices)
+                {
+                    if ((!string.IsNullOrEmpty(assetFilter) && !price.Asset.Equals(assetFilter, StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrEmpty(fiatFilter) && !price.Fiat.Equals(fiatFilter, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+
+                    var spread = await _spreadService.GetSpreadAnalysisAsync(price.Asset, price.Fiat).ConfigureAwait(false);
+
+                    displayData.Add(new
+                    {
+                        price.Asset,
+                        price.Fiat,
+                        BuyPrice = price.BuyPrice.ToString("F8"),
+                        SellPrice = price.SellPrice.ToString("F8"),
+                        Spread = spread?.CurrentSpreadPercent.ToString("F2") + "%" ?? "N/A",
+                        Change = price.BuyChangePercent.ToString("+0.00;-0.00;0") + "%",
+                        LastUpdate = price.UpdatedAt.ToString("HH:mm:ss")
+                    });
+                }
+
+                if (displayData.Any())
+                {
+                    if (format.Equals("table", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _output.WriteRaw(tableFormatter.Format(displayData));
+                    }
+                    else
+                    {
+                        _output.WriteRaw(specificFormatter.Format(displayData));
+                    }
+                }
+                else
+                {
+                    _output.WriteInfo("No data to display. Ensure assets and fiats are configured and monitoring is active.");
+                }
+
+                _output.WriteBlankLine();
+                _output.WriteInfo("Press Ctrl+C to stop monitoring");
+
                 try
                 {
                     await Task.Delay(TimeSpan.FromSeconds(interval), cts.Token).ConfigureAwait(false);
@@ -141,7 +193,8 @@ Examples:
                     break;
                 }
             }
-
+            
+            await _priceService.StopMonitoringAsync();
             _output.WriteSuccess("Monitoring stopped");
             return 0;
         }
