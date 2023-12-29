@@ -32,6 +32,17 @@ public class AppSettings
     public bool EnableTelegramNotifications { get; set; } = true;
     public bool EnableAutoCleanup { get; set; } = true;
 
+    /// <summary>
+    /// Optional HTTP endpoint that receives a JSON POST on every triggered alert.
+    /// Leave empty to disable webhook delivery.
+    /// </summary>
+    public string WebhookUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// When true, webhook notifications are sent in addition to (or instead of) Telegram alerts.
+    /// </summary>
+    public bool EnableWebhookNotifications { get; set; } = false;
+
     public string LogLevel { get; set; } = "Information";
     public string LogPath { get; set; } = "./logs";
 
