@@ -171,10 +171,8 @@ public class AlertService : IAlertService
             if (string.IsNullOrWhiteSpace(message))
                 throw new ArgumentException("Message cannot be empty");
 
-            // Assuming _telegramNotificationClient can handle the chat ID internally or it's configured for admin chat
-            // For per-user alerts, _telegramNotificationClient.SendMessageAsync needs to be extended to accept chatId
-            // For now, it sends to the admin chat as configured in AppSettings
-            await _telegramNotificationClient.SendMessageAsync(message).ConfigureAwait(false);
+            // For per-user alerts, ensure _telegramNotificationClient.SendMessageAsync accepts and uses the chatId.
+            await _telegramNotificationClient.SendMessageAsync(telegramChatId, message).ConfigureAwait(false);
             _logger.LogInformation("Notification sent to {ChatId}: {Message}", telegramChatId, message);
         }
         catch (Exception ex)
