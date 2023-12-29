@@ -14,6 +14,7 @@ public class ExportCommand : ICommand
     private readonly IPriceRepository _priceRepository;
     private readonly IHistoryRepository _historyRepository;
     private readonly ConsoleOutputWriter _output;
+    private readonly IEnumerable<IOutputFormatter> _formatters;
     private readonly ILogger<ExportCommand> _logger;
 
     public string Name => "export";
@@ -23,11 +24,13 @@ public class ExportCommand : ICommand
         IPriceRepository priceRepository,
         IHistoryRepository historyRepository,
         ConsoleOutputWriter output,
+        IEnumerable<IOutputFormatter> formatters,
         ILogger<ExportCommand> logger)
     {
         _priceRepository = priceRepository;
         _historyRepository = historyRepository;
         _output = output;
+        _formatters = formatters;
         _logger = logger;
     }
 
@@ -61,8 +64,17 @@ Examples:
             errors.Add("--output is required");
 
         var format = context.GetOption("format", "csv");
-        if (!new[] { "csv", "json" }.Contains(format))
+        if (!new[] { "csv", "json" }.Contains(format, StringComparer.OrdinalIgnoreCase))
             errors.Add("Format must be csv or json");
+            
+        if (context.HasOption("days") && (!int.TryParse(context.GetOption("days"), out int days) || days <= 0))
+            errors.Add("--days must be a positive integer");
+
+        var hasAsset = context.HasOption("asset");
+        var hasFiat = context.HasOption("fiat");
+
+        if ((hasAsset && !hasFiat) || (!hasAsset && hasFiat))
+            errors.Add("--asset and --fiat must be provided together if either is used for filtering.");
 
         return errors;
     }
@@ -71,28 +83,66 @@ Examples:
     {
         try
         {
-            var outputPath = context.GetOption("output", "");
+            var outputPath = context.GetOption("output", string.Empty);
             var format = context.GetOption("format", "csv");
-            var days = int.Parse(context.GetOption("days", "7"));
+            var asset = context.GetOption("asset", string.Empty);
+            var fiat = context.GetOption("fiat", string.Empty);
+            var daysString = context.GetOption("days", "7");
+
+            if (!int.TryParse(daysString, out int days) || days <= 0)
+            {
+                _output.WriteError("Invalid value for --days. Must be a positive integer.");
+                return 1;
+            }
 
             if (string.IsNullOrEmpty(outputPath))
             {
-                _output.WriteError("Output path is required");
+                _output.WriteError("Output path is required.");
                 return 1;
             }
 
             var directory = Path.GetDirectoryName(outputPath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                _output.WriteInfo($"Creating directory: {directory}");
                 Directory.CreateDirectory(directory);
+            }
 
-            _output.WriteInfo($"Exporting data to {outputPath}");
+            _output.WriteInfo($"Exporting data to {outputPath} in {format.ToUpper()} format for {days} days...");
 
             var startDate = DateTime.UtcNow.AddDays(-days);
-            var content = $"# Exported on {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n";
+            IEnumerable<PriceHistory> history;
 
-            await File.WriteAllTextAsync(outputPath, content).ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(asset) && !string.IsNullOrEmpty(fiat))
+            {
+                history = await _historyRepository.GetHistoryByDateRangeAsync(asset, fiat, startDate, DateTime.UtcNow).ConfigureAwait(false);
+            }
+            else
+            {
+                // If no specific asset/fiat, get all recent history and filter by date range
+                var allHistory = await _historyRepository.GetRecentHistoryAsync(days * 24 * 60).ConfigureAwait(false);
+                history = allHistory.Where(h => h.RecordedAt >= startDate).ToList();
+            }
 
-            _output.WriteSuccess($"Data exported to {Path.GetFullPath(outputPath)}");
+            if (!history.Any())
+            {
+                _output.WriteInfo("No historical data found for the specified criteria.");
+                return 0;
+            }
+
+            var formatter = _formatters.FirstOrDefault(f => f.FormatType.Equals(format, StringComparison.OrdinalIgnoreCase));
+            if (formatter is null)
+            {
+                _output.WriteError($"Unsupported format: {format}. Available formats: {string.Join(", ", _formatters.Select(f => f.FormatType))}");
+                return 1;
+            }
+
+            // Convert PriceHistory to object to allow generic formatting
+            var formattedData = formatter.Format(history.Cast<object>());
+
+            await File.WriteAllTextAsync(outputPath, formattedData).ConfigureAwait(false);
+
+            _output.WriteSuccess($"Data exported successfully to {Path.GetFullPath(outputPath)}");
             return 0;
         }
         catch (Exception ex)
