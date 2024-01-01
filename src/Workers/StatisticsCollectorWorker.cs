@@ -58,8 +58,8 @@ public class StatisticsCollectorWorker : BackgroundService
         var priceRepository = scope.ServiceProvider.GetRequiredService<IPriceRepository>();
         var historyRepository = scope.ServiceProvider.GetRequiredService<IHistoryRepository>();
 
-        var assets = _appSettings.MonitoredAssets.FirstOrDefault()?.Split(',') ?? string[]();
-        var fiats = _appSettings.MonitoredFiats.FirstOrDefault()?.Split(',') ?? string[]();
+        var assets = _appSettings.MonitoredAssets.FirstOrDefault()?.Split(',') ?? Array.Empty<string>();
+        var fiats = _appSettings.MonitoredFiats.FirstOrDefault()?.Split(',') ?? Array.Empty<string>();
 
         _logger.LogDebug("Collecting statistics for {AssetCount} assets and {FiatCount} fiats", assets.Length, fiats.Length);
 
