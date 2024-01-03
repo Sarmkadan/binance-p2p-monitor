@@ -150,6 +150,7 @@ public class PriceRepositoryTests : IDisposable
         var id = await _priceRepository.AddAsync(price).ConfigureAwait(false);
         var storedPrice = await _priceRepository.GetByIdAsync(id).ConfigureAwait(false);
         storedPrice!.BuyPrice = 39.0m;
+        storedPrice.SellPrice = 39.5m;
 
         // Act
         var result = await _priceRepository.UpdateAsync(storedPrice).ConfigureAwait(false);
