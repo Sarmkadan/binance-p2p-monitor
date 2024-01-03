@@ -1,9 +1,4 @@
 #nullable enable
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
-
 using BinanceP2pMonitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 

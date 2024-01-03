@@ -1,9 +1,4 @@
 #nullable enable
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
-
 namespace BinanceP2pMonitor.Backtesting;
 
 /// <summary>Directional intent of a generated trade signal.</summary>
