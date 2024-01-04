@@ -66,9 +66,28 @@ Check the [examples/](examples/) directory for practical implementation guidance
 
 ## Docker
 
+You can use Docker to run the monitor as a containerized service.
+
+### Building and Running with Docker
+
 ```bash
+# Build the image
 docker build -t binance-p2p-monitor .
+
+# Run the container
 docker run -v $(pwd)/data:/app/data binance-p2p-monitor monitor
+```
+
+### Using Docker Compose
+
+For a managed experience with environment variable configuration, use `docker-compose`:
+
+```bash
+# Start the service
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f app
 ```
 
 ## Testing
