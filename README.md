@@ -98,6 +98,24 @@ dotnet test
 
 212 unit tests covering service logic and repository integrations.
 
+## Performance Benchmarks
+
+This project includes performance benchmarks using [BenchmarkDotNet](https://benchmarkdotnet.org/).
+
+### Running Benchmarks
+
+To run the performance benchmarks, use the following command from the project root:
+
+```bash
+dotnet run -c Release --project benchmarks/binance-p2p-monitor.Benchmarks/
+```
+
+You can run all benchmarks by passing `*` as an argument:
+
+```bash
+dotnet run -c Release --project benchmarks/binance-p2p-monitor.Benchmarks/ -- "*"
+```
+
 ## License
 
 MIT
