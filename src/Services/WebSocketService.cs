@@ -80,11 +80,11 @@ public class WebSocketService : IWebSocketService, IDisposable
             // Start listening for messages
             _ = ListenForMessagesAsync(_cancellationTokenSource.Token);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not ApiException)
         {
             _isConnected = false;
             _logger.LogError(ex, "Failed to connect to WebSocket");
-            throw new ApiException("Failed to connect to WebSocket", null, "WEBSOCKET_CONNECT_FAILED");
+            throw new ApiException("Failed to connect to WebSocket", ex, "WEBSOCKET_CONNECT_FAILED");
         }
     }
 
@@ -283,7 +283,7 @@ public class WebSocketService : IWebSocketService, IDisposable
                 {
                     break;
                 }
-                catch (WebSocketException wsEx)
+                catch (WebSocketException wsEx) when (wsEx is not ApiException)
                 {
                     _isConnected = false;
                     _logger.LogError(wsEx, "WebSocket connection lost unexpectedly. Reconnecting...");
@@ -298,7 +298,7 @@ public class WebSocketService : IWebSocketService, IDisposable
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not ApiException)
         {
             _isConnected = false;
             _logger.LogError(ex, "Error listening to WebSocket messages");
@@ -415,10 +415,10 @@ public class WebSocketService : IWebSocketService, IDisposable
                 new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true,
                 _cancellationTokenSource!.Token);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not ApiException)
         {
             _logger.LogError(ex, "Error sending WebSocket message");
-            throw;
+            throw new ApiException("Failed to send WebSocket message", ex);
         }
     }
 
