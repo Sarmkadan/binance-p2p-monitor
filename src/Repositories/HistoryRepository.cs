@@ -41,6 +41,10 @@ public class HistoryRepository : IHistoryRepository
 
     public async Task<IEnumerable<PriceHistory>> GetHistoryByAssetAndFiatAsync(string asset, string fiat, int hours = 24)
     {
+        if (string.IsNullOrWhiteSpace(asset)) throw new ArgumentException("Asset cannot be null or empty", nameof(asset));
+        if (string.IsNullOrWhiteSpace(fiat)) throw new ArgumentException("Fiat cannot be null or empty", nameof(fiat));
+        if (hours <= 0) throw new ArgumentException("Hours must be positive", nameof(hours));
+
         try
         {
             const string sql = @"
@@ -77,6 +81,7 @@ public class HistoryRepository : IHistoryRepository
 
     public async Task<IEnumerable<PriceHistory>> GetRecentHistoryAsync(int minutes = 60)
     {
+        if (minutes <= 0) throw new ArgumentException("Minutes must be positive", nameof(minutes));
         try
         {
             const string sql = @"
@@ -106,6 +111,10 @@ public class HistoryRepository : IHistoryRepository
 
     public async Task<IEnumerable<PriceHistory>> GetHistoryByDateRangeAsync(string asset, string fiat, DateTime from, DateTime to)
     {
+        if (string.IsNullOrWhiteSpace(asset)) throw new ArgumentException("Asset cannot be null or empty", nameof(asset));
+        if (string.IsNullOrWhiteSpace(fiat)) throw new ArgumentException("Fiat cannot be null or empty", nameof(fiat));
+        if (from >= to) throw new ArgumentException("From date must be earlier than to date");
+
         try
         {
             const string sql = @"
@@ -143,9 +152,10 @@ public class HistoryRepository : IHistoryRepository
 
     public async Task<int> AddAsync(PriceHistory history)
     {
+        if (history is null) throw new ArgumentNullException(nameof(history));
         try
         {
-            if (history is null || !history.IsValid())
+            if (!history.IsValid())
                 throw new InvalidPriceException("Price history data is invalid");
 
             const string sql = @"
@@ -184,6 +194,7 @@ public class HistoryRepository : IHistoryRepository
 
     public async Task<bool> DeleteOldRecordsAsync(int daysOld)
     {
+        if (daysOld < 0) throw new ArgumentException("Days old must be non-negative", nameof(daysOld));
         try
         {
             const string sql = @"
@@ -222,6 +233,9 @@ public class HistoryRepository : IHistoryRepository
 
     public async Task<decimal> GetHighestPriceAsync(string asset, string fiat, int hours)
     {
+        if (string.IsNullOrWhiteSpace(asset)) throw new ArgumentException("Asset cannot be null or empty", nameof(asset));
+        if (string.IsNullOrWhiteSpace(fiat)) throw new ArgumentException("Fiat cannot be null or empty", nameof(fiat));
+        if (hours <= 0) throw new ArgumentException("Hours must be positive", nameof(hours));
         try
         {
             const string sql = @"
@@ -251,6 +265,9 @@ public class HistoryRepository : IHistoryRepository
 
     public async Task<decimal> GetLowestPriceAsync(string asset, string fiat, int hours)
     {
+        if (string.IsNullOrWhiteSpace(asset)) throw new ArgumentException("Asset cannot be null or empty", nameof(asset));
+        if (string.IsNullOrWhiteSpace(fiat)) throw new ArgumentException("Fiat cannot be null or empty", nameof(fiat));
+        if (hours <= 0) throw new ArgumentException("Hours must be positive", nameof(hours));
         try
         {
             const string sql = @"

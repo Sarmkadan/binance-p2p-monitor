@@ -100,14 +100,14 @@ public class PriceMonitoringServiceTests
     }
 
     [Fact]
-    public async Task UpdatePriceAsync_ShouldThrowInvalidPriceException_WhenPriceIsInvalid()
+    public async Task UpdatePriceAsync_ShouldThrowArgumentException_WhenPriceIsInvalid()
     {
         var invalidPrice = new Price { Asset = "USDT", BuyPrice = -1.0m };
 
         Func<Task> action = async () => await _priceMonitoringService.UpdatePriceAsync(invalidPrice);
 
-        await action.Should().ThrowAsync<InvalidPriceException>()
-            .WithMessage("Invalid price data");
+        await action.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("Price must have valid asset and fiat");
         await _mockPriceRepository.DidNotReceive().AddAsync(Arg.Any<Price>());
     }
 

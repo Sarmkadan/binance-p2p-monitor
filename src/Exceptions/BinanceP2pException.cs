@@ -71,6 +71,12 @@ public class ApiException : BinanceP2pException
     {
         HttpStatusCode = statusCode;
     }
+
+    public ApiException(string message, Exception innerException, string? errorCode = null, int? statusCode = null)
+        : base(message, innerException, errorCode)
+    {
+        HttpStatusCode = statusCode;
+    }
 }
 
 /// <summary>

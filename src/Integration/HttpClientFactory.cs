@@ -49,7 +49,7 @@ public class HttpClientFactory
         catch (Exception ex)
         {
             _logger.LogError(ex, "GET request failed for {Url}", url);
-            throw;
+            throw new ApiException($"GET request failed for {url}", ex);
         }
     }
 
@@ -75,7 +75,7 @@ public class HttpClientFactory
         catch (Exception ex)
         {
             _logger.LogError(ex, "POST request failed for {Url}", url);
-            throw;
+            throw new ApiException($"POST request failed for {url}", ex);
         }
     }
 
@@ -91,7 +91,7 @@ public class HttpClientFactory
         catch (Exception ex)
         {
             _logger.LogError(ex, "GET string request failed for {Url}", url);
-            throw;
+            throw new ApiException($"GET string request failed for {url}", ex);
         }
     }
 }
