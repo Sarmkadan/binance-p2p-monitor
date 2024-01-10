@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.CLI;
 /// <summary>
 /// Factory for creating command instances based on command names
 /// </summary>
-public class CommandFactory
+public sealed class CommandFactory
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CommandFactory> _logger;

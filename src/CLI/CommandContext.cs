@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.CLI;
 /// <summary>
 /// Context for command execution containing parsed arguments and configuration
 /// </summary>
-public class CommandContext
+public sealed class CommandContext
 {
     public string CommandName { get; set; } = string.Empty;
     public string[] Arguments { get; set; } = Array.Empty<string>();

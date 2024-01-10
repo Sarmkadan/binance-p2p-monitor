@@ -13,7 +13,7 @@ using BinanceP2pMonitor.Data;
 
 namespace BinanceP2pMonitor;
 
-class Program
+sealed class Program
 {
     static async Task Main(string[] args)
     {
@@ -25,77 +25,7 @@ class Program
                     .AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true)
                     .AddEnvironmentVariables();
             })
-            .ConfigureServices((context, services) =>
-            {
-                // Register configuration
-                var appSettings = context.Configuration.GetSection("AppSettings").Get<AppSettings>()
-                    ?? throw new InvalidOperationException("AppSettings section not found in configuration");
-                services.AddSingleton(appSettings);
-
-                // Register database
-                services.AddSingleton<DatabaseContext>();
-                services.AddScoped<IDbConnection>(_ => new SqliteConnection(appSettings.DatabaseConnectionString));
-
-                // Register repositories
-                services.AddScoped<IPriceRepository, PriceRepository>();
-                services.AddScoped<ITradeOfferRepository, TradeOfferRepository>();
-                services.AddScoped<IAlertRepository, AlertRepository>();
-                services.AddScoped<IHistoryRepository, HistoryRepository>();
-
-                // Register services
-                services.AddScoped<IPriceMonitoringService, PriceMonitoringService>();
-                services.AddScoped<IAlertService, AlertService>();
-                services.AddScoped<ISpreadAnalysisService, SpreadAnalysisService>();
-                services.AddScoped<IPriceHistoryService, PriceHistoryService>();
-                services.AddScoped<IWebSocketService, WebSocketService>();
-                services.AddScoped<IHistoricalSpreadAnalysisService, HistoricalSpreadAnalysisService>();
-
-                // Register caching
-                services.AddSingleton<ICache, MemoryCache>();
-
-                // Register event bus
-                services.AddSingleton<IEventBus, EventBus>();
-
-                // Register CLI infrastructure
-                services.AddSingleton<CommandParser>();
-                services.AddSingleton<CommandFactory>();
-                services.AddSingleton<ConsoleOutputWriter>();
-
-                // Register HTTP client and integration services
-                services.AddHttpClient();
-                services.AddSingleton<BinanceP2pMonitor.Integration.HttpClientFactory>();
-                services.AddSingleton<ITelegramNotificationClient, TelegramNotificationClient>();
-                services.AddSingleton<IWebhookNotificationClient, WebhookNotificationClient>();
-
-                // Register rate limiter
-                services.AddSingleton(new RateLimiter(100, TimeSpan.FromMinutes(1)));
-
-                // Register output formatters
-                services.AddSingleton<IOutputFormatter, JsonOutputFormatter>();
-                services.AddSingleton<IOutputFormatter, TableOutputFormatter>();
-                services.AddSingleton<IOutputFormatter, CsvOutputFormatter>();
-
-                // Register infrastructure utilities
-                services.AddSingleton<ConfigurationValidator>();
-                services.AddSingleton<DataExporter>();
-                services.AddSingleton<PerformanceMetrics>();
-
-                // Register backtesting
-                services.AddBacktesting();
-
-                // Register hosted services
-                services.AddHostedService<MonitoringHostedService>();
-                services.AddHostedService<StatisticsCollectorWorker>();
-                services.AddHostedService<DatabaseCleanupWorker>();
-                services.AddHostedService<DailySummaryService>();
-
-                // Register logging
-                services.AddLogging(builder =>
-                {
-                    builder.AddConsole();
-                    builder.SetMinimumLevel(LogLevel.Information);
-                });
-            })
+            .ConfigureServices(ConfigureServices)
             .Build();
 
         try
@@ -127,5 +57,77 @@ class Program
         {
             host.Dispose();
         }
+    }
+
+    private static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
+    {
+        // Register configuration
+        var appSettings = context.Configuration.GetSection("AppSettings").Get<AppSettings>()
+            ?? throw new InvalidOperationException("AppSettings section not found in configuration");
+        services.AddSingleton(appSettings);
+
+        // Register database
+        services.AddSingleton<DatabaseContext>();
+        services.AddScoped<IDbConnection>(_ => new SqliteConnection(appSettings.DatabaseConnectionString));
+
+        // Register repositories
+        services.AddScoped<IPriceRepository, PriceRepository>();
+        services.AddScoped<ITradeOfferRepository, TradeOfferRepository>();
+        services.AddScoped<IAlertRepository, AlertRepository>();
+        services.AddScoped<IHistoryRepository, HistoryRepository>();
+
+        // Register services
+        services.AddScoped<IPriceMonitoringService, PriceMonitoringService>();
+        services.AddScoped<IAlertService, AlertService>();
+        services.AddScoped<ISpreadAnalysisService, SpreadAnalysisService>();
+        services.AddScoped<IPriceHistoryService, PriceHistoryService>();
+        services.AddScoped<IWebSocketService, WebSocketService>();
+        services.AddScoped<IHistoricalSpreadAnalysisService, HistoricalSpreadAnalysisService>();
+
+        // Register caching
+        services.AddSingleton<ICache, MemoryCache>();
+
+        // Register event bus
+        services.AddSingleton<IEventBus, EventBus>();
+
+        // Register CLI infrastructure
+        services.AddSingleton<CommandParser>();
+        services.AddSingleton<CommandFactory>();
+        services.AddSingleton<ConsoleOutputWriter>();
+
+        // Register HTTP client and integration services
+        services.AddHttpClient();
+        services.AddSingleton<BinanceP2pMonitor.Integration.HttpClientFactory>();
+        services.AddSingleton<ITelegramNotificationClient, TelegramNotificationClient>();
+        services.AddSingleton<IWebhookNotificationClient, WebhookNotificationClient>();
+
+        // Register rate limiter
+        services.AddSingleton(new RateLimiter(100, TimeSpan.FromMinutes(1)));
+
+        // Register output formatters
+        services.AddSingleton<IOutputFormatter, JsonOutputFormatter>();
+        services.AddSingleton<IOutputFormatter, TableOutputFormatter>();
+        services.AddSingleton<IOutputFormatter, CsvOutputFormatter>();
+
+        // Register infrastructure utilities
+        services.AddSingleton<ConfigurationValidator>();
+        services.AddSingleton<DataExporter>();
+        services.AddSingleton<PerformanceMetrics>();
+
+        // Register backtesting
+        services.AddBacktesting();
+
+        // Register hosted services
+        services.AddHostedService<MonitoringHostedService>();
+        services.AddHostedService<StatisticsCollectorWorker>();
+        services.AddHostedService<DatabaseCleanupWorker>();
+        services.AddHostedService<DailySummaryService>();
+
+        // Register logging
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();
+            builder.SetMinimumLevel(LogLevel.Information);
+        });
     }
 }

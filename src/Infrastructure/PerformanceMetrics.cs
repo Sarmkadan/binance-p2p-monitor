@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Infrastructure;
 /// <summary>
 /// Tracks and reports application performance metrics
 /// </summary>
-public class PerformanceMetrics
+public sealed class PerformanceMetrics
 {
     private readonly Dictionary<string, OperationMetrics> _metrics = new();
     private readonly ReaderWriterLockSlim _lock = new();

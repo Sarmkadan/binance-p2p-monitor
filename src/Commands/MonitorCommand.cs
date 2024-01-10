@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Commands;
 /// <summary>
 /// Command to start real-time price monitoring
 /// </summary>
-public class MonitorCommand : ICommand
+public sealed class MonitorCommand : ICommand
 {
     private readonly IPriceMonitoringService _priceService;
     private readonly ISpreadAnalysisService _spreadService;
@@ -109,12 +109,7 @@ Examples:
 
         try
         {
-            _eventBus.Subscribe<PriceUpdatedEvent>(async (@event, ct) =>
-            {
-                // This event is primarily for internal logic, not direct console output
-                // Console output is handled by the periodic refresh in the loop below
-                await Task.CompletedTask;
-            });
+            _eventBus.Subscribe<PriceUpdatedEvent>(async (@event, ct) => await Task.CompletedTask);
 
             _eventBus.Subscribe<SpreadAlertTriggeredEvent>(async (@event, ct) =>
             {
@@ -125,69 +120,9 @@ Examples:
             _output.WriteBlankLine();
             _output.WriteInfo("Press Ctrl+C to stop monitoring");
             
-            // Explicitly start the monitoring service which subscribes to WebSockets
             await _priceService.StartMonitoringAsync(cts.Token);
 
-            while (!cts.Token.IsCancellationRequested)
-            {
-                Console.Clear();
-                _output.WriteHeader("P2P Price Monitor - Live Data");
-                _output.WriteInfo($"Last Updated: {DateTime.Now:HH:mm:ss}");
-                _output.WriteBlankLine();
-
-                var prices = await _priceService.GetAllCurrentPricesAsync().ConfigureAwait(false);
-                var displayData = new List<object>();
-
-                foreach (var price in prices)
-                {
-                    if ((!string.IsNullOrEmpty(assetFilter) && !price.Asset.Equals(assetFilter, StringComparison.OrdinalIgnoreCase)) ||
-                        (!string.IsNullOrEmpty(fiatFilter) && !price.Fiat.Equals(fiatFilter, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        continue;
-                    }
-
-                    var spread = await _spreadService.GetSpreadAnalysisAsync(price.Asset, price.Fiat).ConfigureAwait(false);
-
-                    displayData.Add(new
-                    {
-                        price.Asset,
-                        price.Fiat,
-                        BuyPrice = price.BuyPrice.ToString("F8"),
-                        SellPrice = price.SellPrice.ToString("F8"),
-                        Spread = spread?.CurrentSpreadPercent.ToString("F2") + "%" ?? "N/A",
-                        Change = price.BuyChangePercent.ToString("+0.00;-0.00;0") + "%",
-                        LastUpdate = price.UpdatedAt.ToString("HH:mm:ss")
-                    });
-                }
-
-                if (displayData.Any())
-                {
-                    if (format.Equals("table", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _output.WriteRaw(tableFormatter.Format(displayData));
-                    }
-                    else
-                    {
-                        _output.WriteRaw(specificFormatter.Format(displayData));
-                    }
-                }
-                else
-                {
-                    _output.WriteInfo("No data to display. Ensure assets and fiats are configured and monitoring is active.");
-                }
-
-                _output.WriteBlankLine();
-                _output.WriteInfo("Press Ctrl+C to stop monitoring");
-
-                try
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(interval), cts.Token).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-            }
+            await RunMonitoringLoop(cts, interval, assetFilter, fiatFilter, format, tableFormatter, specificFormatter);
             
             await _priceService.StopMonitoringAsync();
             _output.WriteSuccess("Monitoring stopped");
@@ -198,6 +133,64 @@ Examples:
             _logger.LogError(ex, "Monitor command failed");
             _output.WriteError($"Error: {ex.Message}");
             return 1;
+        }
+    }
+
+    private async Task RunMonitoringLoop(CancellationTokenSource cts, int interval, string? assetFilter, string? fiatFilter, string format, TableOutputFormatter tableFormatter, IOutputFormatter specificFormatter)
+    {
+        while (!cts.Token.IsCancellationRequested)
+        {
+            Console.Clear();
+            _output.WriteHeader("P2P Price Monitor - Live Data");
+            _output.WriteInfo($"Last Updated: {DateTime.Now:HH:mm:ss}");
+            _output.WriteBlankLine();
+
+            var prices = await _priceService.GetAllCurrentPricesAsync().ConfigureAwait(false);
+            var displayData = new List<object>();
+
+            foreach (var price in prices)
+            {
+                if ((!string.IsNullOrEmpty(assetFilter) && !price.Asset.Equals(assetFilter, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(fiatFilter) && !price.Fiat.Equals(fiatFilter, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                var spread = await _spreadService.GetSpreadAnalysisAsync(price.Asset, price.Fiat).ConfigureAwait(false);
+
+                displayData.Add(new
+                {
+                    price.Asset,
+                    price.Fiat,
+                    BuyPrice = price.BuyPrice.ToString("F8"),
+                    SellPrice = price.SellPrice.ToString("F8"),
+                    Spread = spread?.CurrentSpreadPercent.ToString("F2") + "%" ?? "N/A",
+                    Change = price.BuyChangePercent.ToString("+0.00;-0.00;0") + "%",
+                    LastUpdate = price.UpdatedAt.ToString("HH:mm:ss")
+                });
+            }
+
+            if (displayData.Any())
+            {
+                var formatter = format.Equals("table", StringComparison.OrdinalIgnoreCase) ? tableFormatter : specificFormatter;
+                _output.WriteRaw(formatter.Format(displayData));
+            }
+            else
+            {
+                _output.WriteInfo("No data to display. Ensure assets and fiats are configured and monitoring is active.");
+            }
+
+            _output.WriteBlankLine();
+            _output.WriteInfo("Press Ctrl+C to stop monitoring");
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(interval), cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
     }
 }

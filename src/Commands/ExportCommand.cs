@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Commands;
 /// <summary>
 /// Command to export data in various formats
 /// </summary>
-public class ExportCommand : ICommand
+public sealed class ExportCommand : ICommand
 {
     private readonly IPriceRepository _priceRepository;
     private readonly IHistoryRepository _historyRepository;

@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Commands;
 /// <summary>
 /// Command to display help information
 /// </summary>
-public class HelpCommand : ICommand
+public sealed class HelpCommand : ICommand
 {
     private readonly CommandFactory _commandFactory;
     private readonly ConsoleOutputWriter _output;

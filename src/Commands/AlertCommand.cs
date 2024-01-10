@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Commands;
 /// <summary>
 /// Command to manage price alerts
 /// </summary>
-public class AlertCommand : ICommand
+public sealed class AlertCommand : ICommand
 {
     private readonly IAlertService _alertService;
     private readonly ConsoleOutputWriter _output;

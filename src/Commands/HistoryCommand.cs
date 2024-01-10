@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Commands;
 /// <summary>
 /// Command to query historical price data
 /// </summary>
-public class HistoryCommand : ICommand
+public sealed class HistoryCommand : ICommand
 {
     private readonly IPriceHistoryService _historyService;
     private readonly ConsoleOutputWriter _output;
