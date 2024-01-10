@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Infrastructure;
 /// <summary>
 /// Writes colored output to console for better readability
 /// </summary>
-public class ConsoleOutputWriter
+public sealed class ConsoleOutputWriter
 {
     public void WriteHeader(string text)
     {

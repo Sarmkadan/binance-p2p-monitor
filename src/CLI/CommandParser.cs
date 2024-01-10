@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.CLI;
 /// <summary>
 /// Parses command-line arguments into structured command contexts
 /// </summary>
-public class CommandParser
+public sealed class CommandParser
 {
     private readonly ILogger<CommandParser> _logger;
 

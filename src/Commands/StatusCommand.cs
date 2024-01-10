@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Commands;
 /// <summary>
 /// Command to display current prices and system status
 /// </summary>
-public class StatusCommand : ICommand
+public sealed class StatusCommand : ICommand
 {
     private readonly IPriceMonitoringService _priceService;
     private readonly IAlertService _alertService;

@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Infrastructure;
 /// <summary>
 /// Validates application configuration before startup
 /// </summary>
-public class ConfigurationValidator
+public sealed class ConfigurationValidator
 {
     private readonly AppSettings _appSettings;
     private readonly ILogger<ConfigurationValidator> _logger;
