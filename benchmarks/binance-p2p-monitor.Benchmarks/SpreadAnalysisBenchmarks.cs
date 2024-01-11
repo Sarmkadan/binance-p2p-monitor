@@ -5,12 +5,21 @@ using System.Buffers;
 
 namespace BinanceP2pMonitor.Benchmarks;
 
+/// <summary>
+/// Provides benchmarking functionality for spread analysis.
+/// </summary>
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net80)]
 public class SpreadAnalysisBenchmarks
 {
+    /// <summary>
+    /// The spread values used for benchmarking.
+    /// </summary>
     private decimal[] _spreadValues = null!;
 
+    /// <summary>
+    /// Initializes the spread values for benchmarking.
+    /// </summary>
     [GlobalSetup]
     public void Setup()
     {
@@ -20,6 +29,10 @@ public class SpreadAnalysisBenchmarks
             _spreadValues[i] = (decimal)(rng.NextDouble() * 5.0);
     }
 
+    /// <summary>
+    /// Analyzes the spread using direct arithmetic.
+    /// </summary>
+    /// <returns>The analyzed spread.</returns>
     [Benchmark(Description = "AnalyzeSpread (inline arithmetic)")]
     public decimal AnalyzeSpread_Direct()
     {
@@ -28,6 +41,10 @@ public class SpreadAnalysisBenchmarks
         return Math.Round(((sellPrice - buyPrice) / buyPrice) * 100m, 4);
     }
 
+    /// <summary>
+    /// Computes the spread statistics using a loop.
+    /// </summary>
+    /// <returns>A tuple containing the mean and standard deviation of the spread.</returns>
     [Benchmark(Description = "ComputeSpreadStatistics (n=500, loop)")]
     public (decimal mean, decimal stdDev) ComputeStatistics_Loop()
     {
@@ -49,6 +66,10 @@ public class SpreadAnalysisBenchmarks
         return (mean, (decimal)Math.Sqrt((double)(varianceSum / count)));
     }
 
+    /// <summary>
+    /// Finds anomalies in the spread using the Z-score method.
+    /// </summary>
+    /// <returns>The number of anomalies found.</returns>
     [Benchmark(Description = "FindAnomalies_ZScore (n=500, ArrayPool)")]
     public int FindAnomalies_ZScore()
     {
@@ -81,6 +102,10 @@ public class SpreadAnalysisBenchmarks
         return anomalyCount;
     }
 
+    /// <summary>
+    /// Finds anomalies in the spread using the Z-score method with an ArrayPool.
+    /// </summary>
+    /// <returns>The number of anomalies found.</returns>
     [Benchmark(Description = "FindAnomalies_ZScore (n=500, rented buffer)")]
     public int FindAnomalies_ZScore_ArrayPool()
     {
