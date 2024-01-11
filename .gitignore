@@ -66,3 +66,6 @@ Desktop.ini
 
 # aider internal state - never commit
 .aider*
+bin/
+obj/
+TestResults/
