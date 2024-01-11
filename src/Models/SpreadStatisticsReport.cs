@@ -86,35 +86,41 @@ public class SpreadStatisticsReport
     /// <summary>
     /// Returns a human-readable description of the spread trend direction and strength
     /// </summary>
+    /// <returns>A string describing the trend (e.g., "Strong Uptrend", "Stable").</returns>
     public string GetTrendLabel() => TrendSlope switch
     {
-        > 0.5m  => "Strong Uptrend",
-        > 0.1m  => "Mild Uptrend",
+        > 0.5m => "Strong Uptrend",
+        > 0.1m => "Mild Uptrend",
         < -0.5m => "Strong Downtrend",
         < -0.1m => "Mild Downtrend",
-        _       => "Stable"
+        _ => "Stable"
     };
 
     /// <summary>
     /// Determines whether the current spread is critically anomalous, i.e., its Z-score
     /// magnitude exceeds <paramref name="criticalZScore"/>
     /// </summary>
+    /// <param name="criticalZScore">The critical Z-score threshold (default 3.0).</param>
+    /// <returns>True if the spread is critically anomalous; otherwise, false.</returns>
     public bool IsCritical(decimal criticalZScore = 3.0m) => Math.Abs(ZScore) > criticalZScore;
 
     /// <summary>
     /// Determines whether the current spread exceeds the historical mean
     /// </summary>
+    /// <returns>True if the current spread is above average; otherwise, false.</returns>
     public bool IsAboveAverage() => CurrentSpread > Mean;
 
     /// <summary>
     /// Returns the interquartile-range width (Percentile95 − Percentile5) as a measure of spread volatility
     /// </summary>
+    /// <returns>The volatility range as a decimal value.</returns>
     public decimal GetVolatilityRange() => Percentile95 - Percentile5;
 
     /// <summary>
     /// Validates that the report contains consistent, non-default data
     /// </summary>
+    /// <returns>True if the report data is valid; otherwise, false.</returns>
     public bool IsValid()
         => !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat)
-           && SampleCount >= 0 && TimeWindowHours > 0;
+        && SampleCount >= 0 && TimeWindowHours > 0;
 }

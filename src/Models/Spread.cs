@@ -54,6 +54,8 @@ public class Spread
     /// <summary>
     /// Determines if spread is unusually high
     /// </summary>
+    /// <param name="threshold">The threshold percentage to consider as high spread (default 1.5%).</param>
+    /// <returns>True if the spread is high; otherwise, false.</returns>
     public bool IsHighSpread(decimal threshold = 1.5m)
     {
         return CurrentSpreadPercent > threshold;
@@ -62,6 +64,8 @@ public class Spread
     /// <summary>
     /// Determines if spread is unusually low
     /// </summary>
+    /// <param name="threshold">The threshold percentage to consider as low spread (default 0.3%).</param>
+    /// <returns>True if the spread is low; otherwise, false.</returns>
     public bool IsLowSpread(decimal threshold = 0.3m)
     {
         return CurrentSpreadPercent < threshold;
@@ -70,6 +74,7 @@ public class Spread
     /// <summary>
     /// Calculates spread variance from average
     /// </summary>
+    /// <returns>The variance percentage from the average spread.</returns>
     public decimal GetVarianceFromAverage()
     {
         if (AverageSpreadPercent == 0)
@@ -81,6 +86,7 @@ public class Spread
     /// <summary>
     /// Checks if spread is within normal parameters
     /// </summary>
+    /// <returns>True if the spread is within normal range; otherwise, false.</returns>
     public bool IsNormal()
     {
         return CurrentSpreadPercent >= MinSpreadPercent && CurrentSpreadPercent <= MaxSpreadPercent;
@@ -89,16 +95,18 @@ public class Spread
     /// <summary>
     /// Validates spread analysis data
     /// </summary>
+    /// <returns>True if the spread data is valid; otherwise, false.</returns>
     public bool IsValid()
     {
         return CurrentSpreadPercent >= 0 && AverageSpreadPercent >= 0 &&
-               MinSpreadPercent >= 0 && MaxSpreadPercent >= MinSpreadPercent &&
-               SampleCount > 0 && !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat);
+        MinSpreadPercent >= 0 && MaxSpreadPercent >= MinSpreadPercent &&
+        SampleCount > 0 && !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat);
     }
 
     /// <summary>
     /// Gets the risk level based on spread magnitude
     /// </summary>
+    /// <returns>A string representing the risk level (Very Low, Low, Medium, High, Very High).</returns>
     public string GetRiskLevel()
     {
         return CurrentSpreadPercent switch
@@ -114,6 +122,7 @@ public class Spread
     /// <summary>
     /// Updates spread statistics (call after new sample)
     /// </summary>
+    /// <param name="newSpread">The new spread percentage to add to statistics.</param>
     public void UpdateStatistics(decimal newSpread)
     {
         if (newSpread < MinSpreadPercent || MinSpreadPercent == 0)

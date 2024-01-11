@@ -54,6 +54,7 @@ public class Price
     /// <summary>
     /// Calculates the bid-ask spread in percentage
     /// </summary>
+    /// <returns>The spread percentage between buy and sell prices</returns>
     public decimal CalculateSpread()
     {
         if (BuyPrice == 0)
@@ -65,15 +66,19 @@ public class Price
     /// <summary>
     /// Validates price data integrity
     /// </summary>
+    /// <returns>True if the price data is valid; otherwise, false.</returns>
     public bool IsValid()
     {
         return BuyPrice > 0 && SellPrice > 0 && SellPrice >= BuyPrice &&
-               !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat);
+        !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat);
     }
 
     /// <summary>
     /// Checks if this price is significantly different from another
     /// </summary>
+    /// <param name="other">The other price to compare against.</param>
+    /// <param name="changeThreshold">The percentage threshold for considering prices different (default 0.5%).</param>
+    /// <returns>True if the prices differ by more than the threshold; otherwise, false.</returns>
     public bool IsDifferentFrom(Price other, decimal changeThreshold = 0.5m)
     {
         if (other is null)
@@ -88,6 +93,7 @@ public class Price
     /// <summary>
     /// Converts to JSON string for storage
     /// </summary>
+    /// <returns>The JSON representation of the price.</returns>
     public string ToJson()
     {
         return JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
@@ -96,6 +102,8 @@ public class Price
     /// <summary>
     /// Creates a Price instance from JSON string
     /// </summary>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <returns>A new Price instance if successful; otherwise, null.</returns>
     public static Price? FromJson(string json)
     {
         try
