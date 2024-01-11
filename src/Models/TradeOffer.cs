@@ -64,15 +64,21 @@ public class TradeOffer
     /// <summary>
     /// Checks if offer matches specified criteria
     /// </summary>
+    /// <param name="minRating">The minimum trader rating required.</param>
+    /// <param name="minAmount">The minimum amount that can be traded.</param>
+    /// <param name="maxAmount">The maximum amount that can be traded.</param>
+    /// <returns>True if the offer matches all criteria; otherwise, false.</returns>
     public bool MatchesCriteria(decimal minRating, decimal minAmount, decimal maxAmount)
     {
         return IsActive && TraderRating >= minRating &&
-               MaxAmount >= minAmount && MinAmount <= maxAmount;
+        MaxAmount >= minAmount && MinAmount <= maxAmount;
     }
 
     /// <summary>
     /// Calculates the premium/discount percentage compared to reference price
     /// </summary>
+    /// <param name="referencePrice">The reference price to compare against.</param>
+    /// <returns>The premium or discount percentage.</returns>
     public decimal CalculatePremium(decimal referencePrice)
     {
         if (referencePrice == 0)
@@ -84,16 +90,18 @@ public class TradeOffer
     /// <summary>
     /// Validates the trade offer integrity
     /// </summary>
+    /// <returns>True if the trade offer data is valid; otherwise, false.</returns>
     public bool IsValid()
     {
         return Price > 0 && MinAmount > 0 && MaxAmount >= MinAmount &&
-               TraderRating >= 0 && TraderRating <= 100 && CompletedTrades >= 0 &&
-               !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat);
+        TraderRating >= 0 && TraderRating <= 100 && CompletedTrades >= 0 &&
+        !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat);
     }
 
     /// <summary>
     /// Calculates the available volume in this offer
     /// </summary>
+    /// <returns>The available trading range (MaxAmount - MinAmount).</returns>
     public decimal GetAvailableRange()
     {
         return MaxAmount - MinAmount;
@@ -102,6 +110,8 @@ public class TradeOffer
     /// <summary>
     /// Checks if a specific amount can be traded with this offer
     /// </summary>
+    /// <param name="amount">The amount to check.</param>
+    /// <returns>True if the amount can be traded with this offer; otherwise, false.</returns>
     public bool CanTradeAmount(decimal amount)
     {
         return IsActive && amount >= MinAmount && amount <= MaxAmount;
