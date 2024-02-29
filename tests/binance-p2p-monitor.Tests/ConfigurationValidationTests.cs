@@ -4,10 +4,14 @@ using BinanceP2pMonitor.Exceptions;
 using FluentAssertions;
 using Xunit;
 
-namespace BinanceP2pMonitor.Tests;
-
+/// <summary>
+/// Tests for the <see cref="AppSettings"/> class.
+/// </summary>
 public class ConfigurationValidationTests
 {
+    /// <summary>
+    /// Tests that <see cref="AppSettings.Validate()"/> does not throw an exception when the settings are valid.
+    /// </summary>
     [Fact]
     public void Validate_ShouldNotThrowException_WhenSettingsAreValid()
     {
@@ -30,6 +34,11 @@ public class ConfigurationValidationTests
         action.Should().NotThrow<ConfigurationException>();
     }
 
+    /// <summary>
+    /// Tests that <see cref="AppSettings.Validate()"/> throws a <see cref="ConfigurationException"/> when the database connection string is invalid.
+    /// </summary>
+    /// <param name="connectionString">The database connection string to test.</param>
+    /// <param name="expectedMessage">The expected error message.</param>
     [Theory]
     [InlineData(null, "DatabaseConnectionString is required")]
     [InlineData("", "DatabaseConnectionString is required")]
@@ -55,6 +64,11 @@ public class ConfigurationValidationTests
             .WithMessage($"Configuration validation failed: {expectedMessage}");
     }
 
+    /// <summary>
+    /// Tests that <see cref="AppSettings.Validate()"/> throws a <see cref="ConfigurationException"/> when the monitoring interval seconds is invalid.
+    /// </summary>
+    /// <param name="interval">The monitoring interval seconds to test.</param>
+    /// <param name="expectedMessage">The expected error message.</param>
     [Theory]
     [InlineData(0, "MonitoringIntervalSeconds must be at least 5")]
     [InlineData(4, "MonitoringIntervalSeconds must be at least 5")]
@@ -80,6 +94,11 @@ public class ConfigurationValidationTests
             .WithMessage($"Configuration validation failed: {expectedMessage}");
     }
 
+    /// <summary>
+    /// Tests that <see cref="AppSettings.Validate()"/> throws a <see cref="ConfigurationException"/> when the alert cooldown minutes is invalid.
+    /// </summary>
+    /// <param name="cooldown">The alert cooldown minutes to test.</param>
+    /// <param name="expectedMessage">The expected error message.</param>
     [Theory]
     [InlineData(0, "AlertCooldownMinutes must be at least 1")]
     public void Validate_ShouldThrowException_WhenAlertCooldownMinutesIsInvalid(int cooldown, string expectedMessage)
@@ -104,6 +123,11 @@ public class ConfigurationValidationTests
             .WithMessage($"Configuration validation failed: {expectedMessage}");
     }
 
+    /// <summary>
+    /// Tests that <see cref="AppSettings.Validate()"/> throws a <see cref="ConfigurationException"/> when the max alerts per user is invalid.
+    /// </summary>
+    /// <param name="maxAlerts">The max alerts per user to test.</param>
+    /// <param name="expectedMessage">The expected error message.</param>
     [Theory]
     [InlineData(0, "MaxAlertsPerUser must be at least 1")]
     public void Validate_ShouldThrowException_WhenMaxAlertsPerUserIsInvalid(int maxAlerts, string expectedMessage)
@@ -128,6 +152,11 @@ public class ConfigurationValidationTests
             .WithMessage($"Configuration validation failed: {expectedMessage}");
     }
 
+    /// <summary>
+    /// Tests that <see cref="AppSettings.Validate()"/> throws a <see cref="ConfigurationException"/> when the history retention days is invalid.
+    /// </summary>
+    /// <param name="retentionDays">The history retention days to test.</param>
+    /// <param name="expectedMessage">The expected error message.</param>
     [Theory]
     [InlineData(0, "HistoryRetentionDays must be at least 1")]
     public void Validate_ShouldThrowException_WhenHistoryRetentionDaysIsInvalid(int retentionDays, string expectedMessage)
@@ -152,6 +181,9 @@ public class ConfigurationValidationTests
             .WithMessage($"Configuration validation failed: {expectedMessage}");
     }
 
+    /// <summary>
+    /// Tests that <see cref="AppSettings.Validate()"/> throws a <see cref="ConfigurationException"/> when the default price change threshold is negative.
+    /// </summary>
     [Fact]
     public void Validate_ShouldThrowException_WhenDefaultPriceChangeThresholdIsNegative()
     {
@@ -175,6 +207,9 @@ public class ConfigurationValidationTests
             .WithMessage("Configuration validation failed: DefaultPriceChangeThreshold cannot be negative");
     }
 
+    /// <summary>
+    /// Tests that <see cref="AppSettings.Validate()"/> throws a <see cref="ConfigurationException"/> when the default spread threshold is negative.
+    /// </summary>
     [Fact]
     public void Validate_ShouldThrowException_WhenDefaultSpreadThresholdIsNegative()
     {
