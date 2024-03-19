@@ -8,12 +8,18 @@ using Xunit;
 
 namespace BinanceP2pMonitor.Tests;
 
+/// <summary>
+/// Contains unit tests for the <see cref="HistoryRepository"/> class.
+/// </summary>
 public class HistoryRepositoryTests : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly DatabaseContext _context;
     private readonly HistoryRepository _historyRepository;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="HistoryRepositoryTests"/> and sets up an in‑memory SQLite database.
+    /// </summary>
     public HistoryRepositoryTests()
     {
         _connection = new SqliteConnection("DataSource=:memory:");
@@ -53,6 +59,9 @@ public class HistoryRepositoryTests : IDisposable
             );");
     }
 
+    /// <summary>
+    /// Disposes the SQLite connection and releases resources.
+    /// </summary>
     public void Dispose()
     {
         _connection.Close();
@@ -81,6 +90,10 @@ public class HistoryRepositoryTests : IDisposable
         };
     }
 
+    /// <summary>
+    /// Verifies that <see cref="HistoryRepository.AddAsync"/> adds a history record and returns a generated identifier.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous test execution.</returns>
     [Fact]
     public async Task AddAsync_ShouldAddHistoryAndReturnId()
     {
@@ -98,6 +111,10 @@ public class HistoryRepositoryTests : IDisposable
         storedHistory.BuyPrice.Should().Be(history.BuyPrice);
     }
 
+    /// <summary>
+    /// Ensures that <see cref="HistoryRepository.GetByIdAsync"/> returns the stored history when it exists.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous test execution.</returns>
     [Fact]
     public async Task GetByIdAsync_ShouldReturnHistory_WhenHistoryExists()
     {
@@ -113,6 +130,10 @@ public class HistoryRepositoryTests : IDisposable
         storedHistory!.Id.Should().Be(id);
     }
 
+    /// <summary>
+    /// Ensures that <see cref="HistoryRepository.GetByIdAsync"/> returns <c>null</c> when the requested history does not exist.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous test execution.</returns>
     [Fact]
     public async Task GetByIdAsync_ShouldReturnNull_WhenHistoryDoesNotExist()
     {
@@ -123,6 +144,10 @@ public class HistoryRepositoryTests : IDisposable
         storedHistory.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="HistoryRepository.GetHistoryByAssetAndFiatAsync"/> returns only records for the specified asset and fiat within the given time window.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous test execution.</returns>
     [Fact]
     public async Task GetHistoryByAssetAndFiatAsync_ShouldReturnHistoryForAssetAndFiatWithinHours()
     {
@@ -147,6 +172,10 @@ public class HistoryRepositoryTests : IDisposable
         });
     }
 
+    /// <summary>
+    /// Confirms that <see cref="HistoryRepository.DeleteOldRecordsAsync"/> removes records older than the specified number of days.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous test execution.</returns>
     [Fact]
     public async Task DeleteOldRecordsAsync_ShouldDeleteRecordsOlderThanDays()
     {
@@ -163,6 +192,10 @@ public class HistoryRepositoryTests : IDisposable
         count.Should().Be(1);
     }
 
+    /// <summary>
+    /// Checks that <see cref="HistoryRepository.GetTotalHistoryCountAsync"/> returns the correct total number of history records.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous test execution.</returns>
     [Fact]
     public async Task GetTotalHistoryCountAsync_ShouldReturnCorrectCount()
     {
@@ -177,6 +210,10 @@ public class HistoryRepositoryTests : IDisposable
         count.Should().Be(2);
     }
 
+    /// <summary>
+    /// Validates that <see cref="HistoryRepository.GetHighestPriceAsync"/> returns the highest sell price within the specified time window.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous test execution.</returns>
     [Fact]
     public async Task GetHighestPriceAsync_ShouldReturnHighestPrice_WithinHours()
     {
