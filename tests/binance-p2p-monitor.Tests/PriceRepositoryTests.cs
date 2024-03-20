@@ -6,14 +6,18 @@ using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Xunit;
 
-namespace BinanceP2pMonitor.Tests;
-
+/// <summary>
+/// Tests for the PriceRepository class.
+/// </summary>
 public class PriceRepositoryTests : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly DatabaseContext _context;
     private readonly PriceRepository _priceRepository;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PriceRepositoryTests"/> class.
+    /// </summary>
     public PriceRepositoryTests()
     {
         _connection = new SqliteConnection("DataSource=:memory:");
@@ -51,12 +55,24 @@ public class PriceRepositoryTests : IDisposable
             );");
     }
 
+    /// <summary>
+    /// Releases unmanaged resources and performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
     public void Dispose()
     {
         _connection.Close();
         _connection.Dispose();
     }
 
+    /// <summary>
+    /// Creates a test price with the specified properties.
+    /// </summary>
+    /// <param name="asset">The asset of the price.</param>
+    /// <param name="fiat">The fiat of the price.</param>
+    /// <param name="buyPrice">The buy price of the price.</param>
+    /// <param name="sellPrice">The sell price of the price.</param>
+    /// <param name="timestamp">The timestamp of the price.</param>
+    /// <returns>A test price with the specified properties.</returns>
     private Price CreateTestPrice(
         string asset = "USDT",
         string fiat = "UAH",
@@ -78,6 +94,9 @@ public class PriceRepositoryTests : IDisposable
         };
     }
 
+    /// <summary>
+    /// Tests that adding a price and retrieving it by ID returns the correct price.
+    /// </summary>
     [Fact]
     public async Task AddAsync_ShouldAddPriceAndReturnId()
     {
@@ -94,6 +113,9 @@ public class PriceRepositoryTests : IDisposable
         storedPrice!.Asset.Should().Be(price.Asset);
     }
 
+    /// <summary>
+    /// Tests that retrieving a price by ID returns the correct price when the price exists.
+    /// </summary>
     [Fact]
     public async Task GetByIdAsync_ShouldReturnPrice_WhenPriceExists()
     {
@@ -109,6 +131,9 @@ public class PriceRepositoryTests : IDisposable
         storedPrice!.Id.Should().Be(id);
     }
 
+    /// <summary>
+    /// Tests that retrieving a price by ID returns null when the price does not exist.
+    /// </summary>
     [Fact]
     public async Task GetByIdAsync_ShouldReturnNull_WhenPriceDoesNotExist()
     {
@@ -119,6 +144,9 @@ public class PriceRepositoryTests : IDisposable
         storedPrice.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that retrieving the latest price by asset and fiat returns the correct price.
+    /// </summary>
     [Fact]
     public async Task GetLatestByAssetAndFiatAsync_ShouldReturnLatestPrice()
     {
@@ -137,6 +165,9 @@ public class PriceRepositoryTests : IDisposable
         result!.BuyPrice.Should().Be(latestPrice.BuyPrice);
     }
 
+    /// <summary>
+    /// Tests that updating a price and retrieving it returns the updated price.
+    /// </summary>
     [Fact]
     public async Task UpdateAsync_ShouldUpdatePriceAndReturnTrue()
     {
@@ -156,6 +187,9 @@ public class PriceRepositoryTests : IDisposable
         updatedPrice!.BuyPrice.Should().Be(39.0m);
     }
 
+    /// <summary>
+    /// Tests that deleting a price and retrieving it returns null.
+    /// </summary>
     [Fact]
     public async Task DeleteAsync_ShouldDeletePriceAndReturnTrue()
     {
@@ -172,6 +206,9 @@ public class PriceRepositoryTests : IDisposable
         deletedPrice.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that retrieving the average price by asset and fiat returns the correct average price.
+    /// </summary>
     [Fact]
     public async Task GetAveragePriceAsync_ShouldReturnAveragePrice()
     {
