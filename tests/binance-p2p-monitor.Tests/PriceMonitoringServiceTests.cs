@@ -11,8 +11,9 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace BinanceP2pMonitor.Tests;
-
+/// <summary>
+/// Tests for the PriceMonitoringService class.
+/// </summary>
 public class PriceMonitoringServiceTests
 {
     private readonly IPriceRepository _mockPriceRepository;
@@ -25,6 +26,9 @@ public class PriceMonitoringServiceTests
     private readonly ILogger<PriceMonitoringService> _mockLogger;
     private readonly PriceMonitoringService _priceMonitoringService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PriceMonitoringServiceTests"/> class.
+    /// </summary>
     public PriceMonitoringServiceTests()
     {
         _mockPriceRepository = Substitute.For<IPriceRepository>();
@@ -50,6 +54,11 @@ public class PriceMonitoringServiceTests
             _mockLogger);
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="PriceMonitoringService.GetCurrentPriceAsync(string, string)"/> method returns a price when it exists.
+    /// </summary>
+    /// <param name="asset">The asset to get the price for.</param>
+    /// <param name="fiat">The fiat to get the price for.</param>
     [Fact]
     public async Task GetCurrentPriceAsync_ShouldReturnPrice_WhenPriceExists()
     {
@@ -63,6 +72,11 @@ public class PriceMonitoringServiceTests
         result.Should().BeEquivalentTo(expectedPrice);
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="PriceMonitoringService.GetCurrentPriceAsync(string, string)"/> method returns null when the price does not exist.
+    /// </summary>
+    /// <param name="asset">The asset to get the price for.</param>
+    /// <param name="fiat">The fiat to get the price for.</param>
     [Fact]
     public async Task GetCurrentPriceAsync_ShouldReturnNull_WhenPriceDoesNotExist()
     {
@@ -75,6 +89,10 @@ public class PriceMonitoringServiceTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="PriceMonitoringService.UpdatePriceAsync(Price)"/> method adds the price and records history and checks alerts when the price is valid.
+    /// </summary>
+    /// <param name="price">The price to update.</param>
     [Fact]
     public async Task UpdatePriceAsync_ShouldAddPriceAndRecordHistoryAndCheckAlerts_WhenPriceIsValid()
     {
@@ -99,6 +117,10 @@ public class PriceMonitoringServiceTests
         await _mockAlertService.Received(1).CheckTriggersAsync(Arg.Is<Price>(p => p.Asset == price.Asset));
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="PriceMonitoringService.UpdatePriceAsync(Price)"/> method throws an <see cref="ArgumentException"/> when the price is invalid.
+    /// </summary>
+    /// <param name="invalidPrice">The invalid price to update.</param>
     [Fact]
     public async Task UpdatePriceAsync_ShouldThrowArgumentException_WhenPriceIsInvalid()
     {
@@ -111,6 +133,12 @@ public class PriceMonitoringServiceTests
         await _mockPriceRepository.DidNotReceive().AddAsync(Arg.Any<Price>());
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="PriceMonitoringService.GetAveragePriceAsync(string, string, int)"/> method returns the average price.
+    /// </summary>
+    /// <param name="asset">The asset to get the average price for.</param>
+    /// <param name="fiat">The fiat to get the average price for.</param>
+    /// <param name="hours">The number of hours to average over.</param>
     [Fact]
     public async Task GetAveragePriceAsync_ShouldReturnAveragePrice()
     {
@@ -124,6 +152,10 @@ public class PriceMonitoringServiceTests
         result.Should().Be(expectedAverage);
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="PriceMonitoringService.GetPricesWithSignificantChangeAsync(decimal)"/> method returns prices meeting the threshold.
+    /// </summary>
+    /// <param name="threshold">The threshold to check for significant change.</param>
     [Fact]
     public async Task GetPricesWithSignificantChangeAsync_ShouldReturnPricesMeetingThreshold()
     {
