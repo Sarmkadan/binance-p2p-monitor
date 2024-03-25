@@ -6,14 +6,18 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace BinanceP2pMonitor.Tests;
-
+/// <summary>
+/// Tests for the CommandParser class.
+/// </summary>
 public class CommandParserTests
 {
     private readonly ILogger<CommandParser> _mockLogger;
     private readonly IServiceProvider _mockServiceProvider;
     private readonly CommandParser _commandParser;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandParserTests"/> class.
+    /// </summary>
     public CommandParserTests()
     {
         _mockLogger = Substitute.For<ILogger<CommandParser>>();
@@ -21,6 +25,9 @@ public class CommandParserTests
         _commandParser = new CommandParser(_mockLogger);
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="CommandParser.Parse(string[], IServiceProvider)"/> method returns a help command when no arguments are provided.
+    /// </summary>
     [Fact]
     public void Parse_ShouldReturnHelpCommand_WhenNoArguments()
     {
@@ -35,6 +42,10 @@ public class CommandParserTests
         context.ServiceProvider.Should().Be(_mockServiceProvider);
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="CommandParser.Parse(string[], IServiceProvider)"/> method parses a command only when a single argument is provided.
+    /// </summary>
+    /// <param name="args">The arguments to parse.</param>
     [Fact]
     public void Parse_ShouldParseCommandOnly()
     {
@@ -48,6 +59,10 @@ public class CommandParserTests
         context.Flags.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="CommandParser.Parse(string[], IServiceProvider)"/> method parses a command with positional arguments.
+    /// </summary>
+    /// <param name="args">The arguments to parse.</param>
     [Fact]
     public void Parse_ShouldParseCommandWithPositionalArguments()
     {
@@ -62,6 +77,10 @@ public class CommandParserTests
         context.Flags.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="CommandParser.Parse(string[], IServiceProvider)"/> method parses a command with long options.
+    /// </summary>
+    /// <param name="args">The arguments to parse.</param>
     [Fact]
     public void Parse_ShouldParseCommandWithLongOptions()
     {
@@ -79,6 +98,10 @@ public class CommandParserTests
         context.Flags.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="CommandParser.Parse(string[], IServiceProvider)"/> method parses a command with flags.
+    /// </summary>
+    /// <param name="args">The arguments to parse.</param>
     [Fact]
     public void Parse_ShouldParseCommandWithFlags()
     {
@@ -96,6 +119,10 @@ public class CommandParserTests
         });
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="CommandParser.Parse(string[], IServiceProvider)"/> method parses a command with short options.
+    /// </summary>
+    /// <param name="args">The arguments to parse.</param>
     [Fact]
     public void Parse_ShouldParseCommandWithShortOptions()
     {
@@ -113,6 +140,10 @@ public class CommandParserTests
         context.Flags.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="CommandParser.Parse(string[], IServiceProvider)"/> method parses a command with mixed arguments.
+    /// </summary>
+    /// <param name="args">The arguments to parse.</param>
     [Fact]
     public void Parse_ShouldParseMixedArguments()
     {
@@ -134,6 +165,10 @@ public class CommandParserTests
         });
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="CommandParser.Parse(string[], IServiceProvider)"/> method handles option values with spaces.
+    /// </summary>
+    /// <param name="args">The arguments to parse.</param>
     [Fact]
     public void Parse_ShouldHandleOptionValuesWithSpaces()
     {
@@ -148,6 +183,10 @@ public class CommandParserTests
         context.Flags.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="CommandParser.Parse(string[], IServiceProvider)"/> method handles duplicate options, where the last one wins.
+    /// </summary>
+    /// <param name="args">The arguments to parse.</param>
     [Fact]
     public void Parse_ShouldHandleDuplicateOptions_LastOneWins()
     {
@@ -160,6 +199,10 @@ public class CommandParserTests
         context.Options.Should().ContainKey("f").WhoseValue.Should().Be("fourth");
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="CommandParser.Parse(string[], IServiceProvider)"/> method distinguishes between flags and positional arguments starting with a dash.
+    /// </summary>
+    /// <param name="args">The arguments to parse.</param>
     [Fact]
     public void Parse_ShouldDistinguishBetweenFlagsAndPositionalArgumentsStartingWithDash()
     {
