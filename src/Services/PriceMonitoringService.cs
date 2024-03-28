@@ -92,10 +92,7 @@ public class PriceMonitoringService : IPriceMonitoringService
 
 		try
 		{
-			if (price is null || !price.IsValid())
-				throw new InvalidPriceException("Invalid price data");
-
-			var added = await _priceRepository.AddAsync(price).ConfigureAwait(false);
+var added = await _priceRepository.AddAsync(price).ConfigureAwait(false);
 			if (added > 0)
 			{
 				// Record history and check alerts
@@ -254,8 +251,6 @@ public class PriceMonitoringService : IPriceMonitoringService
 	{
 		try
 		{
-			// For now, construct a dummy price object with current and previous prices set to the same value for simplicity.
-			// In a real scenario, this would involve retrieving the previous price from the repository to calculate change.
 			var previousPrice = await _priceRepository.GetLatestByAssetAndFiatAsync(e.Asset, e.Fiat).ConfigureAwait(false);
 
 			var price = new Price
