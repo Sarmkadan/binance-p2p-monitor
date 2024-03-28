@@ -10,84 +10,6 @@ namespace BinanceP2pMonitor.Services;
 public static class PriceMonitoringServiceExtensions
 {
     /// <summary>
-    /// Gets the current price for a specific trading pair with caching support
-    /// </summary>
-    /// <param name="service">The price monitoring service</param>
-    /// <param name="asset">The cryptocurrency asset (e.g., USDT, BTC)</param>
-    /// <param name="fiat">The fiat currency (e.g., USD, EUR)</param>
-    /// <param name="cacheDurationMinutes">Optional cache duration in minutes</param>
-    /// <returns>The current price or null if not found</returns>
-    /// <exception cref="ArgumentNullException">Thrown if service, asset, or fiat is null</exception>
-    /// <exception cref="ArgumentException">Thrown if asset or fiat is whitespace, or cacheDurationMinutes is negative</exception>
-    public static async Task<Price?> GetCurrentPriceAsync(this PriceMonitoringService service, string asset, string fiat, int cacheDurationMinutes = 5)
-    {
-        ArgumentNullException.ThrowIfNull(service);
-
-        ArgumentException.ThrowIfNullOrWhiteSpace(asset);
-        ArgumentException.ThrowIfNullOrWhiteSpace(fiat);
-
-        if (cacheDurationMinutes < 0)
-            throw new ArgumentException("Cache duration cannot be negative", nameof(cacheDurationMinutes));
-
-        // If cache duration is 0, use the original method
-        if (cacheDurationMinutes == 0)
-        {
-            return await service.GetCurrentPriceAsync(asset, fiat).ConfigureAwait(false);
-        }
-
-        // For caching, we would typically use a cache service, but since we don't have one,
-        // we'll implement a simple in-memory cache using a static dictionary
-        // Note: In a real application, consider using IMemoryCache or IDistributedCache
-        var cacheKey = $"{asset}_{fiat}";
-
-        // Check cache first
-        if (TryGetCachedPrice(cacheKey, out var cachedEntry, cacheDurationMinutes))
-        {
-            return cachedEntry.Price;
-        }
-
-        // Cache miss - fetch from service
-        var price = await service.GetCurrentPriceAsync(asset, fiat).ConfigureAwait(false);
-
-        if (price != null)
-        {
-            CachePrice(cacheKey, price);
-        }
-
-        return price;
-    }
-
-    /// <summary>
-    /// Helper method to get cached price
-    /// </summary>
-    /// <param name="cacheKey">The cache key to look up</param>
-    /// <param name="cachedEntry">Output parameter for the cached entry</param>
-    /// <param name="cacheDurationMinutes">Cache duration in minutes</param>
-    /// <returns>True if the price was found in cache and is still valid</returns>
-    /// <exception cref="ArgumentNullException">Thrown if cacheKey is null</exception>
-    private static bool TryGetCachedPrice(string cacheKey, out (Price Price, DateTime Timestamp) cachedEntry, int cacheDurationMinutes)
-    {
-        ArgumentNullException.ThrowIfNull(cacheKey);
-
-        // In a real application, this would use IMemoryCache or IDistributedCache
-        // For this implementation, we return false to always fetch fresh data
-        cachedEntry = default;
-        return false;
-    }
-
-    /// <summary>
-    /// Helper method to cache price
-    /// </summary>
-    /// <param name="cacheKey">The cache key to use</param>
-    /// <param name="price">The price to cache</param>
-    /// <exception cref="ArgumentNullException">Thrown if cacheKey or price is null</exception>
-    private static void CachePrice(string cacheKey, Price price)
-    {
-        ArgumentNullException.ThrowIfNull(cacheKey);
-        ArgumentNullException.ThrowIfNull(price);
-    }
-
-    /// <summary>
     /// Gets all current prices with filtering by asset and fiat
     /// </summary>
     /// <param name="service">The price monitoring service</param>
@@ -171,7 +93,9 @@ public static class PriceMonitoringServiceExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(fiat);
 
         if (hours <= 0)
+        {
             throw new ArgumentException("Hours must be positive", nameof(hours));
+        }
 
         var averagePrice = await service.GetAveragePriceAsync(asset, fiat, hours).ConfigureAwait(false);
 
@@ -243,7 +167,9 @@ public static class PriceMonitoringServiceExtensions
         ArgumentNullException.ThrowIfNull(newPrice);
 
         if (alertThresholdPercent <= 0)
+        {
             throw new ArgumentException("Alert threshold must be positive", nameof(alertThresholdPercent));
+        }
 
         // Get current price to compare against
         var currentPrice = await service.GetCurrentPriceAsync(newPrice.Asset, newPrice.Fiat).ConfigureAwait(false);
@@ -259,24 +185,24 @@ public static class PriceMonitoringServiceExtensions
 
         return buyChangePercent >= alertThresholdPercent || sellChangePercent >= alertThresholdPercent;
     }
-}
 
-/// <summary>
-/// Container for price statistics
-/// </summary>
-public sealed class PriceStatistics
-{
-    public string Asset { get; set; } = string.Empty;
-    public string Fiat { get; set; } = string.Empty;
-    public int Hours { get; set; }
-    public decimal AverageBuyPrice { get; set; }
-    public decimal AverageSellPrice { get; set; }
-    public decimal MinBuyPrice { get; set; }
-    public decimal MaxBuyPrice { get; set; }
-    public decimal MinSellPrice { get; set; }
-    public decimal MaxSellPrice { get; set; }
-    public decimal BuyPriceVolatilityPercent { get; set; }
-    public decimal SellPriceVolatilityPercent { get; set; }
-    public int PriceCount { get; set; }
-    public DateTime LastUpdated { get; set; }
+    /// <summary>
+    /// Container for price statistics
+    /// </summary>
+    public sealed class PriceStatistics
+    {
+        public string Asset { get; set; } = string.Empty;
+        public string Fiat { get; set; } = string.Empty;
+        public int Hours { get; set; }
+        public decimal AverageBuyPrice { get; set; }
+        public decimal AverageSellPrice { get; set; }
+        public decimal MinBuyPrice { get; set; }
+        public decimal MaxBuyPrice { get; set; }
+        public decimal MinSellPrice { get; set; }
+        public decimal MaxSellPrice { get; set; }
+        public decimal BuyPriceVolatilityPercent { get; set; }
+        public decimal SellPriceVolatilityPercent { get; set; }
+        public int PriceCount { get; set; }
+        public DateTime LastUpdated { get; set; }
+    }
 }
