@@ -21,28 +21,30 @@ public class MemoryCache : ICache, IDisposable
     public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
     {
         await Task.Yield();
+        var expired = false;
         _lock.EnterReadLock();
         try
         {
             if (_cache.TryGetValue(key, out var entry))
             {
-                if (entry.IsExpired)
+                if (!entry.IsExpired)
                 {
-                    _lock.ExitReadLock();
-                    await RemoveAsync(key, ct).ConfigureAwait(false);
-                    return default;
+                    _logger.LogDebug("Cache hit for key: {Key}", key);
+                    return (T?)entry.Value;
                 }
 
-                _logger.LogDebug("Cache hit for key: {Key}", key);
-                return (T?)entry.Value;
+                expired = true;
             }
-
-            return default;
         }
         finally
         {
             _lock.ExitReadLock();
         }
+
+        if (expired)
+            await RemoveAsync(key, ct).ConfigureAwait(false);
+
+        return default;
     }
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken ct = default)

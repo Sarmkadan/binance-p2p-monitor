@@ -44,7 +44,8 @@ public sealed class RateLimiter
     /// </summary>
     public int GetRemainingTokens(string key)
     {
-        _lock.EnterReadLock();
+        // Write lock: reading token state triggers a refill, which mutates the bucket.
+        _lock.EnterWriteLock();
         try
         {
             return _buckets.TryGetValue(key, out var bucket)
@@ -53,7 +54,7 @@ public sealed class RateLimiter
         }
         finally
         {
-            _lock.ExitReadLock();
+            _lock.ExitWriteLock();
         }
     }
 
@@ -94,7 +95,8 @@ public sealed class RateLimiter
     /// </summary>
     public TimeSpan? GetTimeUntilNextToken(string key)
     {
-        _lock.EnterReadLock();
+        // Write lock: reading token state triggers a refill, which mutates the bucket.
+        _lock.EnterWriteLock();
         try
         {
             return _buckets.TryGetValue(key, out var bucket)
@@ -103,7 +105,7 @@ public sealed class RateLimiter
         }
         finally
         {
-            _lock.ExitReadLock();
+            _lock.ExitWriteLock();
         }
     }
 
