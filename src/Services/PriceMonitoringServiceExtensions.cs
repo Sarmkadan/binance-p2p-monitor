@@ -1,8 +1,6 @@
 #nullable enable
 
 using BinanceP2pMonitor.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace BinanceP2pMonitor.Services;
 
@@ -19,16 +17,14 @@ public static class PriceMonitoringServiceExtensions
     /// <param name="fiat">The fiat currency (e.g., USD, EUR)</param>
     /// <param name="cacheDurationMinutes">Optional cache duration in minutes</param>
     /// <returns>The current price or null if not found</returns>
+    /// <exception cref="ArgumentNullException">Thrown if service, asset, or fiat is null</exception>
+    /// <exception cref="ArgumentException">Thrown if asset or fiat is whitespace, or cacheDurationMinutes is negative</exception>
     public static async Task<Price?> GetCurrentPriceAsync(this PriceMonitoringService service, string asset, string fiat, int cacheDurationMinutes = 5)
     {
-        if (service is null)
-            throw new ArgumentNullException(nameof(service));
+        ArgumentNullException.ThrowIfNull(service);
 
-        if (string.IsNullOrWhiteSpace(asset))
-            throw new ArgumentException("Asset cannot be null or whitespace", nameof(asset));
-
-        if (string.IsNullOrWhiteSpace(fiat))
-            throw new ArgumentException("Fiat cannot be null or whitespace", nameof(fiat));
+        ArgumentException.ThrowIfNullOrWhiteSpace(asset);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fiat);
 
         if (cacheDurationMinutes < 0)
             throw new ArgumentException("Cache duration cannot be negative", nameof(cacheDurationMinutes));
@@ -64,10 +60,17 @@ public static class PriceMonitoringServiceExtensions
     /// <summary>
     /// Helper method to get cached price
     /// </summary>
+    /// <param name="cacheKey">The cache key to look up</param>
+    /// <param name="cachedEntry">Output parameter for the cached entry</param>
+    /// <param name="cacheDurationMinutes">Cache duration in minutes</param>
+    /// <returns>True if the price was found in cache and is still valid</returns>
+    /// <exception cref="ArgumentNullException">Thrown if cacheKey is null</exception>
     private static bool TryGetCachedPrice(string cacheKey, out (Price Price, DateTime Timestamp) cachedEntry, int cacheDurationMinutes)
     {
-        // This would be implemented with actual caching in a real application
-        // For now, we'll return false to always fetch fresh data
+        ArgumentNullException.ThrowIfNull(cacheKey);
+
+        // In a real application, this would use IMemoryCache or IDistributedCache
+        // For this implementation, we return false to always fetch fresh data
         cachedEntry = default;
         return false;
     }
@@ -75,9 +78,13 @@ public static class PriceMonitoringServiceExtensions
     /// <summary>
     /// Helper method to cache price
     /// </summary>
+    /// <param name="cacheKey">The cache key to use</param>
+    /// <param name="price">The price to cache</param>
+    /// <exception cref="ArgumentNullException">Thrown if cacheKey or price is null</exception>
     private static void CachePrice(string cacheKey, Price price)
     {
-        // This would be implemented with actual caching in a real application
+        ArgumentNullException.ThrowIfNull(cacheKey);
+        ArgumentNullException.ThrowIfNull(price);
     }
 
     /// <summary>
@@ -87,10 +94,10 @@ public static class PriceMonitoringServiceExtensions
     /// <param name="asset">Optional asset filter</param>
     /// <param name="fiat">Optional fiat filter</param>
     /// <returns>Filtered collection of current prices</returns>
+    /// <exception cref="ArgumentNullException">Thrown if service is null</exception>
     public static async Task<IEnumerable<Price>> GetFilteredCurrentPricesAsync(this PriceMonitoringService service, string? asset = null, string? fiat = null)
     {
-        if (service is null)
-            throw new ArgumentNullException(nameof(service));
+        ArgumentNullException.ThrowIfNull(service);
 
         var allPrices = await service.GetAllCurrentPricesAsync().ConfigureAwait(false);
 
@@ -116,16 +123,16 @@ public static class PriceMonitoringServiceExtensions
     /// <param name="asset">The cryptocurrency asset</param>
     /// <param name="fiat">Optional fiat currency filter</param>
     /// <returns>Tuple containing best buy price, best sell price, and count of prices analyzed</returns>
+    /// <exception cref="ArgumentNullException">Thrown if service or asset is null</exception>
+    /// <exception cref="ArgumentException">Thrown if asset is whitespace</exception>
     public static async Task<(decimal BestBuyPrice, decimal BestSellPrice, int PriceCount)> GetBestPricesAsync(
         this PriceMonitoringService service,
         string asset,
         string? fiat = null)
     {
-        if (service is null)
-            throw new ArgumentNullException(nameof(service));
+        ArgumentNullException.ThrowIfNull(service);
 
-        if (string.IsNullOrWhiteSpace(asset))
-            throw new ArgumentException("Asset cannot be null or whitespace", nameof(asset));
+        ArgumentException.ThrowIfNullOrWhiteSpace(asset);
 
         var prices = await service.GetFilteredCurrentPricesAsync(asset, fiat).ConfigureAwait(false);
 
@@ -150,20 +157,18 @@ public static class PriceMonitoringServiceExtensions
     /// <param name="fiat">The fiat currency</param>
     /// <param name="hours">Number of hours to consider for statistics</param>
     /// <returns>Price statistics including average, min, max, and volatility</returns>
+    /// <exception cref="ArgumentNullException">Thrown if service, asset, or fiat is null</exception>
+    /// <exception cref="ArgumentException">Thrown if asset or fiat is whitespace, or hours is not positive</exception>
     public static async Task<PriceStatistics?> GetPriceStatisticsAsync(
         this PriceMonitoringService service,
         string asset,
         string fiat,
         int hours = 24)
     {
-        if (service is null)
-            throw new ArgumentNullException(nameof(service));
+        ArgumentNullException.ThrowIfNull(service);
 
-        if (string.IsNullOrWhiteSpace(asset))
-            throw new ArgumentException("Asset cannot be null or whitespace", nameof(asset));
-
-        if (string.IsNullOrWhiteSpace(fiat))
-            throw new ArgumentException("Fiat cannot be null or whitespace", nameof(fiat));
+        ArgumentException.ThrowIfNullOrWhiteSpace(asset);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fiat);
 
         if (hours <= 0)
             throw new ArgumentException("Hours must be positive", nameof(hours));
@@ -227,16 +232,15 @@ public static class PriceMonitoringServiceExtensions
     /// <param name="newPrice">The new price to check</param>
     /// <param name="alertThresholdPercent">Alert threshold percentage</param>
     /// <returns>True if the price change would trigger an alert</returns>
+    /// <exception cref="ArgumentNullException">Thrown if service or newPrice is null</exception>
+    /// <exception cref="ArgumentException">Thrown if alertThresholdPercent is not positive</exception>
     public static async Task<bool> WouldTriggerAlertAsync(
         this PriceMonitoringService service,
         Price newPrice,
         decimal alertThresholdPercent = 2.0m)
     {
-        if (service is null)
-            throw new ArgumentNullException(nameof(service));
-
-        if (newPrice is null)
-            throw new ArgumentNullException(nameof(newPrice));
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(newPrice);
 
         if (alertThresholdPercent <= 0)
             throw new ArgumentException("Alert threshold must be positive", nameof(alertThresholdPercent));
@@ -260,7 +264,7 @@ public static class PriceMonitoringServiceExtensions
 /// <summary>
 /// Container for price statistics
 /// </summary>
-public class PriceStatistics
+public sealed class PriceStatistics
 {
     public string Asset { get; set; } = string.Empty;
     public string Fiat { get; set; } = string.Empty;
