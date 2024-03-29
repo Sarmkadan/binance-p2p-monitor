@@ -1,4 +1,6 @@
 #nullable enable
+using System.Globalization;
+
 namespace BinanceP2pMonitor.Formatters;
 
 /// <summary>
@@ -45,7 +47,15 @@ public class CsvOutputFormatter : IOutputFormatter
             foreach (var header in headerList)
             {
                 var prop = properties.FirstOrDefault(p => p.Name == header);
-                var value = prop?.GetValue(item)?.ToString() ?? string.Empty;
+                var rawValue = prop?.GetValue(item);
+                // Invariant culture keeps numeric and date fields machine-parseable
+                // regardless of the host locale
+                var value = rawValue switch
+                {
+                    null => string.Empty,
+                    IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
+                    _ => rawValue.ToString() ?? string.Empty
+                };
                 values.Add(EscapeCsv(value));
             }
 

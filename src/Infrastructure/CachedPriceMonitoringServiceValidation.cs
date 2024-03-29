@@ -52,7 +52,7 @@ public static class CachedPriceMonitoringServiceValidation
         }
 
         // Validate cache duration
-        if ((TimeSpan)_cacheDurationField.GetValue(value) <= TimeSpan.Zero)
+        if (_cacheDurationField.GetValue(value) is not TimeSpan cacheDuration || cacheDuration <= TimeSpan.Zero)
         {
             problems.Add("Cache duration (_cacheDuration) must be positive");
         }

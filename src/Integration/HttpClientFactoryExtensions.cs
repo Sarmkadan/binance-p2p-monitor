@@ -4,9 +4,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-/// <summary>
-/// Extension methods for <see cref="HttpClientFactory"/> that simplify common HTTP scenarios.
-/// </summary>
 namespace BinanceP2pMonitor.Integration
 {
     /// <summary>
