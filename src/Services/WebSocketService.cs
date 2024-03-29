@@ -1,4 +1,5 @@
 #nullable enable
+using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -182,7 +183,7 @@ public class WebSocketService : IWebSocketService, IDisposable
             if (!IsConnected)
                 await ConnectAsync().ConfigureAwait(false);
 
-            var pairKey = $"{asset.ToLower()}{fiat.ToLower()}";
+            var pairKey = $"{asset.ToLowerInvariant()}{fiat.ToLowerInvariant()}";
 
             if (_subscribedPairs.Contains(pairKey))
                 return;
@@ -214,7 +215,7 @@ public class WebSocketService : IWebSocketService, IDisposable
     {
         try
         {
-            var pairKey = $"{asset.ToLower()}{fiat.ToLower()}";
+            var pairKey = $"{asset.ToLowerInvariant()}{fiat.ToLowerInvariant()}";
 
             if (!_subscribedPairs.Contains(pairKey))
                 return;
@@ -247,6 +248,7 @@ public class WebSocketService : IWebSocketService, IDisposable
         try
         {
             var buffer = new byte[4096];
+            using var messageStream = new MemoryStream();
 
             while (!cancellationToken.IsCancellationRequested && IsConnected)
             {
@@ -257,8 +259,14 @@ public class WebSocketService : IWebSocketService, IDisposable
 
                     if (result.MessageType == WebSocketMessageType.Text)
                     {
-                        var json = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                        ProcessMessage(json);
+                        // Accumulate fragments until the full message has arrived
+                        messageStream.Write(buffer, 0, result.Count);
+                        if (result.EndOfMessage)
+                        {
+                            var json = Encoding.UTF8.GetString(messageStream.GetBuffer(), 0, (int)messageStream.Length);
+                            messageStream.SetLength(0);
+                            ProcessMessage(json);
+                        }
                     }
                     else if (result.MessageType == WebSocketMessageType.Binary)
                     {
@@ -321,52 +329,11 @@ public class WebSocketService : IWebSocketService, IDisposable
             }
 
             // Extract Asset and Fiat from the symbol
-            string asset;
-            string fiat;
-            var symbol = message.s.ToUpper();
-
-            // Common fiat currencies are 3 or 4 characters long
-            if (symbol.EndsWith("USDT"))
-            {
-                fiat = "USDT";
-                asset = symbol.Replace("USDT", "");
-            }
-            else if (symbol.EndsWith("BUSD"))
-            {
-                fiat = "BUSD";
-                asset = symbol.Replace("BUSD", "");
-            }
-            else if (symbol.EndsWith("DAI"))
-            {
-                fiat = "DAI";
-                asset = symbol.Replace("DAI", "");
-            }
-            else if (symbol.EndsWith("EUR"))
-            {
-                fiat = "EUR";
-                asset = symbol.Replace("EUR", "");
-            }
-            else if (symbol.EndsWith("RUB"))
-            {
-                fiat = "RUB";
-                asset = symbol.Replace("RUB", "");
-            }
-            else if (symbol.EndsWith("GBP"))
-            {
-                fiat = "GBP";
-                asset = symbol.Replace("GBP", "");
-            }
-            else if (symbol.Length > 3) // Assume last 3 chars are fiat if not matched above
-            {
-                fiat = symbol.Substring(symbol.Length - 3);
-                asset = symbol.Substring(0, symbol.Length - 3);
-            }
-            else
-            {
-                _logger.LogWarning("Could not parse asset and fiat from symbol: {Symbol}", symbol);
+            var parsedPair = ParsePairKey(message.s);
+            if (!parsedPair.HasValue)
                 return;
-            }
 
+            var (asset, fiat) = parsedPair.Value;
 
             var eventArgs = new PriceUpdateEventArgs
             {
@@ -430,33 +397,24 @@ public class WebSocketService : IWebSocketService, IDisposable
         OnPriceUpdate?.Invoke(this, args);
     }
 
+    // Known quote currencies, longer suffixes first so they win over 3-char fallback
+    private static readonly string[] KnownQuoteSuffixes = ["USDT", "BUSD", "DAI", "EUR", "RUB", "GBP"];
+
     private (string Asset, string Fiat)? ParsePairKey(string pairKey)
     {
-        var symbol = pairKey.ToUpper();
+        var symbol = pairKey.ToUpperInvariant();
 
-        // Common fiat currencies, ordered by length to prioritize longer matches
-        if (symbol.EndsWith("USDT"))
-            return (symbol.Replace("USDT", ""), "USDT");
-        if (symbol.EndsWith("BUSD"))
-            return (symbol.Replace("BUSD", ""), "BUSD");
-        if (symbol.EndsWith("DAI"))
-            return (symbol.Replace("DAI", ""), "DAI");
-        if (symbol.EndsWith("EUR"))
-            return (symbol.Replace("EUR", ""), "EUR");
-        if (symbol.EndsWith("RUB"))
-            return (symbol.Replace("RUB", ""), "RUB");
-        if (symbol.EndsWith("GBP"))
-            return (symbol.Replace("GBP", ""), "GBP");
-        
-        // Fallback for 3-character fiats if not matched above and symbol is long enough
-        if (symbol.Length > 3)
+        foreach (var suffix in KnownQuoteSuffixes)
         {
-            var potentialFiat = symbol.Substring(symbol.Length - 3);
-            // This is a more generalized assumption, might need to be refined based on actual data
-            // For now, assume if it's 3 chars and not a known asset prefix, it's fiat
-            // A more robust solution might involve a predefined list of fiats
-            return (symbol.Substring(0, symbol.Length - 3), potentialFiat);
+            // Trim the suffix from the end only; Replace would also corrupt
+            // assets that contain the quote code (e.g. EURSEUR -> S)
+            if (symbol.Length > suffix.Length && symbol.EndsWith(suffix, StringComparison.Ordinal))
+                return (symbol[..^suffix.Length], suffix);
         }
+
+        // Fallback: assume the last 3 characters are the fiat code
+        if (symbol.Length > 3)
+            return (symbol[..^3], symbol[^3..]);
 
         _logger.LogWarning("Could not parse asset and fiat from pair key: {PairKey}", pairKey);
         return null;
@@ -465,6 +423,17 @@ public class WebSocketService : IWebSocketService, IDisposable
     public void Dispose()
     {
         _keepaliveTimer?.Dispose();
+
+        try
+        {
+            // Stop the receive loop before tearing the socket down
+            _cancellationTokenSource?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Already disposed; nothing left to cancel
+        }
+
         _webSocket?.Dispose();
         _cancellationTokenSource?.Dispose();
         GC.SuppressFinalize(this);
