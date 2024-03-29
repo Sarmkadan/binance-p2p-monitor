@@ -1,12 +1,12 @@
 #nullable enable
 
+using System.Globalization;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using BinanceP2pMonitor.Caching;
 using BinanceP2pMonitor.Configuration;
 using BinanceP2pMonitor.Utilities;
 using Microsoft.Extensions.Logging;
-using BinanceP2pMonitor.Configuration; // added using directive
 
 namespace BinanceP2pMonitor.Integration;
 
@@ -119,7 +119,7 @@ public class TelegramNotificationClient : ITelegramNotificationClient
                       $"<b>Sell:</b> {sellPrice:F4}\n\n" +
                       $"<b>Reason:</b> {alertReason}\n" +
                       $"<b>Time:</b> {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
-        return await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId), message, ct).ConfigureAwait(false);
+        return await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId, CultureInfo.InvariantCulture), message, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public class TelegramNotificationClient : ITelegramNotificationClient
             return false;
         }
 
-        var success = await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId), message, ct).ConfigureAwait(false);
+        var success = await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId, CultureInfo.InvariantCulture), message, ct).ConfigureAwait(false);
         if (success)
             await _cache.SetAsync(lastSentKey, DateTime.UtcNow, rateLimitWindow, ct).ConfigureAwait(false);
 

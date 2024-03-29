@@ -127,8 +127,7 @@ Examples:
 
             _output.WriteBlankLine();
             _output.WriteSection("Active Alerts Summary");
-            // Assuming UserId = 1 for CLI. In a real app, this would be dynamic.
-            var userAlerts = await _alertService.GetUserAlertsAsync(1).ConfigureAwait(false);
+            var userAlerts = await _alertService.GetUserAlertsAsync(ApplicationConstants.DefaultCliUserId).ConfigureAwait(false);
             if (userAlerts.Any())
             {
                 var enabledAlerts = userAlerts.Count(a => a.IsEnabled);
