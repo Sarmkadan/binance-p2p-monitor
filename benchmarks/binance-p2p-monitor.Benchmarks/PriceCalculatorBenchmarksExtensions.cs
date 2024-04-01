@@ -29,6 +29,7 @@ public static class PriceCalculatorBenchmarksExtensions
 
 	/// <summary>
 	/// Calculates the spread between a buy moving average and a sell moving average.
+	/// The sell moving average is simulated as 2% higher than the buy moving average.
 	/// </summary>
 	/// <param name="benchmarks">The benchmark instance.</param>
 	/// <param name="period">The moving average period to calculate.</param>
@@ -51,7 +52,7 @@ public static class PriceCalculatorBenchmarksExtensions
 	/// <param name="benchmarks">The benchmark instance.</param>
 	/// <param name="period">The moving average period to calculate.</param>
 	/// <param name="sampleSize">The sample size to use for the moving average calculation.</param>
-	/// <returns>A formatted string containing the price and its moving average.</returns>
+	/// <returns>A formatted string containing the price and its moving average in the format "Price | MA(period)=MovingAverage".</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="benchmarks"/> is null.</exception>
 	/// <exception cref="ArgumentException">Thrown when the period/sampleSize combination is not supported.</exception>
 	public static string FormatPriceWithMovingAverage(this PriceCalculatorBenchmarks benchmarks, int period, int sampleSize)
@@ -66,7 +67,7 @@ public static class PriceCalculatorBenchmarksExtensions
 	/// Calculates statistics (mean and standard deviation) for spread values.
 	/// </summary>
 	/// <param name="benchmarks">The benchmark instance.</param>
-	/// <param name="sampleCount">The number of spread samples to generate and analyze.</param>
+	/// <param name="sampleCount">The number of spread samples to generate and analyze. Defaults to 100.</param>
 	/// <returns>A tuple containing the mean spread and standard deviation.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="benchmarks"/> is null.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="sampleCount"/> is less than 1.</exception>
