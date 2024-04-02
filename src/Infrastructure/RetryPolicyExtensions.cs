@@ -31,6 +31,7 @@ namespace BinanceP2pMonitor.Infrastructure
         /// </summary>
         /// <param name="policy">The retry policy instance.</param>
         /// <param name="action">The async operation to execute.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="policy"/> or <paramref name="action"/> is null.</exception>
         public static Task ExecuteWithRetryAsync(this RetryPolicy policy, Func<Task> action)
         {
@@ -67,6 +68,7 @@ namespace BinanceP2pMonitor.Infrastructure
         /// <param name="policy">The retry policy instance.</param>
         /// <param name="action">The async operation to execute.</param>
         /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="policy"/> or <paramref name="action"/> is null.</exception>
         public static Task ExecuteWithRetryAsync(this RetryPolicy policy, Func<CancellationToken, Task> action, CancellationToken cancellationToken = default)
         {
