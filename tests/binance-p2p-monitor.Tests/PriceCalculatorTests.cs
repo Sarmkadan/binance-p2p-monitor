@@ -46,6 +46,9 @@ public class PriceCalculatorTests
         result.Should().Be(0m);
     }
 
+    /// <summary>
+    /// Tests that the spread calculation returns the correct percentage when both buy and sell prices are non‑zero.
+    /// </summary>
     [Fact]
     public void CalculateSpread_BuyAndSellPrices_ReturnsCorrectSpreadPercent()
     {
@@ -55,6 +58,9 @@ public class PriceCalculatorTests
         result.Should().Be(2m);
     }
 
+    /// <summary>
+    /// Tests that a zero buy price results in a spread of zero to avoid division by zero.
+    /// </summary>
     [Fact]
     public void CalculateSpread_ZeroBuyPrice_ReturnsZero()
     {
@@ -63,6 +69,9 @@ public class PriceCalculatorTests
         result.Should().Be(0m);
     }
 
+    /// <summary>
+    /// Tests that the mid‑price calculation returns the arithmetic mean of two prices.
+    /// </summary>
     [Fact]
     public void CalculateMidPrice_TwoPrices_ReturnsArithmeticMean()
     {
@@ -71,6 +80,10 @@ public class PriceCalculatorTests
         result.Should().Be(150m);
     }
 
+    /// <summary>
+    /// Tests that when the number of supplied prices is fewer than the requested period,
+    /// the moving average calculation returns the average of all available prices.
+    /// </summary>
     [Fact]
     public void CalculateMovingAverage_FewerPricesThanPeriod_ReturnsOverallAverage()
     {
@@ -81,6 +94,10 @@ public class PriceCalculatorTests
         result.Should().Be(20m);
     }
 
+    /// <summary>
+    /// Tests that when the number of supplied prices equals the requested period,
+    /// the moving average calculation returns the average of the last N prices.
+    /// </summary>
     [Fact]
     public void CalculateMovingAverage_ExactPeriod_ReturnsLastNAverage()
     {
@@ -92,6 +109,9 @@ public class PriceCalculatorTests
         result.Should().Be(40m);
     }
 
+    /// <summary>
+    /// Tests that the standard deviation of a single price is zero.
+    /// </summary>
     [Fact]
     public void CalculateStandardDeviation_SinglePrice_ReturnsZero()
     {
@@ -100,6 +120,9 @@ public class PriceCalculatorTests
         result.Should().Be(0m);
     }
 
+    /// <summary>
+    /// Tests that the standard deviation of identical prices is zero.
+    /// </summary>
     [Fact]
     public void CalculateStandardDeviation_IdenticalPrices_ReturnsZero()
     {
@@ -108,6 +131,9 @@ public class PriceCalculatorTests
         result.Should().Be(0m);
     }
 
+    /// <summary>
+    /// Tests that formatting a price with a currency symbol prefixes the symbol and respects the specified precision.
+    /// </summary>
     [Fact]
     public void FormatPrice_WithCurrencySymbol_PrependsCurrencySymbol()
     {
@@ -116,6 +142,9 @@ public class PriceCalculatorTests
         result.Should().Be("$1234.50");
     }
 
+    /// <summary>
+    /// Tests that formatting a price without a currency symbol returns only the numeric representation with the requested precision.
+    /// </summary>
     [Fact]
     public void FormatPrice_NoCurrencySymbol_ReturnsPlainDecimal()
     {
@@ -125,8 +154,17 @@ public class PriceCalculatorTests
     }
 }
 
+/// <summary>
+/// Contains unit tests for the <see cref="ValidationHelper"/> static validation methods.
+/// Each test verifies that the helper returns the expected boolean result for a variety of inputs.
+/// </summary>
 public class ValidationHelperTests
 {
+    /// <summary>
+    /// Verifies that <see cref="ValidationHelper.IsValidEmail"/> returns the expected result for various email strings.
+    /// </summary>
+    /// <param name="email">The email string to validate.</param>
+    /// <param name="expected">The expected boolean outcome of the validation.</param>
     [Theory]
     [InlineData("user@example.com", true)]
     [InlineData("bad-email", false)]
@@ -139,6 +177,11 @@ public class ValidationHelperTests
         result.Should().Be(expected);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="ValidationHelper.IsValidTicker"/> returns the expected result for various ticker strings.
+    /// </summary>
+    /// <param name="ticker">The ticker string to validate.</param>
+    /// <param name="expected">The expected boolean outcome of the validation.</param>
     [Theory]
     [InlineData("BTC", true)]
     [InlineData("USDT", true)]
@@ -152,6 +195,11 @@ public class ValidationHelperTests
         result.Should().Be(expected);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="ValidationHelper.IsValidFiatCode"/> returns the expected result for various fiat code strings.
+    /// </summary>
+    /// <param name="code">The fiat code string to validate.</param>
+    /// <param name="expected">The expected boolean outcome of the validation.</param>
     [Theory]
     [InlineData("USD", true)]
     [InlineData("EUR", true)]
@@ -165,6 +213,9 @@ public class ValidationHelperTests
         result.Should().Be(expected);
     }
 
+    /// <summary>
+    /// Verifies that a price within the default acceptable range is considered valid.
+    /// </summary>
     [Fact]
     public void IsValidPrice_PriceWithinDefaultRange_ReturnsTrue()
     {
@@ -173,6 +224,9 @@ public class ValidationHelperTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that a price of zero is considered invalid.
+    /// </summary>
     [Fact]
     public void IsValidPrice_ZeroPrice_ReturnsFalse()
     {
@@ -181,6 +235,9 @@ public class ValidationHelperTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that a positive Telegram chat identifier is considered valid.
+    /// </summary>
     [Fact]
     public void IsValidTelegramChatId_PositiveId_ReturnsTrue()
     {
@@ -189,6 +246,9 @@ public class ValidationHelperTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that zero or negative Telegram chat identifiers are considered invalid.
+    /// </summary>
     [Fact]
     public void IsValidTelegramChatId_ZeroOrNegative_ReturnsFalse()
     {
@@ -196,6 +256,9 @@ public class ValidationHelperTests
         ValidationHelper.IsValidTelegramChatId(-1L).Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that a date range where the start precedes the end is considered valid.
+    /// </summary>
     [Fact]
     public void IsValidDateRange_StartBeforeEnd_ReturnsTrue()
     {
@@ -207,6 +270,9 @@ public class ValidationHelperTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that a date range where the start follows the end is considered invalid.
+    /// </summary>
     [Fact]
     public void IsValidDateRange_StartAfterEnd_ReturnsFalse()
     {
@@ -218,6 +284,9 @@ public class ValidationHelperTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that a non‑empty collection is considered valid.
+    /// </summary>
     [Fact]
     public void IsValidCollection_NonEmptyList_ReturnsTrue()
     {
@@ -226,6 +295,9 @@ public class ValidationHelperTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that an empty collection is considered invalid.
+    /// </summary>
     [Fact]
     public void IsValidCollection_EmptyList_ReturnsFalse()
     {
@@ -234,6 +306,9 @@ public class ValidationHelperTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that a null collection is considered invalid.
+    /// </summary>
     [Fact]
     public void IsValidCollection_NullCollection_ReturnsFalse()
     {
