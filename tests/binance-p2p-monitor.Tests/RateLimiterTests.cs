@@ -9,8 +9,14 @@ using System.Threading.Tasks;
 
 namespace BinanceP2pMonitor.Tests;
 
+/// <summary>
+/// Tests for the RateLimiter class.
+/// </summary>
 public class RateLimiterTests
 {
+    /// <summary>
+    /// Verifies that the IsAllowed method allows requests up to the maximum number of requests.
+    /// </summary>
     [Fact]
     public void IsAllowed_ShouldAllowRequestsUpToMaxRequests()
     {
@@ -28,6 +34,9 @@ public class RateLimiterTests
         limiter.IsAllowed(key).Should().BeFalse("No more requests should be allowed");
     }
 
+    /// <summary>
+    /// Verifies that the IsAllowed method refills tokens after the time window has passed.
+    /// </summary>
     [Fact]
     public void IsAllowed_ShouldRefillTokensAfterTimeWindow()
     {
@@ -46,6 +55,9 @@ public class RateLimiterTests
         limiter.IsAllowed(key).Should().BeTrue("Request should be allowed after refill");
     }
 
+    /// <summary>
+    /// Verifies that the IsAllowed method handles multiple keys independently.
+    /// </summary>
     [Fact]
     public void IsAllowed_ShouldHandleMultipleKeysIndependently()
     {
@@ -68,6 +80,10 @@ public class RateLimiterTests
         limiter.IsAllowed(key2).Should().BeFalse();
     }
     
+    /// <summary>
+    /// Verifies that the IsAllowed method is thread-safe.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task IsAllowed_ShouldBeThreadSafe()
     {
@@ -97,6 +113,9 @@ public class RateLimiterTests
         allowedCount.Should().Be(maxRequests);
     }
 
+    /// <summary>
+    /// Verifies that the GetRemainingTokens method returns the correct count of remaining tokens.
+    /// </summary>
     [Fact]
     public void GetRemainingTokens_ShouldReturnCorrectCount()
     {
@@ -117,6 +136,9 @@ public class RateLimiterTests
         limiter.GetRemainingTokens(key).Should().Be(maxRequests - 3, "Should show 3 less tokens");
     }
 
+    /// <summary>
+    /// Verifies that the GetRemainingTokens method returns the maximum number of requests for a non-existent key.
+    /// </summary>
     [Fact]
     public void GetRemainingTokens_ShouldReturnMaxRequestsForNonExistentKey()
     {
@@ -133,6 +155,9 @@ public class RateLimiterTests
         remainingTokens.Should().Be(maxRequests);
     }
 
+    /// <summary>
+    /// Verifies that the Reset method restores tokens for a given key.
+    /// </summary>
     [Fact]
     public void Reset_ShouldRestoreTokensForGivenKey()
     {
@@ -153,6 +178,9 @@ public class RateLimiterTests
         limiter.IsAllowed(key).Should().BeTrue("Request should be allowed after reset");
     }
 
+    /// <summary>
+    /// Verifies that the Reset method does not affect other keys.
+    /// </summary>
     [Fact]
     public void Reset_ShouldNotAffectOtherKeys()
     {
@@ -176,6 +204,9 @@ public class RateLimiterTests
         limiter.IsAllowed(key2).Should().BeFalse("Key2 should remain exhausted"); // Key2 not affected
     }
 
+    /// <summary>
+    /// Verifies that the Reset method does nothing for a non-existent key.
+    /// </summary>
     [Fact]
     public void Reset_ShouldDoNothingForNonExistentKey()
     {
@@ -192,6 +223,9 @@ public class RateLimiterTests
         act.Should().NotThrow(); // Should not throw an error
     }
 
+    /// <summary>
+    /// Verifies that the ClearAll method clears all buckets.
+    /// </summary>
     [Fact]
     public void ClearAll_ShouldClearAllBuckets()
     {
@@ -215,6 +249,9 @@ public class RateLimiterTests
         limiter.IsAllowed(key2).Should().BeTrue("Key2 should be restored after ClearAll");
     }
 
+    /// <summary>
+    /// Verifies that the GetTimeUntilNextToken method returns zero when tokens are available.
+    /// </summary>
     [Fact]
     public void GetTimeUntilNextToken_ShouldReturnZero_WhenTokensAvailable()
     {
@@ -233,6 +270,9 @@ public class RateLimiterTests
         time.Should().Be(TimeSpan.Zero);
     }
 
+    /// <summary>
+    /// Verifies that the GetTimeUntilNextToken method returns a positive time when no tokens are available.
+    /// </summary>
     [Fact]
     public void GetTimeUntilNextToken_ShouldReturnPositiveTime_WhenNoTokensAvailable()
     {
@@ -253,6 +293,9 @@ public class RateLimiterTests
         time.Should().BeLessThanOrEqualTo(timeWindow);
     }
 
+    /// <summary>
+    /// Verifies that the GetTimeUntilNextToken method returns null for a non-existent key.
+    /// </summary>
     [Fact]
     public void GetTimeUntilNextToken_ShouldReturnNull_ForNonExistentKey()
     {
