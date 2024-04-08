@@ -5,8 +5,16 @@ using Xunit;
 
 namespace BinanceP2pMonitor.Tests;
 
+/// <summary>
+/// Contains edge case unit tests for the <see cref="PriceCalculator"/> utility methods.
+/// </summary>
 public class PriceCalculatorEdgeCaseTests
 {
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculatePercentageChange"/> returns <c>0</c>
+    /// when the original price is zero.
+    /// </summary>
+    /// <returns>Nothing.</returns>
     [Fact]
     public void CalculatePercentageChange_ShouldReturnZero_WhenOriginalPriceIsZero()
     {
@@ -17,6 +25,14 @@ public class PriceCalculatorEdgeCaseTests
         result.Should().Be(0m);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculatePercentageChange"/> returns the expected
+    /// percentage change for various original and new price values.
+    /// </summary>
+    /// <param name="original">The original price.</param>
+    /// <param name="new">The new price.</param>
+    /// <param name="expected">The expected percentage change.</param>
+    /// <returns>Nothing.</returns>
     [Theory]
     [InlineData(100, 110, 10)]
     [InlineData(100, 90, -10)]
@@ -31,6 +47,11 @@ public class PriceCalculatorEdgeCaseTests
         result.Should().Be(expected);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculateSpread"/> returns <c>0</c>
+    /// when the buy price is zero.
+    /// </summary>
+    /// <returns>Nothing.</returns>
     [Fact]
     public void CalculateSpread_ShouldReturnZero_WhenBuyPriceIsZero()
     {
@@ -41,6 +62,14 @@ public class PriceCalculatorEdgeCaseTests
         result.Should().Be(0m);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculateSpread"/> returns the expected spread
+    /// for various buy and sell price values.
+    /// </summary>
+    /// <param name="buy">The buy price.</param>
+    /// <param name="sell">The sell price.</param>
+    /// <param name="expected">The expected spread.</param>
+    /// <returns>Nothing.</returns>
     [Theory]
     [InlineData(100, 102, 2)]
     [InlineData(100, 98, -2)]
@@ -54,6 +83,11 @@ public class PriceCalculatorEdgeCaseTests
         result.Should().Be(expected);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculateMovingAverage"/> returns <c>0</c>
+    /// when the input price collection is empty.
+    /// </summary>
+    /// <returns>Nothing.</returns>
     [Fact]
     public void CalculateMovingAverage_ShouldReturnZero_WhenPricesIsEmpty()
     {
@@ -67,6 +101,11 @@ public class PriceCalculatorEdgeCaseTests
         result.Should().Be(0m);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculateMovingAverage"/> throws an
+    /// <see cref="ArgumentNullException"/> when the <c>prices</c> collection is <c>null</c>.
+    /// </summary>
+    /// <returns>Nothing.</returns>
     [Fact]
     public void CalculateMovingAverage_ShouldThrowArgumentNullException_WhenPricesIsNull()
     {
@@ -81,6 +120,12 @@ public class PriceCalculatorEdgeCaseTests
             .WithMessage("Prices collection cannot be null (Parameter 'prices')");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculateMovingAverage"/> throws an
+    /// <see cref="ArgumentOutOfRangeException"/> when the <c>period</c> argument is zero or negative.
+    /// </summary>
+    /// <param name="period">The period value to test (zero or negative).</param>
+    /// <returns>Nothing.</returns>
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -97,6 +142,11 @@ public class PriceCalculatorEdgeCaseTests
             .WithMessage("Period must be greater than zero*");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculateMovingAverage"/> returns the correct average
+    /// when the requested period is greater than the number of price entries.
+    /// </summary>
+    /// <returns>Nothing.</returns>
     [Fact]
     public void CalculateMovingAverage_ShouldReturnCorrectAverage_WhenPeriodGreaterThanCount()
     {
@@ -110,6 +160,11 @@ public class PriceCalculatorEdgeCaseTests
         result.Should().Be(2m); // (1+2+3)/3
     }
 
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculateStandardDeviation"/> returns <c>0</c>
+    /// for empty or single‑item price collections.
+    /// </summary>
+    /// <returns>Nothing.</returns>
     [Fact]
     public void CalculateStandardDeviation_ShouldReturnZero_WhenPricesIsEmptyOrSingleItem()
     {
@@ -122,6 +177,11 @@ public class PriceCalculatorEdgeCaseTests
         PriceCalculator.CalculateStandardDeviation(singlePrice).Should().Be(0m);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculateStandardDeviation"/> throws an
+    /// <see cref="ArgumentNullException"/> when the <c>prices</c> collection is <c>null</c>.
+    /// </summary>
+    /// <returns>Nothing.</returns>
     [Fact]
     public void CalculateStandardDeviation_ShouldThrowArgumentNullException_WhenPricesIsNull()
     {
@@ -136,6 +196,11 @@ public class PriceCalculatorEdgeCaseTests
             .WithMessage("Prices collection cannot be null (Parameter 'prices')");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="PriceCalculator.CalculateStandardDeviation"/> returns the correct
+    /// standard deviation for a known data set.
+    /// </summary>
+    /// <returns>Nothing.</returns>
     [Fact]
     public void CalculateStandardDeviation_ShouldReturnCorrectStandardDeviation()
     {
