@@ -162,6 +162,31 @@ You can run all benchmarks by passing `*` as an argument:
 dotnet run -c Release --project benchmarks/binance-p2p-monitor.Benchmarks/ -- "*"
 ```
 
-## License
+## ConsoleOutputWriterExtensions
 
-MIT
+The `ConsoleOutputWriterExtensions` class provides a set of formatting and output utility methods for the `ConsoleOutputWriter`. These extensions facilitate consistent and visually organized console output, including success/error messages, section headers, key-value pairs, progress indicators, and separators.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Infrastructure;
+
+var writer = new ConsoleOutputWriter();
+
+// Write formatted messages with context/codes
+writer.WriteSuccessWithContext("Monitoring started", "Binance P2P");
+writer.WriteErrorWithCode("Connection failed", "ERR001");
+writer.WriteWarningWithSource("High latency detected", "WebSocketService");
+writer.WriteInfoWithTimestamp("Checking prices...", DateTime.Now);
+
+// Layout and formatting
+writer.WriteSectionWithSubtitle("System Status", "All services running");
+writer.WriteKeyValueHighlighted("Status", "Online", 15, true);
+writer.WriteBlankLines(1);
+writer.WriteSeparator("End of Report", '=');
+
+// Progress tracking
+writer.WriteProgress(50, 100, "Syncing data");
+```
+
+## License
