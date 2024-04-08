@@ -189,4 +189,54 @@ writer.WriteSeparator("End of Report", '=');
 writer.WriteProgress(50, 100, "Syncing data");
 ```
 
+## PriceAlertExtensions
+
+The `PriceAlertExtensions` class provides extension methods for the `PriceAlert` model to enhance alert management functionality. These extensions enable alert cloning, threshold updates, trigger tracking, age calculation, and note management for price monitoring scenarios.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Models;
+
+// Create a new price alert
+var alert = new PriceAlert
+{
+    Asset = "BTC",
+    Fiat = "USD",
+    AlertType = AlertType.PriceIncrease,
+    Threshold = 2.5m,
+    Condition = "Price increased by 2.5% or more",
+    IsEnabled = true,
+    UserId = "user123",
+    CreatedAt = DateTime.UtcNow,
+    Notes = "Monitoring for significant price movements"
+};
+
+// Clone an alert for modification
+var alertCopy = alert.Clone();
+
+// Check if alert has triggered at least N times
+if (alert.HasTriggeredAtLeast(3))
+{
+    Console.WriteLine("Alert has triggered 3+ times");
+}
+
+// Update the threshold value
+if (alert.UpdateThreshold(3.0m))
+{
+    Console.WriteLine("Threshold updated successfully");
+}
+
+// Get the age of the alert in days
+double ageInDays = alert.GetAgeInDays();
+Console.WriteLine($"Alert age: {ageInDays:F2} days");
+
+// Check if alert should fire based on current conditions
+bool shouldFire = alert.ShouldFire(2.6m, 5);
+Console.WriteLine($"Should fire: {shouldFire}");
+
+// Append additional notes to the alert
+alert.AppendNotes("Updated monitoring criteria on 2026-07-12");
+```
+
 ## License
