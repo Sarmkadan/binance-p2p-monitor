@@ -11,6 +11,9 @@ using Xunit;
 
 namespace BinanceP2pMonitor.Tests;
 
+/// <summary>
+/// Provides unit tests for <see cref="HistoricalSpreadAnalysisService"/>.
+/// </summary>
 public class HistoricalSpreadAnalysisServiceTests
 {
     private readonly IHistoryRepository _mockHistoryRepository;
@@ -20,6 +23,10 @@ public class HistoricalSpreadAnalysisServiceTests
     private readonly ILogger<HistoricalSpreadAnalysisService> _mockLogger;
     private readonly HistoricalSpreadAnalysisService _historicalSpreadAnalysisService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HistoricalSpreadAnalysisServiceTests"/> class.
+    /// Sets up the necessary mock dependencies and the service instance for testing.
+    /// </summary>
     public HistoricalSpreadAnalysisServiceTests()
     {
         _mockHistoryRepository = Substitute.For<IHistoryRepository>();
@@ -47,6 +54,9 @@ public class HistoricalSpreadAnalysisServiceTests
         };
     }
 
+    /// <summary>
+    /// Verifies that <see cref="HistoricalSpreadAnalysisService.AnalyzeHistoricalSpreadAsync(string, string)"/> returns null when no history is found.
+    /// </summary>
     [Fact]
     public async Task AnalyzeHistoricalSpreadAsync_ShouldReturnNull_WhenNoHistory()
     {
@@ -61,6 +71,9 @@ public class HistoricalSpreadAnalysisServiceTests
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="HistoricalSpreadAnalysisService.AnalyzeHistoricalSpreadAsync(string, string)"/> returns a valid report when history data exists.
+    /// </summary>
     [Fact]
     public async Task AnalyzeHistoricalSpreadAsync_ShouldReturnReport_WhenHistoryExists()
     {
@@ -84,6 +97,9 @@ public class HistoricalSpreadAnalysisServiceTests
         report.CurrentSpread.Should().Be(1.4m);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="HistoricalSpreadAnalysisService.DetectStatisticalAlertsAsync(IEnumerable<(string, string)>, decimal)"/> returns anomalies when the Z-score exceeds the threshold.
+    /// </summary>
     [Fact]
     public async Task DetectStatisticalAlertsAsync_ShouldReturnAnomalies_WhenZScoreExceedsThreshold()
     {
@@ -109,6 +125,9 @@ public class HistoricalSpreadAnalysisServiceTests
         await _mockEventBus.Received(1).PublishAsync(Arg.Any<SpreadAlertTriggeredEvent>(), Arg.Any<CancellationToken>()).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="HistoricalSpreadAnalysisService.DetectStatisticalAlertsAsync(IEnumerable<(string, string)>, decimal)"/> does not return anomalies when the Z-score is below the threshold.
+    /// </summary>
     [Fact]
     public async Task DetectStatisticalAlertsAsync_ShouldNotReturnAnomalies_WhenZScoreIsBelowThreshold()
     {
@@ -131,6 +150,11 @@ public class HistoricalSpreadAnalysisServiceTests
         await _mockEventBus.DidNotReceive().PublishAsync(Arg.Any<SpreadAlertTriggeredEvent>(), Arg.Any<CancellationToken>()).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="HistoricalSpreadAnalysisService.GetSpreadPercentileAsync(string, string, decimal)"/> returns the correct percentile value.
+    /// </summary>
+    /// <param name="percentile">The percentile to calculate.</param>
+    /// <param name="expectedValue">The expected percentile value.</param>
     [Theory]
     [InlineData(0, 1.0)] // Min
     [InlineData(50, 1.2)] // Median
@@ -150,6 +174,9 @@ public class HistoricalSpreadAnalysisServiceTests
         result.Should().Be(expectedValue);
     }
 
+    /// <summary>
+    /// Verifies that <see cref="HistoricalSpreadAnalysisService.GetSpreadPercentileAsync(string, string, decimal)"/> throws <see cref="ArgumentOutOfRangeException"/> when an invalid percentile is provided.
+    /// </summary>
     [Fact]
     public async Task GetSpreadPercentileAsync_ShouldThrowArgumentOutOfRangeException_ForInvalidPercentile()
     {
@@ -167,6 +194,9 @@ public class HistoricalSpreadAnalysisServiceTests
             .WithMessage("Percentile must be between 0 and 100 (Parameter 'percentile')");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="HistoricalSpreadAnalysisService.GetRollingWindowAveragesAsync(string, string)"/> returns an empty collection when no history exists.
+    /// </summary>
     [Fact]
     public async Task GetRollingWindowAveragesAsync_ShouldReturnEmpty_WhenNoHistory()
     {
