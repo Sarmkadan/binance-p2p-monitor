@@ -239,4 +239,50 @@ Console.WriteLine($"Should fire: {shouldFire}");
 alert.AppendNotes("Updated monitoring criteria on 2026-07-12");
 ```
 
+## ArgumentValidationExceptionExtensions
+
+The `ArgumentValidationExceptionExtensions` class provides extension methods for `ArgumentValidationException` to enhance validation error handling and inspection. These extensions enable merging additional validation errors, checking for specific parameter errors, retrieving error messages, and formatting all validation errors for display.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Exceptions;
+
+// Create an ArgumentValidationException with initial errors
+var errors = new Dictionary<string, string>
+{
+    { "minPrice", "Minimum price must be greater than 0" },
+    { "maxPrice", "Maximum price must be greater than minPrice" }
+};
+var exception = new ArgumentValidationException("Price validation failed", errors, "ARG001");
+
+// Check if a specific parameter has an error
+if (exception.HasErrorFor("minPrice"))
+{
+    Console.WriteLine("minPrice has validation error");
+}
+
+// Get the error message for a specific parameter
+string? errorMessage = exception.GetErrorMessage("maxPrice");
+if (errorMessage != null)
+{
+    Console.WriteLine($"maxPrice error: {errorMessage}");
+}
+
+// Get all formatted error messages
+string allErrors = exception.GetAllErrorMessages();
+Console.WriteLine(allErrors);
+
+// Add a new validation error to the exception
+var updatedException = exception.WithError("currency", "Currency must be a 3-letter code");
+
+// Merge additional validation errors
+var additionalErrors = new Dictionary<string, string>
+{
+    { "symbol", "Symbol must be uppercase" },
+    { "precision", "Precision must be between 2 and 8" }
+};
+var mergedException = updatedException.WithAdditionalErrors(additionalErrors);
+```
+
 ## License
