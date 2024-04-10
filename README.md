@@ -68,4 +68,24 @@ Console.WriteLine($"Worst Performing: {worstOperation}");
 
 ...
 
+## ApiResponseExtensions
+
+The `ApiResponseExtensions` class provides utility methods for working with `ApiResponse` objects, enabling fluent validation, error handling, and summary generation. It supports both generic and non-generic response types.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Infrastructure;
+
+ApiResponse<int> response = new ApiResponse<int>();
+if (!response.IsSuccessful)
+{
+    response = response.AddError("Failed to process request.");
+}
+response = response.WithData(42);
+Console.WriteLine(response.Summary());
+```
+
+...
+
 ## License
