@@ -1,4 +1,4 @@
-# Binance P2P Monitor
+# Binance P2p Monitor
 
 A CLI tool for monitoring Binance P2P prices, tracking spread anomalies, and sending Telegram alerts.
 
@@ -116,4 +116,32 @@ Console.WriteLine($"Valid Output Paths: [{string.Join(", ", validOutputPaths)}]"
 
 ...
 
+## SpreadAnalysisBenchmarks
+
+The `SpreadAnalysisBenchmarks` class provides a set of benchmark methods for analyzing and computing statistics on spread data.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Benchmarks;
+
+var benchmark = new SpreadAnalysisBenchmarks();
+benchmark.Setup();
+
+var directSpread = benchmark.AnalyzeSpread_Direct();
+Console.WriteLine($"Direct Spread Analysis: {directSpread}");
+
+var (mean, stdDev) = benchmark.ComputeStatistics_Loop();
+Console.WriteLine($"Loop Statistics: Mean={mean}, StdDev={stdDev}");
+
+var anomalies = benchmark.FindAnomalies_ZScore();
+Console.WriteLine($"Z-Score Anomalies: {anomalies}");
+
+var anomaliesPool = benchmark.FindAnomalies_ZScore_ArrayPool();
+Console.WriteLine($"Z-Score Anomalies (Array Pool): {anomaliesPool}");
+```
+
+...
+
 ## License
+```
