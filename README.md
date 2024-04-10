@@ -144,4 +144,3 @@ Console.WriteLine($"Z-Score Anomalies (Array Pool): {anomaliesPool}");
 ...
 
 ## License
-```
