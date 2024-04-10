@@ -88,4 +88,32 @@ Console.WriteLine(response.Summary());
 
 ...
 
+## ExportCommandExtensions
+
+The `ExportCommandExtensions` class provides utility methods for validating and generating export commands.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Commands;
+
+var outputPath = ExportCommandExtensions.GetDefaultOutputPath();
+var format = ExportCommandExtensions.GetFormat("csv");
+var daysToExport = ExportCommandExtensions.GetDaysToExport(7);
+var assetFilter = ExportCommandExtensions.GetAssetFilter("BTC");
+var fiatFilter = ExportCommandExtensions.GetFiatFilter("USD");
+var assetFiatPairs = ExportCommandExtensions.ValidateAssetFiatPair(new List<string> { "BTC-USD", "ETH-USD" });
+var validOutputPaths = ExportCommandExtensions.ValidateOutputPath(new List<string> { "/path/to/output" });
+
+Console.WriteLine($"Default Output Path: {outputPath}");
+Console.WriteLine($"Format: {format}");
+Console.WriteLine($"Days to Export: {daysToExport}");
+Console.WriteLine($"Asset Filter: {assetFilter}");
+Console.WriteLine($"Fiat Filter: {fiatFilter}");
+Console.WriteLine($"Asset-Fiat Pairs: [{string.Join(", ", assetFiatPairs)}]");
+Console.WriteLine($"Valid Output Paths: [{string.Join(", ", validOutputPaths)}]");
+```
+
+...
+
 ## License
