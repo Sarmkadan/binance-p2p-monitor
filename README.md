@@ -31,6 +31,36 @@ dotnet restore
 
 ...
 
+## CommandFactoryExtensions
+
+The `CommandFactoryExtensions` class provides utility methods for managing command registration and creation in the CLI. It enables checking command availability, retrieving registered command names, and creating commands with validation.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.CLI;
+
+var factory = new CommandFactory();
+bool isAvailable = CommandFactoryExtensions.IsCommandAvailable(factory, "list");
+HashSet<string> availableCommands = CommandFactoryExtensions.GetAvailableCommandsSet(factory);
+int commandCount = CommandFactoryExtensions.GetCommandCount(factory);
+
+Console.WriteLine($"Commands available: {isAvailable}");
+Console.WriteLine($"Registered commands: [{string.Join(", ", availableCommands)}]");
+Console.WriteLine($"Total commands: {commandCount}");
+
+if (CommandFactoryExtensions.TryCreateCommand(factory, "list", out var command))
+{
+    Console.WriteLine("Created 'list' command successfully.");
+}
+else
+{
+    Console.WriteLine($"First available command: {CommandFactoryExtensions.FindFirstAvailableCommand(factory)}");
+}
+```
+
+...
+
 ## PerformanceMetricsExtensions
 
 The `PerformanceMetricsExtensions` class provides extension methods for analyzing and reporting performance metrics of operations, including success rates, average durations, failure counts, and operation statistics.
