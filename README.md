@@ -173,4 +173,39 @@ Console.WriteLine($"Z-Score Anomalies (Array Pool): {anomaliesPool}");
 
 ...
 
+## PriceMonitoringServiceExtensions
+
+The `PriceMonitoringServiceExtensions` class provides utility methods for analyzing and retrieving current prices, best buy/sell prices, and price statistics. It allows users to monitor prices in real-time and make informed decisions.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Services;
+
+var priceMonitoringService = new PriceMonitoringServiceExtensions("BTC", "USD", 24);
+var currentPrice = await priceMonitoringService.GetCurrentPriceAsync();
+Console.WriteLine($"Current Price: {currentPrice}");
+
+var filteredPrices = await priceMonitoringService.GetFilteredCurrentPricesAsync();
+Console.WriteLine($"Filtered Current Prices: [{string.Join(", ", filteredPrices)}]");
+
+var (bestBuyPrice, bestSellPrice, priceCount) = await priceMonitoringService.GetBestPricesAsync();
+Console.WriteLine($"Best Buy Price: {bestBuyPrice}, Best Sell Price: {bestSellPrice}, Price Count: {priceCount}");
+
+var priceStatistics = await priceMonitoringService.GetPriceStatisticsAsync();
+if (priceStatistics != null)
+{
+    Console.WriteLine($"Average Buy Price: {priceStatistics.AverageBuyPrice}, Average Sell Price: {priceStatistics.AverageSellPrice}");
+    Console.WriteLine($"Min Buy Price: {priceStatistics.MinBuyPrice}, Max Buy Price: {priceStatistics.MaxBuyPrice}");
+    Console.WriteLine($"Min Sell Price: {priceStatistics.MinSellPrice}, Max Sell Price: {priceStatistics.MaxSellPrice}");
+    Console.WriteLine($"Buy Price Volatility: {priceStatistics.BuyPriceVolatilityPercent}%, Sell Price Volatility: {priceStatistics.SellPriceVolatilityPercent}%");
+    Console.WriteLine($"Price Count: {priceStatistics.PriceCount}, Last Updated: {priceStatistics.LastUpdated}");
+}
+
+var wouldTriggerAlert = await priceMonitoringService.WouldTriggerAlertAsync();
+Console.WriteLine($"Would Trigger Alert: {wouldTriggerAlert}");
+```
+
+...
+
 ## License
