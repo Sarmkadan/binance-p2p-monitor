@@ -208,4 +208,69 @@ Console.WriteLine($"Would Trigger Alert: {wouldTriggerAlert}");
 
 ...
 
+## DatabaseContextExtensions
+
+`DatabaseContextExtensions` adds a collection of helper methods that make it easier to execute raw SQL against a `DatabaseContext`. The extensions cover non‑query commands, result‑set queries, scalar retrieval, typed single‑row queries, and transactional execution, all while handling parameters in a concise way.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Data;
+
+// Assume DatabaseContext implements IDisposable and has a parameter‑less constructor.
+using var db = new DatabaseContext();
+
+// Execute a non‑query command.
+int affectedRows = db.ExecuteCommand(
+    "DELETE FROM PriceHistory WHERE Timestamp < @maxAge",
+    new { maxAge = DateTime.UtcNow.AddDays(-30) });
+
+// Run a query that returns multiple rows as dictionaries.
+IEnumerable<Dictionary<string, object>> rows = db.ExecuteQuery(
+    "SELECT Asset, Fiat, Price FROM Prices WHERE Asset = @asset",
+    new { asset = "BTC" });
+
+// Retrieve a scalar integer.
+int totalCount = db.QueryInt(
+    "SELECT COUNT(*) FROM Prices");
+
+// Retrieve a decimal value.
+decimal avgPrice = db.QueryDecimal(
+    "SELECT AVG(Price) FROM Prices WHERE Asset = @asset",
+    new { asset = "BTC" });
+
+// Retrieve a boolean flag.
+bool isActive = db.QueryBool(
+    "SELECT IsActive FROM Users WHERE Id = @id",
+    new { id = 1 });
+
+// Retrieve a nullable DateTime.
+DateTime? lastUpdate = db.QueryDateTime(
+    "SELECT MAX(UpdatedAt) FROM Prices");
+
+// Retrieve a single strongly‑typed object.
+var firstPrice = db.QuerySingle<PriceHistory>(
+    "SELECT * FROM Prices ORDER BY Timestamp DESC LIMIT 1");
+
+// Generic scalar retrieval.
+long maxId = db.ExecuteScalar<long>(
+    "SELECT MAX(Id) FROM Prices");
+
+// Execute multiple commands inside a transaction.
+db.ExecuteInTransaction(() =>
+{
+    db.ExecuteCommand(
+        "INSERT INTO Prices (Asset, Fiat, Price) VALUES (@asset, @fiat, @price)",
+        new { asset = "ETH", fiat = "USD", price = 1800.50m });
+
+    db.ExecuteCommand(
+        "UPDATE Statistics SET LastRun = @now",
+        new { now = DateTime.UtcNow });
+});
+```
+
+The example demonstrates the most common extension methods; you can mix and match them according to the shape of the data you need to work with.
+
+...
+
 ## License
