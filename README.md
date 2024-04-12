@@ -324,8 +324,6 @@ static async Task<decimal> FetchCurrentPriceFromApiAsync(CancellationToken ct)
 }
 ```
 
-
-
 ## AppSettingsExtensions
 
 The `AppSettingsExtensions` class provides utility methods for accessing and converting application settings values. It includes methods for checking notification configuration, retrieving monitoring intervals, alert thresholds, and lists of monitored assets and currencies.
@@ -389,6 +387,26 @@ Console.WriteLine($"Price change threshold: {priceChangeThresholdPercent}%");
 Console.WriteLine($"Spread threshold: {spreadThresholdPercent}%");
 Console.WriteLine($"Monitored assets: [{string.Join(", ", monitoredAssets)}]");
 Console.WriteLine($"Monitored fiats: [{string.Join(", ", monitoredFiats)}]");
+```
+
+## PriceHistoryServiceTestsExtensions
+
+The `PriceHistoryServiceTestsExtensions` class provides utility methods for creating test instances of `PriceHistoryService`. It includes methods for creating default services, services with specific history, services with cleanup results, and services that throw exceptions. It also provides methods for generating price history in ascending or descending order.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Tests;
+
+var defaultService = PriceHistoryServiceTestsExtensions.CreateDefaultService();
+var serviceWithHistory = PriceHistoryServiceTestsExtensions.CreateServiceWithHistory(
+    PriceHistoryServiceTestsExtensions.CreateAscendingPriceHistory(10));
+var serviceWithException = PriceHistoryServiceTestsExtensions.CreateServiceWithException(
+    new ArgumentException("Test exception"));
+
+Console.WriteLine($"Default service: {defaultService}");
+Console.WriteLine($"Service with history: {serviceWithHistory}");
+Console.WriteLine($"Service with exception: {serviceWithException}");
 ```
 
 ## License
