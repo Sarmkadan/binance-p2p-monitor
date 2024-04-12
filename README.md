@@ -273,4 +273,69 @@ The example demonstrates the most common extension methods; you can mix and matc
 
 ...
 
+## AppSettingsExtensions
+
+The `AppSettingsExtensions` class provides utility methods for accessing and converting application settings values. It includes methods for checking notification configuration, retrieving monitoring intervals, alert thresholds, and lists of monitored assets and currencies.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Configuration;
+
+var settings = new AppSettings
+{
+    EnableTelegramNotifications = true,
+    TelegramBotToken = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
+    TelegramAdminChatId = "123456789",
+    EnableWebhookNotifications = true,
+    WebhookUrl = "https://example.com/webhook",
+    MonitoringIntervalSeconds = 30,
+    AlertCooldownMinutes = 5,
+    HistoryRetentionDays = 30,
+    DatabaseCommandTimeoutSeconds = 30,
+    SpreadAnalysisHistoryHours = 24,
+    DailySummaryHourUtc = 9,
+    MaxAlertsPerUser = 3,
+    DefaultPriceChangeThreshold = 2.5m,
+    DefaultSpreadThreshold = 1.8m,
+    MonitoredAssets = new List<string> { "BTC", "ETH", "USDT" },
+    MonitoredFiats = new List<string> { "USD", "EUR", "RUB" }
+};
+
+// Check notification configuration
+bool isTelegramReady = settings.IsTelegramConfigured();
+bool isWebhookReady = settings.IsWebhookConfigured();
+
+// Get monitoring intervals
+int monitoringIntervalMs = settings.GetMonitoringIntervalMs();
+int alertCooldownSeconds = settings.GetAlertCooldownSeconds();
+int historyRetentionHours = settings.GetHistoryRetentionHours();
+int databaseTimeoutMs = settings.GetDatabaseCommandTimeoutMs();
+int spreadAnalysisPeriodHours = settings.GetSpreadAnalysisHistoryPeriod();
+
+// Check daily summary settings
+bool isDailySummaryEnabled = settings.IsDailySummaryEnabled();
+int dailySummaryLocalHour = settings.GetDailySummaryLocalHour();
+
+// Get alert thresholds
+int maxAlertsPerCooldown = settings.GetMaxAlertsPerCooldown();
+decimal priceChangeThresholdPercent = settings.GetPriceChangeThresholdPercent();
+decimal spreadThresholdPercent = settings.GetSpreadThresholdPercent();
+
+// Get monitored lists
+List<string> monitoredAssets = settings.GetMonitoredAssets();
+List<string> monitoredFiats = settings.GetMonitoredFiats();
+
+Console.WriteLine($"Telegram configured: {isTelegramReady}");
+Console.WriteLine($"Webhook configured: {isWebhookReady}");
+Console.WriteLine($"Monitoring interval: {monitoringIntervalMs}ms");
+Console.WriteLine($"Alert cooldown: {alertCooldownSeconds}s");
+Console.WriteLine($"History retention: {historyRetentionHours}h");
+Console.WriteLine($"Daily summary enabled: {isDailySummaryEnabled} (hour: {dailySummaryLocalHour})");
+Console.WriteLine($"Price change threshold: {priceChangeThresholdPercent}%");
+Console.WriteLine($"Spread threshold: {spreadThresholdPercent}%");
+Console.WriteLine($"Monitored assets: [{string.Join(", ", monitoredAssets)}]");
+Console.WriteLine($"Monitored fiats: [{string.Join(", ", monitoredFiats)}]");
+```
+
 ## License
