@@ -271,7 +271,60 @@ db.ExecuteInTransaction(() =>
 
 The example demonstrates the most common extension methods; you can mix and match them according to the shape of the data you need to work with.
 
-...
+## MemoryCacheExtensions
+
+The `MemoryCacheExtensions` class provides asynchronous extension methods for working with `Microsoft.Extensions.Caching.Memory.MemoryCache`. It offers convenient async operations for getting, setting, and managing cached values with support for expiration times, bulk operations, and atomic get-or-create patterns.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Caching;
+using Microsoft.Extensions.Caching.Memory;
+
+// Create cache instance
+var cache = new MemoryCache(new MemoryCacheOptions());
+
+// Set values with expiration
+await cache.SetAsync("btc_price", 50000.50m, 30); // 30 seconds
+await cache.SetAsync("eth_price", 3200.75m, 5.5); // 5.5 minutes
+
+// Get values with async operations
+var btcPrice = await cache.GetValueAsync<decimal>("btc_price");
+var ethPrice = await cache.GetValueAsync<decimal>("eth_price");
+
+// Try-get pattern
+var (success, value) = await cache.TryGetValueAsync<decimal>("btc_price");
+if (success)
+{
+    Console.WriteLine($"Cached value: {value}");
+}
+
+// Get-or-create pattern
+var currentPrice = await cache.GetOrCreateAsync(
+    "current_btc_price",
+    async ct => await FetchCurrentPriceFromApiAsync(ct),
+    60 // 60 seconds expiration
+);
+
+// Remove multiple keys
+await cache.RemoveRangeAsync(new[] { "btc_price", "eth_price", "old_key" });
+
+// Get cache statistics
+int itemCount = cache.Count;
+var expirationTime = await cache.GetExpirationAsync("btc_price");
+
+Console.WriteLine($"Cache contains {itemCount} items");
+Console.WriteLine($"BTC price expiration: {expirationTime}");
+
+static async Task<decimal> FetchCurrentPriceFromApiAsync(CancellationToken ct)
+{
+    // Simulate API call
+    await Task.Delay(100, ct);
+    return 50500.25m;
+}
+```
+
+
 
 ## AppSettingsExtensions
 
