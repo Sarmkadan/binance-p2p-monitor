@@ -1,139 +1,48 @@
 // entire file content ...
 // ... goes in between
 
-## AlertServiceTestsExtensions
+## PriceCalculatorBenchmarks
 
-The `AlertServiceTestsExtensions` class provides helper methods for creating and validating `PriceAlert` instances in unit tests. It allows constructing alerts with specific IDs, thresholds, conditions, and types, as well as verifying their properties.
-
-### Usage
-
-```csharp
-using BinanceP2pMonitor.Tests;
-
-// Create a valid alert with custom properties
-var alert = AlertServiceTestsExtensions.CreateValidAlert()
-    .WithId(Guid.NewGuid())
-    .WithThreshold(105.0m)
-    .WithCondition(PriceAlertCondition.Above)
-    .WithType(PriceAlertType.Price);
-
-// Verify alert properties
-alert.ShouldHaveExpectedProperties(
-    expectedId: alert.Id,
-    expectedThreshold: 105.0m,
-    expectedCondition: PriceAlertCondition.Above,
-    expectedType: PriceAlertType.Price
-);
-
-// Create a disabled alert with specific threshold
-var disabledAlert = AlertServiceTestsExtensions.Disabled()
-    .WithThreshold(95.0m);
-```
-
-## PriceCalculatorTestsExtensions
-
-The `PriceCalculatorTestsExtensions` class provides utility methods for generating test price sequences, calculating price changes, and analyzing spreads. It includes methods for generating linear and exponential price sequences, calculating cumulative percentage changes, and formatting price arrays.
+The `PriceCalculatorBenchmarks` class provides a set of benchmarking methods for evaluating the performance of the `PriceCalculator` class. It includes methods for calculating spread, percentage change, moving averages, and standard deviation.
 
 ### Usage
 
 ```csharp
-using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Benchmarks;
 
-// Generate a linear price sequence
-var linearPrices = PriceCalculatorTestsExtensions.GenerateLinearPriceSequence(10, 100.0m, 10.0m);
-Console.WriteLine($"Linear Price Sequence: [{string.Join(", ", linearPrices)}]");
+// Create a new instance of PriceCalculatorBenchmarks
+var priceCalculatorBenchmarks = new PriceCalculatorBenchmarks();
 
-// Generate an exponential price sequence
-var exponentialPrices = PriceCalculatorTestsExtensions.GenerateExponentialPriceSequence(10, 100.0m, 1.1m);
-Console.WriteLine($"Exponential Price Sequence: [{string.Join(", ", exponentialPrices)}]");
+// Setup the benchmark
+priceCalculatorBenchmarks.Setup();
 
-// Calculate cumulative percentage change
-var cumulativeChange = PriceCalculatorTestsExtensions.CalculateCumulativePercentageChange(linearPrices);
-Console.WriteLine($"Cumulative Percentage Change: {cumulativeChange:P}");
+// Calculate the spread
+var spread = priceCalculatorBenchmarks.CalculateSpread();
 
-// Calculate average spread
-var buyPrices = new decimal[] { 100.0m, 120.0m, 110.0m };
-var sellPrices = new decimal[] { 90.0m, 100.0m, 95.0m };
-var averageSpread = PriceCalculatorTestsExtensions.CalculateAverageSpread(buyPrices, sellPrices);
-Console.WriteLine($"Average Spread: {averageSpread:P}");
+// Calculate the percentage change
+var percentageChange = priceCalculatorBenchmarks.PercentageChange();
 
-// Generate a volatile price sequence
-var volatilePrices = PriceCalculatorTestsExtensions.GenerateVolatilePriceSequence(10, 100.0m, 10.0m);
-Console.WriteLine($"Volatile Price Sequence: [{string.Join(", ", volatilePrices)}]");
+// Calculate the moving average for a period of 20 with 1000 samples
+var movingAveragePeriod20N1000 = priceCalculatorBenchmarks.MovingAverage_Period20_N1000;
 
-// Format a price array
-var formattedPrices = PriceCalculatorTestsExtensions.FormatPriceArray(linearPrices);
-Console.WriteLine($"Formatted Price Array: {formattedPrices}");
+// Calculate the moving average for a period of 200 with 1000 samples
+var movingAveragePeriod200N1000 = priceCalculatorBenchmarks.MovingAverage_Period200_N1000;
 
-// Check if a value is within tolerance
-var isWithinTolerance = PriceCalculatorTestsExtensions.ShouldBeWithinTolerance(100.0m, 105.0m, 5.0m);
-Console.WriteLine($"Is Within Tolerance: {isWithinTolerance}");
+// Calculate the moving average for a period of 20 with 50 samples
+var movingAveragePeriod20N50 = priceCalculatorBenchmarks.MovingAverage_Period20_N50;
 
-// Generate spread test cases
-var testCases = PriceCalculatorTestsExtensions.GenerateSpreadTestCases(10, 100.0m, 10.0m);
-Console.WriteLine($"Spread Test Cases: [{string.Join(", ", testCases)}]");
-```
+// Calculate the standard deviation for 1000 samples
+var standardDeviationN1000 = priceCalculatorBenchmarks.StandardDeviation_N1000;
 
-## PriceAlertTestsExtensions
+// Calculate the standard deviation for 50 samples
+var standardDeviationN50 = priceCalculatorBenchmarks.StandardDeviation_N50;
 
-`PriceAlertTestsExtensions` supplies helper methods for creating and manipulating `PriceAlert` and `Spread` objects in unit‑tests. It lets you quickly build test alerts, evaluate trigger conditions, toggle alert state, and inspect statistical properties such as variance, sample count and risk level.
+// Format a price without a symbol
+var formattedPriceNoSymbol = priceCalculatorBenchmarks.FormatPrice_NoSymbol;
 
-### Usage
-
-```csharp
-using System;
-using BinanceP2pMonitor.Tests;
-
-// Create a test alert and a corresponding spread
-var alert = PriceAlertTestsExtensions.CreateTestAlert();
-var spread = PriceAlertTestsExtensions.CreateTestSpread();
-
-// Inspect basic properties
-Console.WriteLine($"Alert enabled: {PriceAlertTestsExtensions.IsEnabled(alert)}");
-Console.WriteLine($"Alert description: {PriceAlertTestsExtensions.GetDescription(alert)}");
-Console.WriteLine($"Spread risk level: {PriceAlertTestsExtensions.GetRiskLevel(spread)}");
-
-// Determine whether the alert should fire for the current spread
-if (PriceAlertTestsExtensions.ShouldTrigger(alert, spread))
-{
-    // Record the trigger and display updated statistics
-    alert = PriceAlertTestsExtensions.RecordTrigger(alert);
-    Console.WriteLine($"Alert triggered {PriceAlertTestsExtensions.TriggerCount(alert)} time(s).");
-    Console.WriteLine($"Last triggered at: {PriceAlertTestsExtensions.LastTriggeredAt(alert)}");
-}
-
-// Example of toggling the alert state and checking cooldown
-alert = PriceAlertTestsExtensions.Toggle(alert);
-Console.WriteLine($"Alert now enabled: {PriceAlertTestsExtensions.IsEnabled(alert)}");
-Console.WriteLine($"In cooldown period: {PriceAlertTestsExtensions.IsInCooldownPeriod(alert)}");
-
-// Update spread statistics and query derived values
-spread = PriceAlertTestsExtensions.UpdateStatistics(spread);
-Console.WriteLine($"Spread is high: {PriceAlertTestsExtensions.IsHighSpread(spread)}");
-Console.WriteLine($"Variance from average: {PriceAlertTestsExtensions.GetVarianceFromAverage(spread):P}");
-Console.WriteLine($"Sample count: {PriceAlertTestsExtensions.SampleCount(spread)}");
-```
-
-## PriceRepositoryTestsExtensions
-
-The `PriceRepositoryTestsExtensions` class provides utility methods for testing price repository functionality. It includes methods for getting a price repository, adding prices, and retrieving prices by ID or asset and fiat.
-
-### Usage
-
-```csharp
-using BinanceP2pMonitor.Tests;
-
-// Get a price repository
-var priceRepository = PriceRepositoryTestsExtensions.GetPriceRepository();
-
-// Add a price and get its ID
-var addedPriceId = await PriceRepositoryTestsExtensions.AddAsync_ShouldReturnValidIdAndPersist(priceRepository, new Price());
-
-// Get a price by ID
-var price = await PriceRepositoryTestsExtensions.GetByIdAsync_ShouldReturnValidPrice(priceRepository, addedPriceId);
-
-// Get the average price
-var averagePrice = await PriceRepositoryTestsExtensions.GetAveragePriceAsync_ShouldReturnNull_WhenNoPricesInTimeRange(priceRepository, DateTime.Now, DateTime.Now.AddHours(-1));
+// Format a price with a symbol
+var formattedPriceWithSymbol = priceCalculatorBenchmarks.FormatPrice_WithSymbol;
 ```
 
 // ... rest of file content ...
+```
