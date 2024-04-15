@@ -45,4 +45,44 @@ var testCases = PriceCalculatorTestsExtensions.GenerateSpreadTestCases(10, 100.0
 Console.WriteLine($"Spread Test Cases: [{string.Join(", ", testCases)}]");
 ```
 
+## PriceAlertTestsExtensions
+
+`PriceAlertTestsExtensions` supplies helper methods for creating and manipulating `PriceAlert` and `Spread` objects in unit‑tests. It lets you quickly build test alerts, evaluate trigger conditions, toggle alert state, and inspect statistical properties such as variance, sample count and risk level.
+
+### Usage
+
+```csharp
+using System;
+using BinanceP2pMonitor.Tests;
+
+// Create a test alert and a corresponding spread
+var alert = PriceAlertTestsExtensions.CreateTestAlert();
+var spread = PriceAlertTestsExtensions.CreateTestSpread();
+
+// Inspect basic properties
+Console.WriteLine($"Alert enabled: {PriceAlertTestsExtensions.IsEnabled(alert)}");
+Console.WriteLine($"Alert description: {PriceAlertTestsExtensions.GetDescription(alert)}");
+Console.WriteLine($"Spread risk level: {PriceAlertTestsExtensions.GetRiskLevel(spread)}");
+
+// Determine whether the alert should fire for the current spread
+if (PriceAlertTestsExtensions.ShouldTrigger(alert, spread))
+{
+    // Record the trigger and display updated statistics
+    alert = PriceAlertTestsExtensions.RecordTrigger(alert);
+    Console.WriteLine($"Alert triggered {PriceAlertTestsExtensions.TriggerCount(alert)} time(s).");
+    Console.WriteLine($"Last triggered at: {PriceAlertTestsExtensions.LastTriggeredAt(alert)}");
+}
+
+// Example of toggling the alert state and checking cooldown
+alert = PriceAlertTestsExtensions.Toggle(alert);
+Console.WriteLine($"Alert now enabled: {PriceAlertTestsExtensions.IsEnabled(alert)}");
+Console.WriteLine($"In cooldown period: {PriceAlertTestsExtensions.IsInCooldownPeriod(alert)}");
+
+// Update spread statistics and query derived values
+spread = PriceAlertTestsExtensions.UpdateStatistics(spread);
+Console.WriteLine($"Spread is high: {PriceAlertTestsExtensions.IsHighSpread(spread)}");
+Console.WriteLine($"Variance from average: {PriceAlertTestsExtensions.GetVarianceFromAverage(spread):P}");
+Console.WriteLine($"Sample count: {PriceAlertTestsExtensions.SampleCount(spread)}");
+```
+
 // ... rest of file content ...
