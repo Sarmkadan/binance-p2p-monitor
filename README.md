@@ -1,6 +1,35 @@
 // entire file content ...
 // ... goes in between
 
+## AlertServiceTestsExtensions
+
+The `AlertServiceTestsExtensions` class provides helper methods for creating and validating `PriceAlert` instances in unit tests. It allows constructing alerts with specific IDs, thresholds, conditions, and types, as well as verifying their properties.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Tests;
+
+// Create a valid alert with custom properties
+var alert = AlertServiceTestsExtensions.CreateValidAlert()
+    .WithId(Guid.NewGuid())
+    .WithThreshold(105.0m)
+    .WithCondition(PriceAlertCondition.Above)
+    .WithType(PriceAlertType.Price);
+
+// Verify alert properties
+alert.ShouldHaveExpectedProperties(
+    expectedId: alert.Id,
+    expectedThreshold: 105.0m,
+    expectedCondition: PriceAlertCondition.Above,
+    expectedType: PriceAlertType.Price
+);
+
+// Create a disabled alert with specific threshold
+var disabledAlert = AlertServiceTestsExtensions.Disabled()
+    .WithThreshold(95.0m);
+```
+
 ## PriceCalculatorTestsExtensions
 
 The `PriceCalculatorTestsExtensions` class provides utility methods for generating test price sequences, calculating price changes, and analyzing spreads. It includes methods for generating linear and exponential price sequences, calculating cumulative percentage changes, and formatting price arrays.
