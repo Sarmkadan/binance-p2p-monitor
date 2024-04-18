@@ -35,8 +35,6 @@ consoleOutputWriter.WriteBlankLine();
 consoleOutputWriter.WriteRaw("Pre-formatted text");
 ```
 
-// ... rest of file content ...
-
 ## LoggingExtensions
 
 The `LoggingExtensions` class provides extension methods for configuring file-based logging and structured logging throughout the application. It includes methods for logging performance metrics, price changes, alerts, and database operations with appropriate log levels and formatting.
@@ -123,3 +121,37 @@ Console.WriteLine(report);
 // Clear collected metrics
 metricsTracker.Clear();
 ```
+
+## ArgumentValidationException
+
+`ArgumentValidationException` is thrown when argument validation fails. It contains a dictionary of validation errors mapping parameter names to error messages, and provides constructors for single or multiple errors. The `ToString` method is overridden to include the detailed error information.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Exceptions;
+using System.Collections.Generic;
+
+// Create a dictionary of validation errors
+var errors = new Dictionary<string, string>
+{
+    ["username"] = "Username cannot be empty",
+    ["age"] = "Age must be a positive integer"
+};
+
+// Instantiate the exception with multiple errors
+var ex = new ArgumentValidationException(
+    "One or more arguments are invalid.",
+    errors
+);
+
+// Access the ValidationErrors property
+foreach (var kvp in ex.ValidationErrors)
+{
+    Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+}
+
+// Output the exception details
+Console.WriteLine(ex.ToString());
+```
+
