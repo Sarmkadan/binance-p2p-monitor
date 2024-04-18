@@ -78,3 +78,48 @@ logger.LogDatabaseOperation(
     TimeSpan.FromMilliseconds(45)
 );
 ```
+
+## PerformanceMetrics
+
+The `PerformanceMetrics` class tracks and analyzes operation execution metrics including success/failure rates, durations, and timestamps. It provides methods to record operations, retrieve individual or aggregated metrics, generate comprehensive reports, and clear collected data.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Infrastructure;
+
+// Create a performance metrics tracker for a specific operation
+var metricsTracker = new PerformanceMetrics("PriceFetchOperation");
+
+// Record successful operations
+metricsTracker.RecordOperation(TimeSpan.FromMilliseconds(125));
+metricsTracker.RecordOperation(TimeSpan.FromMilliseconds(95));
+
+// Record failed operations
+metricsTracker.RecordOperation(TimeSpan.FromMilliseconds(85), isSuccess: false);
+
+// Get metrics for the current operation
+var currentMetrics = metricsTracker.GetMetrics();
+if (currentMetrics != null)
+{
+    Console.WriteLine($"Total: {currentMetrics.TotalCount}, Success: {currentMetrics.SuccessCount}, " +
+                     $"Failure: {currentMetrics.FailureCount}, Success Rate: {currentMetrics.SuccessRate:P1}");
+    Console.WriteLine($"Duration - Avg: {currentMetrics.AverageDuration.TotalMilliseconds:F2}ms, " +
+                     $"Min: {currentMetrics.MinDuration.TotalMilliseconds:F2}ms, " +
+                     $"Max: {currentMetrics.MaxDuration.TotalMilliseconds:F2}ms");
+}
+
+// Get all tracked operations
+var allMetrics = metricsTracker.GetAllMetrics();
+foreach (var kvp in allMetrics)
+{
+    Console.WriteLine($"{kvp.Key}: {kvp.Value.TotalCount} operations");
+}
+
+// Generate a comprehensive report
+var report = metricsTracker.GenerateReport();
+Console.WriteLine(report);
+
+// Clear collected metrics
+metricsTracker.Clear();
+```
