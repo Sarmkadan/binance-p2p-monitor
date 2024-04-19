@@ -199,6 +199,39 @@ await eventBus.PublishManyAsync(new[] {
 eventBus.Unsubscribe<PriceThresholdExceededEvent>(subscriptionToken);
 ```
 
+## PriceUpdatedEvent
+
+The `PriceUpdatedEvent` class represents an event that is fired whenever a price update occurs for a specific trading pair. It contains both current and previous price values, along with offer counts, allowing subscribers to track price changes and react to market movements.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Events;
+
+// Create a price updated event for USDT/BTC pair
+var priceEvent = new PriceUpdatedEvent
+{
+    Asset = "BTC",
+    Fiat = "USDT",
+    BuyPrice = 50000.50m,
+    SellPrice = 50010.75m,
+    PreviousBuyPrice = 49990.25m,
+    PreviousSellPrice = 50005.50m,
+    BuyOfferCount = 15,
+    SellOfferCount = 20
+};
+
+// Access event properties
+Console.WriteLine($"Asset: {priceEvent.Asset}");
+Console.WriteLine($"Fiat: {priceEvent.Fiat}");
+Console.WriteLine($"Buy Price: {priceEvent.BuyPrice}");
+Console.WriteLine($"Sell Price: {priceEvent.SellPrice}");
+Console.WriteLine($"Previous Buy Price: {priceEvent.PreviousBuyPrice}");
+Console.WriteLine($"Previous Sell Price: {priceEvent.PreviousSellPrice}");
+Console.WriteLine($"Buy Offer Count: {priceEvent.BuyOfferCount}");
+Console.WriteLine($"Sell Offer Count: {priceEvent.SellOfferCount}");
+```
+
 ## SerializationException
 
 `SerializationException` is thrown when serialization or deserialization fails. It includes a `DataType` property to identify the type being serialized and provides an overridden `ToString()` method that includes this information.
