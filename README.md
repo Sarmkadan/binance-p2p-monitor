@@ -177,3 +177,27 @@ Console.WriteLine($"DataType: {ex.DataType}");
 Console.WriteLine(ex.ToString());
 ```
 
+## BinanceP2pException
+
+`BinanceP2pException` is the base exception class for all application-specific errors. It provides properties for error code and context, as well as constructors for creating exceptions with or without inner exceptions. The `ToString` method is overridden to include the error code and context information.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Exceptions;
+
+// Create a BinanceP2pException with error code and context
+var ex = new BinanceP2pException(
+    "An error occurred.",
+    errorCode: "ERROR_001",
+    context: new Dictionary<string, object> { ["key"] = "value" }
+);
+
+// Access the ErrorCode and Context properties
+Console.WriteLine($"ErrorCode: {ex.ErrorCode}");
+Console.WriteLine($"Context: {string.Join(", ", ex.Context.Select(kv => $"{kv.Key}={kv.Value}"))}");
+
+// Output the exception details
+Console.WriteLine(ex.ToString());
+```
+
