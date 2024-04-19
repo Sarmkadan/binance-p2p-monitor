@@ -155,3 +155,25 @@ foreach (var kvp in ex.ValidationErrors)
 Console.WriteLine(ex.ToString());
 ```
 
+## SerializationException
+
+`SerializationException` is thrown when serialization or deserialization fails. It includes a `DataType` property to identify the type being serialized and provides an overridden `ToString()` method that includes this information.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Exceptions;
+
+// Create a serialization exception for a specific data type
+var ex = new SerializationException(
+    "Failed to serialize user data",
+    dataType: "User"
+);
+
+// Access the DataType property
+Console.WriteLine($"DataType: {ex.DataType}");
+
+// Output the exception details
+Console.WriteLine(ex.ToString());
+```
+
