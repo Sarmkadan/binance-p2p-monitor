@@ -155,6 +155,43 @@ foreach (var kvp in ex.ValidationErrors)
 Console.WriteLine(ex.ToString());
 ```
 
+## HttpClientFactory
+
+The `HttpClientFactory` class provides a factory for creating configured HTTP clients with standard headers and policies for making API calls. It simplifies HTTP communication by managing a shared `HttpClient` instance with pre-configured settings such as user-agent, accept headers, and timeout values.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Integration;
+using Microsoft.Extensions.Logging;
+
+// Create and configure services
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var logger = loggerFactory.CreateLogger<HttpClientFactory>();
+var httpClient = new HttpClient();
+var httpClientFactory = new HttpClientFactory(httpClient, logger);
+
+// Create a configured API client for a specific base URL
+var apiClient = httpClientFactory.CreateApiClient("https://api.binance.com");
+
+// Make a GET request to retrieve deserialized JSON response
+var priceData = await httpClientFactory.GetAsync<PriceData>(
+    "/p2p/v1/friendly/loan/config"
+);
+
+// Make a POST request with JSON body and get typed response
+var requestData = new { symbol = "USDT", fiat = "EUR" };
+var response = await httpClientFactory.PostAsync<ApiResponse>(
+    "/p2p/v1/friendly/loan/price",
+    requestData
+);
+
+// Get raw response as string
+var rawResponse = await httpClientFactory.GetStringAsync(
+    "https://api.binance.com/p2p/v1/friendly/loan/config"
+);
+```
+
 ## EventBus
 
 The `EventBus` class implements an in-memory event bus using the publish-subscribe pattern. It allows components to communicate asynchronously through strongly-typed events without direct dependencies. The bus supports both single event publishing and batch operations, with thread-safe subscription management and comprehensive logging.
