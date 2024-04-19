@@ -155,6 +155,50 @@ foreach (var kvp in ex.ValidationErrors)
 Console.WriteLine(ex.ToString());
 ```
 
+## EventBus
+
+The `EventBus` class implements an in-memory event bus using the publish-subscribe pattern. It allows components to communicate asynchronously through strongly-typed events without direct dependencies. The bus supports both single event publishing and batch operations, with thread-safe subscription management and comprehensive logging.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Events;
+using Microsoft.Extensions.Logging;
+
+// Create an event bus with logging
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var logger = loggerFactory.CreateLogger<EventBus>();
+var eventBus = new EventBus(logger);
+
+// Define a custom event implementing IEvent
+public record PriceThresholdExceededEvent(
+    string Symbol,
+    decimal Threshold,
+    decimal CurrentPrice) : IEvent;
+
+// Subscribe to events
+var subscriptionToken = eventBus.Subscribe<PriceThresholdExceededEvent>(
+    async (priceEvent, ct) => {
+        Console.WriteLine($"Threshold exceeded: {priceEvent.Symbol} at {priceEvent.CurrentPrice}");
+        // Handle the event
+        await Task.CompletedTask;
+    }
+);
+
+// Publish a single event
+var priceEvent = new PriceThresholdExceededEvent("USDT", 50000m, 52000m);
+await eventBus.PublishAsync(priceEvent);
+
+// Publish multiple events at once
+await eventBus.PublishManyAsync(new[] {
+    new PriceThresholdExceededEvent("BTC", 45000m, 46500m),
+    new PriceThresholdExceededEvent("ETH", 3000m, 3200m)
+});
+
+// Unsubscribe when no longer needed
+eventBus.Unsubscribe<PriceThresholdExceededEvent>(subscriptionToken);
+```
+
 ## SerializationException
 
 `SerializationException` is thrown when serialization or deserialization fails. It includes a `DataType` property to identify the type being serialized and provides an overridden `ToString()` method that includes this information.
