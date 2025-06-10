@@ -1,0 +1,50 @@
+# =============================================================================
+# Author: Vladyslav Zaiets | https://sarmkadan.com
+# CTO & Software Architect
+# =============================================================================
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: binance-p2p-monitor
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - AppSettings__DatabaseConnectionString=Data Source=/data/binance_p2p.db;Version=3;
+      - AppSettings__TelegramBotToken=${TELEGRAM_BOT_TOKEN:-}
+      - AppSettings__TelegramAdminChatId=${TELEGRAM_ADMIN_CHAT_ID:-}
+      - AppSettings__MonitoringIntervalSeconds=30
+      - AppSettings__AlertCooldownMinutes=5
+      - AppSettings__EnableWebSocket=true
+      - AppSettings__EnableTelegramNotifications=${ENABLE_TELEGRAM:-false}
+      - AppSettings__EnableAutoCleanup=true
+      - AppSettings__LogLevel=Information
+      - AppSettings__LogPath=/app/logs
+      - AppSettings__MonitoredAssets=BTC,ETH,BNB,USDT
+      - AppSettings__MonitoredFiats=USD,EUR,GBP
+    volumes:
+      - ./data:/data
+      - ./logs:/app/logs
+    ports:
+      - "5000:5000"
+    networks:
+      - binance-network
+    healthcheck:
+      test: ["CMD", "dotnet", "binance-p2p-monitor.dll", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  binance-network:
+    driver: bridge
