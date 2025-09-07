@@ -1,0 +1,126 @@
+# =============================================================================
+# Author: Vladyslav Zaiets | https://sarmkadan.com
+# CTO & Software Architect
+# =============================================================================
+
+name: Build & Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        dotnet-version: ['10.0.x']
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+        cache: true
+        cache-dependency-path: '**/packages.lock.json'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build Release
+      run: dotnet build -c Release --no-restore
+
+    - name: Run tests
+      run: dotnet test -c Release --no-build --verbosity normal
+
+    - name: Code quality analysis
+      run: dotnet format --verify-no-changes --verbosity diagnostic
+      continue-on-error: true
+
+    - name: Publish self-contained
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        dotnet publish -c Release -r linux-x64 --self-contained -o ./publish/linux-x64
+        dotnet publish -c Release -r win-x64 --self-contained -o ./publish/win-x64
+        dotnet publish -c Release -r osx-x64 --self-contained -o ./publish/osx-x64
+
+    - name: Upload artifacts
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: binaries
+        path: publish/
+
+  docker:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: docker build -t binance-p2p-monitor:latest -t binance-p2p-monitor:${{ github.sha }} .
+
+    - name: Run Docker container test
+      run: |
+        docker run --rm \
+          -e AppSettings__MonitoringIntervalSeconds=60 \
+          -e AppSettings__EnableWebSocket=false \
+          -e AppSettings__EnableTelegramNotifications=false \
+          binance-p2p-monitor:latest \
+          status
+
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Check for vulnerabilities
+      run: dotnet audit --disable-telemetry
+      continue-on-error: true
+
+    - name: SAST Analysis
+      uses: github/super-linter@v5
+      env:
+        DEFAULT_BRANCH: main
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: binaries
+        path: ./artifacts/
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: artifacts/**/*
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
