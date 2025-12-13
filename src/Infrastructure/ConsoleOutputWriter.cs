@@ -106,4 +106,12 @@ public class ConsoleOutputWriter
     {
         Console.WriteLine();
     }
+
+    /// <summary>
+    /// Writes pre-formatted text directly to stdout without any decoration or colour.
+    /// </summary>
+    public void WriteRaw(string text)
+    {
+        Console.WriteLine(text);
+    }
 }
