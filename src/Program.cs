@@ -7,7 +7,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using BinanceP2pMonitor.Backtesting;
 using BinanceP2pMonitor.Configuration;
+using BinanceP2pMonitor.Extensions;
 using BinanceP2pMonitor.Services;
 using BinanceP2pMonitor.Repositories;
 using BinanceP2pMonitor.Data;
@@ -80,6 +82,9 @@ class Program
                 services.AddSingleton<DataExporter>();
                 services.AddSingleton<PerformanceMetrics>();
 
+                // Register backtesting
+                services.AddBacktesting();
+
                 // Register hosted services
                 services.AddHostedService<MonitoringHostedService>();
                 services.AddHostedService<StatisticsCollectorWorker>();
@@ -109,6 +114,7 @@ class Program
             commandFactory.RegisterCommand("history", typeof(HistoryCommand));
             commandFactory.RegisterCommand("export", typeof(ExportCommand));
             commandFactory.RegisterCommand("version", typeof(VersionCommand));
+            commandFactory.RegisterCommand("backtest", typeof(BacktestCommand));
 
             await host.RunAsync();
         }
