@@ -1,0 +1,115 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+.idea/
+*.DotSettings.user
+
+# Visual Studio Code
+*.code-workspace
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Entity Framework
+*.edmx.diagram
+*.edmx
+
+# Local database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Configuration files with secrets
+appsettings.local.json
+appsettings.secrets.json
+appsettings.Development.json
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test Results
+TestResults/
+.coverage
+*.coverage
+
+# IDE files
+.editorconfig.local
+.vscode/settings.json
+
+# Logs and output
+logs/
+*.log
+output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# IDE specific files
+.vscode/launch.json
+.vscode/settings.json
+.vscode/tasks.json
+
+# ReSharper
+.idea/
+*.sln.iml
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# StyleCop
+StyleCopReport.xml
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Documentation
+docs/_build/
+site/
+
+# Node modules (if any frontend)
+node_modules/
+npm-debug.log
+
+# Certificates
+*.pfx
+*.pem
+*.key
+
+# Package lock files
+package-lock.json
+yarn.lock
