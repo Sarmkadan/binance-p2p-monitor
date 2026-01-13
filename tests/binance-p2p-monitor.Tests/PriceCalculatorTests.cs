@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -216,7 +217,7 @@ public class ValidationHelperTests
     [Fact]
     public void IsValidCollection_EmptyList_ReturnsFalse()
     {
-        var result = ValidationHelper.IsValidCollection(Array.Empty<int>());
+        var result = ValidationHelper.IsValidCollection(int[]());
 
         result.Should().BeFalse();
     }

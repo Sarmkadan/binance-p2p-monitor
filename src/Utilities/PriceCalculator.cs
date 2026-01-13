@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -89,7 +90,7 @@ public static class PriceCalculator
     /// </summary>
     public static decimal CalculateMovingAverage(IEnumerable<decimal> prices, int period)
     {
-        if (prices == null)
+        if (prices is null)
             throw new ArgumentNullException(nameof(prices), "Prices collection cannot be null");
 
         if (period <= 0)
@@ -121,7 +122,7 @@ public static class PriceCalculator
     /// </summary>
     public static decimal CalculateStandardDeviation(IEnumerable<decimal> prices)
     {
-        if (prices == null)
+        if (prices is null)
             throw new ArgumentNullException(nameof(prices), "Prices collection cannot be null");
 
         var list = prices is IReadOnlyList<decimal> r ? r : prices.ToList();
