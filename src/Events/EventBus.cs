@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -21,7 +22,7 @@ public class EventBus : IEventBus
 
     public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken ct = default) where TEvent : IEvent
     {
-        if (@event == null)
+        if (@event is null)
             throw new ArgumentNullException(nameof(@event), $"Event of type {typeof(TEvent).Name} cannot be null");
 
         var eventType = typeof(TEvent);

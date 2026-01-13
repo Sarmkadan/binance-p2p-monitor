@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -94,7 +95,7 @@ public class Market
     /// </summary>
     public bool IsPriceStale(int maxAgeMinutes = 5)
     {
-        if (LastPriceUpdateAt == null)
+        if (LastPriceUpdateAt is null)
             return true;
 
         var lastUpdate = DateTime.FromBinary(LastPriceUpdateAt.Value);

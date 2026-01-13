@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -84,7 +85,7 @@ public class UserProfile
     /// </summary>
     public bool IsRecentlyActive(int inactiveMinutes = 30)
     {
-        if (LastActivityAt == null)
+        if (LastActivityAt is null)
             return false;
 
         var lastActivity = DateTime.FromBinary(LastActivityAt.Value);

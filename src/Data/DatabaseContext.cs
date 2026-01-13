@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -83,7 +84,7 @@ public class DatabaseContext : IDisposable
             command.CommandText = commandText;
             command.CommandTimeout = _settings.DatabaseCommandTimeoutSeconds;
 
-            if (parameters != null)
+            if (parameters is not null)
             {
                 foreach (var param in parameters)
                 {
@@ -110,7 +111,7 @@ public class DatabaseContext : IDisposable
             command.CommandText = commandText;
             command.CommandTimeout = _settings.DatabaseCommandTimeoutSeconds;
 
-            if (parameters != null)
+            if (parameters is not null)
             {
                 foreach (var param in parameters)
                 {
@@ -137,7 +138,7 @@ public class DatabaseContext : IDisposable
             command.CommandText = commandText;
             command.CommandTimeout = _settings.DatabaseCommandTimeoutSeconds;
 
-            if (parameters != null)
+            if (parameters is not null)
             {
                 foreach (var param in parameters)
                 {
