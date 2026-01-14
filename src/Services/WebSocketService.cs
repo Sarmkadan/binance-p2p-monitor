@@ -52,6 +52,27 @@ public class WebSocketService : IWebSocketService, IDisposable
             _isConnected = true;
             _logger.LogInformation("WebSocket connected successfully");
 
+            // Hotfix: Re-subscribe to all previously subscribed pairs after reconnection
+            foreach (var pairKey in _subscribedPairs.ToList())
+            {
+                // Reconstruct asset and fiat from pairKey
+                // Assuming pairKey is always assetfiat (e.g., btcusdt)
+                if (pairKey.Length >= 6) // Minimum length for assetfiat (e.g., BTCUSDT)
+                {
+                    var asset = pairKey.Substring(0, pairKey.Length - 4); // Assuming fiat is always 4 chars (USDT, BUSD, etc.)
+                    var fiat = pairKey.Substring(pairKey.Length - 4);
+                    _logger.LogInformation("Re-subscribing to {Asset}/{Fiat} after reconnection", asset.ToUpper(), fiat.ToUpper());
+                    var subscriptionMessage = new
+                    {
+                        method = "SUBSCRIBE",
+                        @params = new[] { $"{pairKey}@ticker" },
+                        id = DateTime.UtcNow.Ticks
+                    };
+                    var json = System.Text.Json.JsonSerializer.Serialize(subscriptionMessage);
+                    await SendMessageAsync(json);
+                }
+            }
+
             // Start listening for messages
             _ = ListenForMessagesAsync(_cancellationTokenSource.Token);
         }
