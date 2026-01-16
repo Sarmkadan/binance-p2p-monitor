@@ -68,7 +68,7 @@ public class TelegramNotificationClient
 <b>Time:</b> {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC
 ";
 
-        return await SendMessageAsync(message, ct);
+        return await SendMessageAsync(message, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public class TelegramNotificationClient
     public async Task<bool> SendTestMessageAsync(CancellationToken ct = default)
     {
         var message = $"✅ BinanceP2pMonitor is running\n⏰ {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
-        return await SendMessageAsync(message, ct);
+        return await SendMessageAsync(message, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public class TelegramNotificationClient
     public async Task<bool> SendRateLimitedAsync(string cacheKey, string message, TimeSpan rateLimitWindow, CancellationToken ct = default)
     {
         var lastSentKey = $"telegram_ratelimit_{cacheKey}";
-        var exists = await _cache.ExistsAsync(lastSentKey, ct);
+        var exists = await _cache.ExistsAsync(lastSentKey, ct).ConfigureAwait(false);
 
         if (exists)
         {
@@ -94,10 +94,10 @@ public class TelegramNotificationClient
             return false;
         }
 
-        var success = await SendMessageAsync(message, ct);
+        var success = await SendMessageAsync(message, ct).ConfigureAwait(false);
         if (success)
         {
-            await _cache.SetAsync(lastSentKey, DateTime.UtcNow, rateLimitWindow, ct);
+            await _cache.SetAsync(lastSentKey, DateTime.UtcNow, rateLimitWindow, ct).ConfigureAwait(false);
         }
 
         return success;

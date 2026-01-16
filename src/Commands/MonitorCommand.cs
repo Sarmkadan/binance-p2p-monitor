@@ -134,7 +134,7 @@ Examples:
             {
                 try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(interval), cts.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(interval), cts.Token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {

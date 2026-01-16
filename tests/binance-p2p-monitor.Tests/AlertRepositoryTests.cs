@@ -88,11 +88,11 @@ public class AlertRepositoryTests : IDisposable
         var alert = CreateTestAlert();
 
         // Act
-        var id = await _alertRepository.AddAsync(alert);
+        var id = await _alertRepository.AddAsync(alert).ConfigureAwait(false);
 
         // Assert
         id.Should().BeGreaterThan(0);
-        var storedAlert = await _alertRepository.GetByIdAsync(id);
+        var storedAlert = await _alertRepository.GetByIdAsync(id).ConfigureAwait(false);
         storedAlert.Should().NotBeNull();
         storedAlert!.Asset.Should().Be(alert.Asset);
         storedAlert.Threshold.Should().Be(alert.Threshold);
@@ -103,10 +103,10 @@ public class AlertRepositoryTests : IDisposable
     {
         // Arrange
         var alert = CreateTestAlert();
-        var id = await _alertRepository.AddAsync(alert);
+        var id = await _alertRepository.AddAsync(alert).ConfigureAwait(false);
 
         // Act
-        var storedAlert = await _alertRepository.GetByIdAsync(id);
+        var storedAlert = await _alertRepository.GetByIdAsync(id).ConfigureAwait(false);
 
         // Assert
         storedAlert.Should().NotBeNull();
@@ -118,7 +118,7 @@ public class AlertRepositoryTests : IDisposable
     public async Task GetByIdAsync_ShouldReturnNull_WhenAlertDoesNotExist()
     {
         // Act
-        var storedAlert = await _alertRepository.GetByIdAsync(999);
+        var storedAlert = await _alertRepository.GetByIdAsync(999).ConfigureAwait(false);
 
         // Assert
         storedAlert.Should().BeNull();
@@ -129,17 +129,17 @@ public class AlertRepositoryTests : IDisposable
     {
         // Arrange
         var alert = CreateTestAlert();
-        var id = await _alertRepository.AddAsync(alert);
-        var storedAlert = await _alertRepository.GetByIdAsync(id);
+        var id = await _alertRepository.AddAsync(alert).ConfigureAwait(false);
+        var storedAlert = await _alertRepository.GetByIdAsync(id).ConfigureAwait(false);
         storedAlert!.Threshold = 2.0m;
         storedAlert.Notes = "Updated Test Alert";
 
         // Act
-        var result = await _alertRepository.UpdateAsync(storedAlert);
+        var result = await _alertRepository.UpdateAsync(storedAlert).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        var updatedAlert = await _alertRepository.GetByIdAsync(id);
+        var updatedAlert = await _alertRepository.GetByIdAsync(id).ConfigureAwait(false);
         updatedAlert!.Threshold.Should().Be(2.0m);
         updatedAlert.Notes.Should().Be("Updated Test Alert");
     }
@@ -152,7 +152,7 @@ public class AlertRepositoryTests : IDisposable
         alert.Id = 999; // Non-existent ID
 
         // Act
-        var result = await _alertRepository.UpdateAsync(alert);
+        var result = await _alertRepository.UpdateAsync(alert).ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();
@@ -163,14 +163,14 @@ public class AlertRepositoryTests : IDisposable
     {
         // Arrange
         var alert = CreateTestAlert();
-        var id = await _alertRepository.AddAsync(alert);
+        var id = await _alertRepository.AddAsync(alert).ConfigureAwait(false);
 
         // Act
-        var result = await _alertRepository.DeleteAsync(id);
+        var result = await _alertRepository.DeleteAsync(id).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        var deletedAlert = await _alertRepository.GetByIdAsync(id);
+        var deletedAlert = await _alertRepository.GetByIdAsync(id).ConfigureAwait(false);
         deletedAlert.Should().BeNull();
     }
 
@@ -178,7 +178,7 @@ public class AlertRepositoryTests : IDisposable
     public async Task DeleteAsync_ShouldReturnFalse_WhenAlertDoesNotExist()
     {
         // Act
-        var result = await _alertRepository.DeleteAsync(999);
+        var result = await _alertRepository.DeleteAsync(999).ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();
@@ -189,12 +189,12 @@ public class AlertRepositoryTests : IDisposable
     {
         // Arrange
         var userId = 1;
-        await _alertRepository.AddAsync(CreateTestAlert(userId));
-        await _alertRepository.AddAsync(CreateTestAlert(userId));
-        await _alertRepository.AddAsync(CreateTestAlert(userId: 2)); // Another user's alert
+        await _alertRepository.AddAsync(CreateTestAlert(userId)).ConfigureAwait(false);
+        await _alertRepository.AddAsync(CreateTestAlert(userId)).ConfigureAwait(false);
+        await _alertRepository.AddAsync(CreateTestAlert(userId: 2)).ConfigureAwait(false); // Another user's alert
 
         // Act
-        var userAlerts = await _alertRepository.GetUserAlertsAsync(userId);
+        var userAlerts = await _alertRepository.GetUserAlertsAsync(userId).ConfigureAwait(false);
 
         // Assert
         userAlerts.Should().HaveCount(2);
