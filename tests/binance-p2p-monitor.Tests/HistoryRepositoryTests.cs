@@ -93,11 +93,11 @@ public class HistoryRepositoryTests : IDisposable
         var history = CreateTestPriceHistory();
 
         // Act
-        var id = await _historyRepository.AddAsync(history);
+        var id = await _historyRepository.AddAsync(history).ConfigureAwait(false);
 
         // Assert
         id.Should().BeGreaterThan(0);
-        var storedHistory = await _historyRepository.GetByIdAsync(id);
+        var storedHistory = await _historyRepository.GetByIdAsync(id).ConfigureAwait(false);
         storedHistory.Should().NotBeNull();
         storedHistory!.Asset.Should().Be(history.Asset);
         storedHistory.BuyPrice.Should().Be(history.BuyPrice);
@@ -108,10 +108,10 @@ public class HistoryRepositoryTests : IDisposable
     {
         // Arrange
         var history = CreateTestPriceHistory();
-        var id = await _historyRepository.AddAsync(history);
+        var id = await _historyRepository.AddAsync(history).ConfigureAwait(false);
 
         // Act
-        var storedHistory = await _historyRepository.GetByIdAsync(id);
+        var storedHistory = await _historyRepository.GetByIdAsync(id).ConfigureAwait(false);
 
         // Assert
         storedHistory.Should().NotBeNull();
@@ -122,7 +122,7 @@ public class HistoryRepositoryTests : IDisposable
     public async Task GetByIdAsync_ShouldReturnNull_WhenHistoryDoesNotExist()
     {
         // Act
-        var storedHistory = await _historyRepository.GetByIdAsync(999);
+        var storedHistory = await _historyRepository.GetByIdAsync(999).ConfigureAwait(false);
 
         // Assert
         storedHistory.Should().BeNull();
@@ -134,13 +134,13 @@ public class HistoryRepositoryTests : IDisposable
         // Arrange
         var asset = "USDT";
         var fiat = "UAH";
-        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, recordedAt: DateTime.UtcNow.AddHours(-1)));
-        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, recordedAt: DateTime.UtcNow.AddHours(-3)));
-        await _historyRepository.AddAsync(CreateTestPriceHistory("BTC", "USD", recordedAt: DateTime.UtcNow.AddHours(-1))); // Different asset/fiat
-        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, recordedAt: DateTime.UtcNow.AddHours(-25))); // Too old
+        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, recordedAt: DateTime.UtcNow.AddHours(-1))).ConfigureAwait(false);
+        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, recordedAt: DateTime.UtcNow.AddHours(-3))).ConfigureAwait(false);
+        await _historyRepository.AddAsync(CreateTestPriceHistory("BTC", "USD", recordedAt: DateTime.UtcNow.AddHours(-1))).ConfigureAwait(false); // Different asset/fiat
+        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, recordedAt: DateTime.UtcNow.AddHours(-25))).ConfigureAwait(false); // Too old
 
         // Act
-        var history = await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours: 24);
+        var history = await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours: 24).ConfigureAwait(false);
 
         // Assert
         history.Should().HaveCount(2);
@@ -156,15 +156,15 @@ public class HistoryRepositoryTests : IDisposable
     public async Task DeleteOldRecordsAsync_ShouldDeleteRecordsOlderThanDays()
     {
         // Arrange
-        await _historyRepository.AddAsync(CreateTestPriceHistory(recordedAt: DateTime.UtcNow.AddDays(-5)));
-        await _historyRepository.AddAsync(CreateTestPriceHistory(recordedAt: DateTime.UtcNow.AddDays(-1)));
+        await _historyRepository.AddAsync(CreateTestPriceHistory(recordedAt: DateTime.UtcNow.AddDays(-5))).ConfigureAwait(false);
+        await _historyRepository.AddAsync(CreateTestPriceHistory(recordedAt: DateTime.UtcNow.AddDays(-1))).ConfigureAwait(false);
 
         // Act
-        var result = await _historyRepository.DeleteOldRecordsAsync(daysOld: 3);
+        var result = await _historyRepository.DeleteOldRecordsAsync(daysOld: 3).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        var count = await _historyRepository.GetTotalHistoryCountAsync();
+        var count = await _historyRepository.GetTotalHistoryCountAsync().ConfigureAwait(false);
         count.Should().Be(1);
     }
 
@@ -172,11 +172,11 @@ public class HistoryRepositoryTests : IDisposable
     public async Task GetTotalHistoryCountAsync_ShouldReturnCorrectCount()
     {
         // Arrange
-        await _historyRepository.AddAsync(CreateTestPriceHistory());
-        await _historyRepository.AddAsync(CreateTestPriceHistory());
+        await _historyRepository.AddAsync(CreateTestPriceHistory()).ConfigureAwait(false);
+        await _historyRepository.AddAsync(CreateTestPriceHistory()).ConfigureAwait(false);
 
         // Act
-        var count = await _historyRepository.GetTotalHistoryCountAsync();
+        var count = await _historyRepository.GetTotalHistoryCountAsync().ConfigureAwait(false);
 
         // Assert
         count.Should().Be(2);
@@ -188,12 +188,12 @@ public class HistoryRepositoryTests : IDisposable
         // Arrange
         var asset = "USDT";
         var fiat = "UAH";
-        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, buyPrice: 38.0m, sellPrice: 38.5m, recordedAt: DateTime.UtcNow.AddHours(-1)));
-        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, buyPrice: 39.0m, sellPrice: 39.5m, recordedAt: DateTime.UtcNow.AddHours(-2)));
-        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, buyPrice: 37.0m, sellPrice: 37.5m, recordedAt: DateTime.UtcNow.AddHours(-3)));
+        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, buyPrice: 38.0m, sellPrice: 38.5m, recordedAt: DateTime.UtcNow.AddHours(-1))).ConfigureAwait(false);
+        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, buyPrice: 39.0m, sellPrice: 39.5m, recordedAt: DateTime.UtcNow.AddHours(-2))).ConfigureAwait(false);
+        await _historyRepository.AddAsync(CreateTestPriceHistory(asset, fiat, buyPrice: 37.0m, sellPrice: 37.5m, recordedAt: DateTime.UtcNow.AddHours(-3))).ConfigureAwait(false);
 
         // Act
-        var highestPrice = await _historyRepository.GetHighestPriceAsync(asset, fiat, 24);
+        var highestPrice = await _historyRepository.GetHighestPriceAsync(asset, fiat, 24).ConfigureAwait(false);
 
         // Assert
         highestPrice.Should().Be(39.5m);

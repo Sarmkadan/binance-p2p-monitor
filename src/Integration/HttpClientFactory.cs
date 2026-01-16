@@ -43,10 +43,10 @@ public class HttpClientFactory
         try
         {
             _logger.LogDebug("GET request to {Url}", url);
-            var response = await _httpClient.GetAsync(url, ct);
+            var response = await _httpClient.GetAsync(url, ct).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
-            var content = await response.Content.ReadAsStringAsync(ct);
+            var content = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             var result = JsonSerializer.Deserialize<T>(content);
 
             return result;
@@ -69,10 +69,10 @@ public class HttpClientFactory
             var json = JsonSerializer.Serialize(data);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync(url, content, ct);
+            var response = await _httpClient.PostAsync(url, content, ct).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
-            var responseContent = await response.Content.ReadAsStringAsync(ct);
+            var responseContent = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             var result = JsonSerializer.Deserialize<T>(responseContent);
 
             return result;
@@ -91,7 +91,7 @@ public class HttpClientFactory
     {
         try
         {
-            return await _httpClient.GetStringAsync(url, ct);
+            return await _httpClient.GetStringAsync(url, ct).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

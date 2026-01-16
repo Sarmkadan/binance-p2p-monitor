@@ -42,7 +42,7 @@ public class AlertService : IAlertService
             if (alert is null || !alert.IsValid())
                 throw new InvalidAlertException("Alert configuration is invalid");
 
-            var userAlertCount = await GetActiveAlertCountAsync(alert.UserId);
+            var userAlertCount = await GetActiveAlertCountAsync(alert.UserId).ConfigureAwait(false);
             if (userAlertCount >= _settings.MaxAlertsPerUser)
                 throw new InvalidAlertException(
                     $"Maximum number of alerts ({_settings.MaxAlertsPerUser}) reached");
@@ -50,7 +50,7 @@ public class AlertService : IAlertService
             alert.CreatedAt = DateTime.UtcNow;
             alert.UpdatedAt = DateTime.UtcNow;
 
-            return await _alertRepository.AddAsync(alert);
+            return await _alertRepository.AddAsync(alert).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -70,7 +70,7 @@ public class AlertService : IAlertService
                 throw new InvalidAlertException("Alert configuration is invalid");
 
             alert.UpdatedAt = DateTime.UtcNow;
-            return await _alertRepository.UpdateAsync(alert);
+            return await _alertRepository.UpdateAsync(alert).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -86,7 +86,7 @@ public class AlertService : IAlertService
     {
         try
         {
-            return await _alertRepository.DeleteAsync(alertId);
+            return await _alertRepository.DeleteAsync(alertId).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -102,7 +102,7 @@ public class AlertService : IAlertService
     {
         try
         {
-            return await _alertRepository.GetUserAlertsAsync(userId);
+            return await _alertRepository.GetUserAlertsAsync(userId).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -121,7 +121,7 @@ public class AlertService : IAlertService
             if (currentPrice is null || !currentPrice.IsValid())
                 return Enumerable.Empty<PriceAlert>();
 
-            var alerts = await _alertRepository.GetAlertsByAssetAndFiatAsync(currentPrice.Asset, currentPrice.Fiat);
+            var alerts = await _alertRepository.GetAlertsByAssetAndFiatAsync(currentPrice.Asset, currentPrice.Fiat).ConfigureAwait(false);
             var triggeredAlerts = new List<PriceAlert>();
 
             foreach (var alert in alerts)
@@ -139,7 +139,7 @@ public class AlertService : IAlertService
                 if (alert.ShouldTrigger(changePercent))
                 {
                     alert.RecordTrigger();
-                    await UpdateAlertAsync(alert);
+                    await UpdateAlertAsync(alert).ConfigureAwait(false);
                     triggeredAlerts.Add(alert);
 
                     _logger.LogInformation("Alert triggered: {AlertDescription}", alert.GetDescription());
@@ -187,7 +187,7 @@ public class AlertService : IAlertService
         try
         {
             var tasks = chatIds.Select(chatId => SendNotificationAsync(chatId, message));
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -203,12 +203,12 @@ public class AlertService : IAlertService
     {
         try
         {
-            var alert = await _alertRepository.GetByIdAsync(alertId);
+            var alert = await _alertRepository.GetByIdAsync(alertId).ConfigureAwait(false);
             if (alert is null)
                 throw new ResourceNotFoundException($"Alert {alertId} not found");
 
             var testMessage = $"Test notification for {alert.GetDescription()}";
-            await SendNotificationAsync(alert.User?.TelegramChatId ?? 0, testMessage);
+            await SendNotificationAsync(alert.User?.TelegramChatId ?? 0, testMessage).ConfigureAwait(false);
 
             _logger.LogInformation("Alert test sent for alert {AlertId}", alertId);
             return true;
@@ -227,7 +227,7 @@ public class AlertService : IAlertService
     {
         try
         {
-            return await _alertRepository.GetUserAlertCountAsync(userId);
+            return await _alertRepository.GetUserAlertCountAsync(userId).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

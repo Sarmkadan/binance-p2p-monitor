@@ -247,7 +247,7 @@ public class PriceRepository : IPriceRepository
                 { "Metadata", price.Metadata ?? (object)DBNull.Value }
             };
 
-            return await Task.Run(() => _context.ExecuteCommand(sql, parameters) > 0);
+            return await Task.Run(() => _context.ExecuteCommand(sql, parameters) > 0).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -263,7 +263,7 @@ public class PriceRepository : IPriceRepository
         try
         {
             const string sql = "DELETE FROM Prices WHERE Id = @Id";
-            return await Task.Run(() => _context.ExecuteCommand(sql, new Dictionary<string, object> { { "Id", id } }) > 0);
+            return await Task.Run(() => _context.ExecuteCommand(sql, new Dictionary<string, object> { { "Id", id } }) > 0).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

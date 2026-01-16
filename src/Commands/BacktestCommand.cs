@@ -161,7 +161,7 @@ Examples:
         {
             BacktestResult result = runMc
                 ? await _backtestingService.RunBacktestWithMonteCarloAsync(asset, fiat, options, hours)
-                : await _backtestingService.RunBacktestAsync(asset, fiat, options, hours);
+                : await _backtestingService.RunBacktestAsync(asset, fiat, options, hours).ConfigureAwait(false);
 
             if (format == "json")
             {
