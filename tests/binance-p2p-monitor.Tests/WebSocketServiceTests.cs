@@ -35,7 +35,7 @@ public class WebSocketServiceTests
         // Arrange
 
         // Act
-        await _webSocketService.ConnectAsync();
+        await _webSocketService.ConnectAsync().ConfigureAwait(false);
 
         // Assert
         _webSocketService.IsConnected.Should().BeTrue();
@@ -46,10 +46,10 @@ public class WebSocketServiceTests
     public async Task DisconnectAsync_ShouldDisconnectSuccessfully()
     {
         // Arrange
-        await _webSocketService.ConnectAsync();
+        await _webSocketService.ConnectAsync().ConfigureAwait(false);
 
         // Act
-        await _webSocketService.DisconnectAsync();
+        await _webSocketService.DisconnectAsync().ConfigureAwait(false);
 
         // Assert
         _webSocketService.IsConnected.Should().BeFalse();
@@ -60,12 +60,12 @@ public class WebSocketServiceTests
     public async Task SubscribeToPairAsync_ShouldSubscribeAndAddPair()
     {
         // Arrange
-        await _webSocketService.ConnectAsync();
+        await _webSocketService.ConnectAsync().ConfigureAwait(false);
         var asset = "BTC";
         var fiat = "USDT";
 
         // Act
-        await _webSocketService.SubscribeToPairAsync(asset, fiat);
+        await _webSocketService.SubscribeToPairAsync(asset, fiat).ConfigureAwait(false);
 
         // Assert
         // We can't directly verify SendMessageAsync as it's private.
@@ -74,7 +74,7 @@ public class WebSocketServiceTests
         _mockLogger.Received(1).LogInformation(Arg.Any<string>(), "Subscribed to {Asset}/{Fiat}", asset, fiat);
         // Additional assertion to indirectly check subscription:
         // Attempt to subscribe again, it should return without sending a new message
-        await _webSocketService.SubscribeToPairAsync(asset, fiat);
+        await _webSocketService.SubscribeToPairAsync(asset, fiat).ConfigureAwait(false);
         _mockLogger.Received(1).LogInformation(Arg.Any<string>(), "Subscribed to {Asset}/{Fiat}", asset, fiat); // Should still be 1 call
     }
 
@@ -87,17 +87,17 @@ public class WebSocketServiceTests
         var asset2 = "ETH";
         var fiat2 = "BUSD";
 
-        await _webSocketService.ConnectAsync();
-        await _webSocketService.SubscribeToPairAsync(asset1, fiat1);
-        await _webSocketService.SubscribeToPairAsync(asset2, fiat2);
+        await _webSocketService.ConnectAsync().ConfigureAwait(false);
+        await _webSocketService.SubscribeToPairAsync(asset1, fiat1).ConfigureAwait(false);
+        await _webSocketService.SubscribeToPairAsync(asset2, fiat2).ConfigureAwait(false);
 
         // Simulate disconnection by making the service think it's disconnected
         // This is a workaround as we can't directly mock ClientWebSocket's state changes easily.
         // In a real scenario, ClientWebSocket's state would change due to network issues.
-        await _webSocketService.DisconnectAsync();
+        await _webSocketService.DisconnectAsync().ConfigureAwait(false);
 
         // Act - Reconnect
-        await _webSocketService.ConnectAsync(); // This should trigger re-subscription logic
+        await _webSocketService.ConnectAsync().ConfigureAwait(false); // This should trigger re-subscription logic
 
         // Assert
         _webSocketService.IsConnected.Should().BeTrue();

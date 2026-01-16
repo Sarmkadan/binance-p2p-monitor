@@ -74,7 +74,7 @@ class TelegramAlertsExample
             // Create all alerts
             foreach (var alert in alerts)
             {
-                var created = await alertService.CreateAlertAsync(alert);
+                var created = await alertService.CreateAlertAsync(alert).ConfigureAwait(false);
                 Console.WriteLine($"[✓] Created alert: {alert.Asset}/{alert.Fiat} " +
                     $"(ID: {created.Id})");
             }
@@ -85,7 +85,7 @@ class TelegramAlertsExample
             eventBus.Subscribe<PriceUpdatedEvent>(async @event =>
             {
                 // Evaluate all alerts against the new price
-                var triggered = await alertService.EvaluateAlertsAsync(@event.Price);
+                var triggered = await alertService.EvaluateAlertsAsync(@event.Price).ConfigureAwait(false);
 
                 foreach (var alert in triggered)
                 {
@@ -114,7 +114,7 @@ class TelegramAlertsExample
             // Keep monitoring
             while (true)
             {
-                await Task.Delay(1000);
+                await Task.Delay(1000).ConfigureAwait(false);
             }
         }
         catch (Exception ex)

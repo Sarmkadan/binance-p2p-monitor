@@ -90,7 +90,7 @@ Examples:
             var startDate = DateTime.UtcNow.AddDays(-days);
             var content = $"# Exported on {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n";
 
-            await File.WriteAllTextAsync(outputPath, content);
+            await File.WriteAllTextAsync(outputPath, content).ConfigureAwait(false);
 
             _output.WriteSuccess($"Data exported to {Path.GetFullPath(outputPath)}");
             return 0;

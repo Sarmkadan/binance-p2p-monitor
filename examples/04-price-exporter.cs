@@ -42,10 +42,10 @@ class PriceExporterExample
             var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
             // Export to CSV
-            await ExportToCsvAsync(historyService, asset, fiat, $"prices_{asset}_{fiat}_{timestamp}.csv");
+            await ExportToCsvAsync(historyService, asset, fiat, $"prices_{asset}_{fiat}_{timestamp}.csv").ConfigureAwait(false);
 
             // Export to JSON
-            await ExportToJsonAsync(historyService, asset, fiat, $"prices_{asset}_{fiat}_{timestamp}.json");
+            await ExportToJsonAsync(historyService, asset, fiat, $"prices_{asset}_{fiat}_{timestamp}.json").ConfigureAwait(false);
 
             // Export aggregated data (hourly)
             await ExportAggregatedAsync(historyService, asset, fiat,
@@ -69,7 +69,7 @@ class PriceExporterExample
     {
         Console.WriteLine($"Exporting to CSV: {filename}");
 
-        var history = await service.GetHistoryAsync(asset, fiat, limit: 1000);
+        var history = await service.GetHistoryAsync(asset, fiat, limit: 1000).ConfigureAwait(false);
 
         var csv = new StringBuilder();
         csv.AppendLine("timestamp,asset,fiat,bid,ask,spread_percent,volume");
@@ -87,7 +87,7 @@ class PriceExporterExample
                 $"{record.Volume}");
         }
 
-        await File.WriteAllTextAsync(filename, csv.ToString());
+        await File.WriteAllTextAsync(filename, csv.ToString()).ConfigureAwait(false);
         Console.WriteLine($"  ✓ {history.Count()} records exported");
     }
 
@@ -96,7 +96,7 @@ class PriceExporterExample
     {
         Console.WriteLine($"Exporting to JSON: {filename}");
 
-        var history = await service.GetHistoryAsync(asset, fiat, limit: 1000);
+        var history = await service.GetHistoryAsync(asset, fiat, limit: 1000).ConfigureAwait(false);
 
         var data = new
         {
@@ -117,7 +117,7 @@ class PriceExporterExample
         };
 
         var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-        await File.WriteAllTextAsync(filename, json);
+        await File.WriteAllTextAsync(filename, json).ConfigureAwait(false);
         Console.WriteLine($"  ✓ {history.Count()} records exported");
     }
 
@@ -130,7 +130,7 @@ class PriceExporterExample
         csv.AppendLine("hour,asset,fiat,open,high,low,close,avg_bid,avg_ask,volume_sum");
 
         // Fetch hourly data (would need actual aggregation logic in service)
-        var hourly = await service.GetAggregatedAsync(asset, fiat, TimeSpan.FromHours(1));
+        var hourly = await service.GetAggregatedAsync(asset, fiat, TimeSpan.FromHours(1)).ConfigureAwait(false);
 
         if (hourly is not null)
         {
@@ -145,7 +145,7 @@ class PriceExporterExample
                 $"{hourly.Ask:F8}," +
                 $"{hourly.Volume}");
 
-            await File.WriteAllTextAsync(filename, csv.ToString());
+            await File.WriteAllTextAsync(filename, csv.ToString()).ConfigureAwait(false);
             Console.WriteLine($"  ✓ Hourly aggregates exported");
         }
     }

@@ -101,11 +101,11 @@ public class TradeOfferRepositoryTests : IDisposable
         var offer = CreateTestTradeOffer();
 
         // Act
-        var id = await _tradeOfferRepository.AddAsync(offer);
+        var id = await _tradeOfferRepository.AddAsync(offer).ConfigureAwait(false);
 
         // Assert
         id.Should().BeGreaterThan(0);
-        var storedOffer = await _tradeOfferRepository.GetByIdAsync(id);
+        var storedOffer = await _tradeOfferRepository.GetByIdAsync(id).ConfigureAwait(false);
         storedOffer.Should().NotBeNull();
         storedOffer!.OfferIdFromBinance.Should().Be(offer.OfferIdFromBinance);
     }
@@ -115,10 +115,10 @@ public class TradeOfferRepositoryTests : IDisposable
     {
         // Arrange
         var offer = CreateTestTradeOffer();
-        var id = await _tradeOfferRepository.AddAsync(offer);
+        var id = await _tradeOfferRepository.AddAsync(offer).ConfigureAwait(false);
 
         // Act
-        var storedOffer = await _tradeOfferRepository.GetByIdAsync(id);
+        var storedOffer = await _tradeOfferRepository.GetByIdAsync(id).ConfigureAwait(false);
 
         // Assert
         storedOffer.Should().NotBeNull();
@@ -129,7 +129,7 @@ public class TradeOfferRepositoryTests : IDisposable
     public async Task GetByIdAsync_ShouldReturnNull_WhenOfferDoesNotExist()
     {
         // Act
-        var storedOffer = await _tradeOfferRepository.GetByIdAsync(999);
+        var storedOffer = await _tradeOfferRepository.GetByIdAsync(999).ConfigureAwait(false);
 
         // Assert
         storedOffer.Should().BeNull();
@@ -140,10 +140,10 @@ public class TradeOfferRepositoryTests : IDisposable
     {
         // Arrange
         var offer = CreateTestTradeOffer("BINANCE_XYZ");
-        await _tradeOfferRepository.AddAsync(offer);
+        await _tradeOfferRepository.AddAsync(offer).ConfigureAwait(false);
 
         // Act
-        var storedOffer = await _tradeOfferRepository.GetByBinanceIdAsync("BINANCE_XYZ");
+        var storedOffer = await _tradeOfferRepository.GetByBinanceIdAsync("BINANCE_XYZ").ConfigureAwait(false);
 
         // Assert
         storedOffer.Should().NotBeNull();
@@ -154,12 +154,12 @@ public class TradeOfferRepositoryTests : IDisposable
     public async Task GetAllActiveAsync_ShouldReturnAllActiveOffers()
     {
         // Arrange
-        await _tradeOfferRepository.AddAsync(CreateTestTradeOffer(binanceId: "1", isActive: true));
-        await _tradeOfferRepository.AddAsync(CreateTestTradeOffer(binanceId: "2", isActive: true));
-        await _tradeOfferRepository.AddAsync(CreateTestTradeOffer(binanceId: "3", isActive: false)); // Inactive offer
+        await _tradeOfferRepository.AddAsync(CreateTestTradeOffer(binanceId: "1", isActive: true)).ConfigureAwait(false);
+        await _tradeOfferRepository.AddAsync(CreateTestTradeOffer(binanceId: "2", isActive: true)).ConfigureAwait(false);
+        await _tradeOfferRepository.AddAsync(CreateTestTradeOffer(binanceId: "3", isActive: false)).ConfigureAwait(false); // Inactive offer
 
         // Act
-        var activeOffers = await _tradeOfferRepository.GetAllActiveAsync();
+        var activeOffers = await _tradeOfferRepository.GetAllActiveAsync().ConfigureAwait(false);
 
         // Assert
         activeOffers.Should().HaveCount(2);
@@ -171,17 +171,17 @@ public class TradeOfferRepositoryTests : IDisposable
     {
         // Arrange
         var offer = CreateTestTradeOffer();
-        var id = await _tradeOfferRepository.AddAsync(offer);
-        var storedOffer = await _tradeOfferRepository.GetByIdAsync(id);
+        var id = await _tradeOfferRepository.AddAsync(offer).ConfigureAwait(false);
+        var storedOffer = await _tradeOfferRepository.GetByIdAsync(id).ConfigureAwait(false);
         storedOffer!.Price = 39.0m;
         storedOffer.IsActive = false;
 
         // Act
-        var result = await _tradeOfferRepository.UpdateAsync(storedOffer);
+        var result = await _tradeOfferRepository.UpdateAsync(storedOffer).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        var updatedOffer = await _tradeOfferRepository.GetByIdAsync(id);
+        var updatedOffer = await _tradeOfferRepository.GetByIdAsync(id).ConfigureAwait(false);
         updatedOffer!.Price.Should().Be(39.0m);
         updatedOffer.IsActive.Should().BeFalse();
     }
@@ -191,14 +191,14 @@ public class TradeOfferRepositoryTests : IDisposable
     {
         // Arrange
         var offer = CreateTestTradeOffer();
-        var id = await _tradeOfferRepository.AddAsync(offer);
+        var id = await _tradeOfferRepository.AddAsync(offer).ConfigureAwait(false);
 
         // Act
-        var result = await _tradeOfferRepository.DeleteAsync(id);
+        var result = await _tradeOfferRepository.DeleteAsync(id).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        var deletedOffer = await _tradeOfferRepository.GetByIdAsync(id);
+        var deletedOffer = await _tradeOfferRepository.GetByIdAsync(id).ConfigureAwait(false);
         deletedOffer.Should().BeNull();
     }
 }

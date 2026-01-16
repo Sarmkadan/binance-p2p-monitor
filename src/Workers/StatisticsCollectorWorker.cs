@@ -36,8 +36,8 @@ public class StatisticsCollectorWorker : BackgroundService
         {
             try
             {
-                await CollectStatisticsAsync(stoppingToken);
-                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                await CollectStatisticsAsync(stoppingToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -47,7 +47,7 @@ public class StatisticsCollectorWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error collecting statistics");
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken).ConfigureAwait(false);
             }
         }
     }

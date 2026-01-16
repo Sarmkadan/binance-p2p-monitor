@@ -47,7 +47,7 @@ public class WebSocketService : IWebSocketService, IDisposable
 
             // Connect to Binance WebSocket endpoint
             var uri = new Uri("wss://stream.binance.com:9443/ws");
-            await _webSocket.ConnectAsync(uri, _cancellationTokenSource.Token);
+            await _webSocket.ConnectAsync(uri, _cancellationTokenSource.Token).ConfigureAwait(false);
 
             _isConnected = true;
             _logger.LogInformation("WebSocket connected successfully");
@@ -69,7 +69,7 @@ public class WebSocketService : IWebSocketService, IDisposable
                         id = DateTime.UtcNow.Ticks
                     };
                     var json = System.Text.Json.JsonSerializer.Serialize(subscriptionMessage);
-                    await SendMessageAsync(json);
+                    await SendMessageAsync(json).ConfigureAwait(false);
                 }
             }
 
@@ -115,7 +115,7 @@ public class WebSocketService : IWebSocketService, IDisposable
         try
         {
             if (!IsConnected)
-                await ConnectAsync();
+                await ConnectAsync().ConfigureAwait(false);
 
             var pairKey = $"{asset.ToLower()}{fiat.ToLower()}";
 
@@ -130,7 +130,7 @@ public class WebSocketService : IWebSocketService, IDisposable
             };
 
             var json = System.Text.Json.JsonSerializer.Serialize(subscriptionMessage);
-            await SendMessageAsync(json);
+            await SendMessageAsync(json).ConfigureAwait(false);
 
             _subscribedPairs.Add(pairKey);
             _logger.LogInformation("Subscribed to {Asset}/{Fiat}", asset, fiat);
@@ -162,7 +162,7 @@ public class WebSocketService : IWebSocketService, IDisposable
             };
 
             var json = System.Text.Json.JsonSerializer.Serialize(unsubscriptionMessage);
-            await SendMessageAsync(json);
+            await SendMessageAsync(json).ConfigureAwait(false);
 
             _subscribedPairs.Remove(pairKey);
             _logger.LogInformation("Unsubscribed from {Asset}/{Fiat}", asset, fiat);
@@ -197,7 +197,7 @@ public class WebSocketService : IWebSocketService, IDisposable
                     }
                     else if (result.MessageType == WebSocketMessageType.Close)
                     {
-                        await DisconnectAsync();
+                        await DisconnectAsync().ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)

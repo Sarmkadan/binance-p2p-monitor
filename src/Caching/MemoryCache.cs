@@ -34,7 +34,7 @@ public class MemoryCache : ICache, IDisposable
                 if (entry.IsExpired)
                 {
                     _lock.ExitReadLock();
-                    await RemoveAsync(key, ct);
+                    await RemoveAsync(key, ct).ConfigureAwait(false);
                     return default;
                 }
 
@@ -103,12 +103,12 @@ public class MemoryCache : ICache, IDisposable
 
     public async Task<T> GetOrCreateAsync<T>(string key, Func<CancellationToken, Task<T>> factory, TimeSpan? expiration = null, CancellationToken ct = default)
     {
-        var cached = await GetAsync<T>(key, ct);
+        var cached = await GetAsync<T>(key, ct).ConfigureAwait(false);
         if (cached is not null)
             return cached;
 
-        var value = await factory(ct);
-        await SetAsync(key, value, expiration, ct);
+        var value = await factory(ct).ConfigureAwait(false);
+        await SetAsync(key, value, expiration, ct).ConfigureAwait(false);
         return value;
     }
 
