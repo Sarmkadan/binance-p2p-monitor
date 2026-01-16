@@ -262,7 +262,7 @@ public class TradeOfferRepository : ITradeOfferRepository
                 { "UpdatedAt", DateTime.UtcNow }
             };
 
-            return await Task.Run(() => _context.ExecuteCommand(sql, parameters) > 0);
+            return await Task.Run(() => _context.ExecuteCommand(sql, parameters) > 0).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -275,7 +275,7 @@ public class TradeOfferRepository : ITradeOfferRepository
         try
         {
             const string sql = "DELETE FROM TradeOffers WHERE Id = @Id";
-            return await Task.Run(() => _context.ExecuteCommand(sql, new Dictionary<string, object> { { "Id", id } }) > 0);
+            return await Task.Run(() => _context.ExecuteCommand(sql, new Dictionary<string, object> { { "Id", id } }) > 0).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

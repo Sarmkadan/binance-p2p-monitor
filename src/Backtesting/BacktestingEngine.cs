@@ -55,7 +55,7 @@ public sealed class BacktestingEngine : IBacktestingService
         int lookbackHours = 720, CancellationToken ct = default)
     {
         options.Validate();
-        var history = await LoadHistoryAsync(asset, fiat, lookbackHours, options.LookbackPeriod, ct);
+        var history = await LoadHistoryAsync(asset, fiat, lookbackHours, options.LookbackPeriod, ct).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Starting backtest for {Asset}/{Fiat} over {Bars} bars ({Hours}h window)",
@@ -71,7 +71,7 @@ public sealed class BacktestingEngine : IBacktestingService
         int lookbackHours = 720, CancellationToken ct = default)
     {
         options.Validate();
-        var history = await LoadHistoryAsync(asset, fiat, lookbackHours, options.LookbackPeriod, ct);
+        var history = await LoadHistoryAsync(asset, fiat, lookbackHours, options.LookbackPeriod, ct).ConfigureAwait(false);
 
         _logger.LogInformation(
             "Starting backtest+MC for {Asset}/{Fiat}: {Bars} bars, {Iterations} MC paths",
@@ -88,7 +88,7 @@ public sealed class BacktestingEngine : IBacktestingService
         int lookbackHours = 720, CancellationToken ct = default)
     {
         options.Validate();
-        var history = await LoadHistoryAsync(asset, fiat, lookbackHours, options.LookbackPeriod, ct);
+        var history = await LoadHistoryAsync(asset, fiat, lookbackHours, options.LookbackPeriod, ct).ConfigureAwait(false);
         return ExtractSignals(history, options);
     }
 
@@ -97,7 +97,7 @@ public sealed class BacktestingEngine : IBacktestingService
     private async Task<IReadOnlyList<PriceHistory>> LoadHistoryAsync(
         string asset, string fiat, int hours, int minBars, CancellationToken ct)
     {
-        var raw = await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours);
+        var raw = await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours).ConfigureAwait(false);
         var history = raw.OrderBy(h => h.RecordedAt).ToList();
 
         if (history.Count < minBars)

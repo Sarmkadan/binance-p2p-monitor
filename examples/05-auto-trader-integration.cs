@@ -37,18 +37,18 @@ class AutoTraderIntegrationExample
             Console.WriteLine("╚════════════════════════════════════════════════════╝\n");
 
             // Set up trading rules
-            await SetUpTradingRulesAsync(alertService);
+            await SetUpTradingRulesAsync(alertService).ConfigureAwait(false);
 
             // Subscribe to price updates for trading decisions
             eventBus.Subscribe<PriceUpdatedEvent>(async @event =>
             {
-                await trader.OnPriceUpdateAsync(@event.Price);
+                await trader.OnPriceUpdateAsync(@event.Price).ConfigureAwait(false);
             });
 
             // Subscribe to alerts for automatic trade execution
             eventBus.Subscribe<AlertTriggeredEvent>(async @event =>
             {
-                await trader.OnAlertTriggeredAsync(@event);
+                await trader.OnAlertTriggeredAsync(@event).ConfigureAwait(false);
             });
 
             // Start monitoring
@@ -62,7 +62,7 @@ class AutoTraderIntegrationExample
 
             while (true)
             {
-                await Task.Delay(1000);
+                await Task.Delay(1000).ConfigureAwait(false);
             }
         }
         catch (Exception ex)
@@ -115,7 +115,7 @@ class SimpleAutoTrader
 
             if (profitPercent >= TargetProfit)
             {
-                await ExecutorSellAsync(price);
+                await ExecutorSellAsync(price).ConfigureAwait(false);
             }
         }
 
@@ -136,7 +136,7 @@ class SimpleAutoTrader
         {
             Console.WriteLine($"[TRADE SIGNAL] BTC alert triggered!");
             // Execute buy in production
-            await ExecuteBuyAsync();
+            await ExecuteBuyAsync().ConfigureAwait(false);
         }
     }
 
@@ -146,7 +146,7 @@ class SimpleAutoTrader
         Console.WriteLine("[BUY ORDER] Executing buy signal...");
         _positionSize = 1;  // Simplified: always buy 1 BTC
         // _lastBuyPrice would be set from actual order fill
-        await Task.Delay(100);
+        await Task.Delay(100).ConfigureAwait(false);
     }
 
     private async Task ExecutorSellAsync(Price price)
@@ -156,6 +156,6 @@ class SimpleAutoTrader
         var profit = ((price.Bid - _lastBuyPrice) / _lastBuyPrice) * 100;
         Console.WriteLine($"[PROFIT] Realized gain: {profit:F2}%");
         _positionSize = 0;
-        await Task.Delay(100);
+        await Task.Delay(100).ConfigureAwait(false);
     }
 }

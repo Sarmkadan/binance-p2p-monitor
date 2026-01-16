@@ -42,7 +42,7 @@ public class PriceHistoryServiceTests
             .ReturnsAsync(new[] { earlier, later });
 
         var service = CreateService();
-        var trend = await service.GetPriceTrendAsync("BTC", "USD", 24);
+        var trend = await service.GetPriceTrendAsync("BTC", "USD", 24).ConfigureAwait(false);
 
         trend.Should().BePositive();
     }
@@ -62,7 +62,7 @@ public class PriceHistoryServiceTests
             .ReturnsAsync(new[] { single });
 
         var service = CreateService();
-        var trend = await service.GetPriceTrendAsync("BTC", "USD", 24);
+        var trend = await service.GetPriceTrendAsync("BTC", "USD", 24).ConfigureAwait(false);
 
         trend.Should().Be(0m);
     }
@@ -75,7 +75,7 @@ public class PriceHistoryServiceTests
             .ReturnsAsync(PriceHistory[]());
 
         var service = CreateService();
-        var trend = await service.GetPriceTrendAsync("BTC", "USD", 24);
+        var trend = await service.GetPriceTrendAsync("BTC", "USD", 24).ConfigureAwait(false);
 
         trend.Should().Be(0m);
     }
@@ -88,7 +88,7 @@ public class PriceHistoryServiceTests
             .ReturnsAsync(PriceHistory[]());
 
         var service = CreateService();
-        var (high, low, avg) = await service.GetPriceStatsAsync("BTC", "USD", 24);
+        var (high, low, avg) = await service.GetPriceStatsAsync("BTC", "USD", 24).ConfigureAwait(false);
 
         high.Should().Be(0m);
         low.Should().Be(0m);
@@ -111,7 +111,7 @@ public class PriceHistoryServiceTests
             .ReturnsAsync(records);
 
         var service = CreateService();
-        var (high, low, _) = await service.GetPriceStatsAsync("BTC", "USD", 24);
+        var (high, low, _) = await service.GetPriceStatsAsync("BTC", "USD", 24).ConfigureAwait(false);
 
         high.Should().Be(51000m);
         low.Should().Be(40000m);
@@ -125,7 +125,7 @@ public class PriceHistoryServiceTests
             .ReturnsAsync(true);
 
         var service = CreateService();
-        var result = await service.CleanupOldHistoryAsync(daysOld: 30);
+        var result = await service.CleanupOldHistoryAsync(daysOld: 30).ConfigureAwait(false);
 
         result.Should().BeTrue();
         _repoMock.Verify(r => r.DeleteOldRecordsAsync(30), Times.Once);
@@ -139,7 +139,7 @@ public class PriceHistoryServiceTests
             .ReturnsAsync(42L);
 
         var service = CreateService();
-        var count = await service.GetHistoryCountAsync();
+        var count = await service.GetHistoryCountAsync().ConfigureAwait(false);
 
         count.Should().Be(42L);
         _repoMock.Verify(r => r.GetTotalHistoryCountAsync(), Times.Once);

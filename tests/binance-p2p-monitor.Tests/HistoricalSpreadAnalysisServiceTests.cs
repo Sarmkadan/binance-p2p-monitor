@@ -60,7 +60,7 @@ public class HistoricalSpreadAnalysisServiceTests
             .Returns(new List<PriceHistory>());
 
         // Act
-        var result = await _historicalSpreadAnalysisService.AnalyzeHistoricalSpreadAsync("USDT", "UAH");
+        var result = await _historicalSpreadAnalysisService.AnalyzeHistoricalSpreadAsync("USDT", "UAH").ConfigureAwait(false);
 
         // Assert
         result.Should().BeNull();
@@ -80,7 +80,7 @@ public class HistoricalSpreadAnalysisServiceTests
         _mockSpreadAnalysisService.GetSpreadAnalysisAsync(asset, fiat).Returns(new Spread { CurrentSpreadPercent = 1.4m });
 
         // Act
-        var report = await _historicalSpreadAnalysisService.AnalyzeHistoricalSpreadAsync(asset, fiat);
+        var report = await _historicalSpreadAnalysisService.AnalyzeHistoricalSpreadAsync(asset, fiat).ConfigureAwait(false);
 
         // Assert
         report.Should().NotBeNull();
@@ -107,14 +107,14 @@ public class HistoricalSpreadAnalysisServiceTests
         var zScoreThreshold = 2.0m;
 
         // Act
-        var anomalies = await _historicalSpreadAnalysisService.DetectStatisticalAlertsAsync(pairs, zScoreThreshold);
+        var anomalies = await _historicalSpreadAnalysisService.DetectStatisticalAlertsAsync(pairs, zScoreThreshold).ConfigureAwait(false);
 
         // Assert
         anomalies.Should().ContainSingle();
         anomalies.First().Asset.Should().Be(asset);
         anomalies.First().Fiat.Should().Be(fiat);
         anomalies.First().ZScore.Should().BeGreaterThanOrEqualTo(zScoreThreshold);
-        await _mockEventBus.Received(1).PublishAsync(Arg.Any<SpreadAlertTriggeredEvent>(), Arg.Any<CancellationToken>());
+        await _mockEventBus.Received(1).PublishAsync(Arg.Any<SpreadAlertTriggeredEvent>(), Arg.Any<CancellationToken>()).ConfigureAwait(false);
     }
 
     [Fact]
@@ -132,11 +132,11 @@ public class HistoricalSpreadAnalysisServiceTests
         var zScoreThreshold = 2.0m;
 
         // Act
-        var anomalies = await _historicalSpreadAnalysisService.DetectStatisticalAlertsAsync(pairs, zScoreThreshold);
+        var anomalies = await _historicalSpreadAnalysisService.DetectStatisticalAlertsAsync(pairs, zScoreThreshold).ConfigureAwait(false);
 
         // Assert
         anomalies.Should().BeEmpty();
-        await _mockEventBus.DidNotReceive().PublishAsync(Arg.Any<SpreadAlertTriggeredEvent>(), Arg.Any<CancellationToken>());
+        await _mockEventBus.DidNotReceive().PublishAsync(Arg.Any<SpreadAlertTriggeredEvent>(), Arg.Any<CancellationToken>()).ConfigureAwait(false);
     }
 
     [Theory]
@@ -152,7 +152,7 @@ public class HistoricalSpreadAnalysisServiceTests
         _mockHistoryRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, Arg.Any<int>()).Returns(history);
 
         // Act
-        var result = await _historicalSpreadAnalysisService.GetSpreadPercentileAsync(asset, fiat, percentile);
+        var result = await _historicalSpreadAnalysisService.GetSpreadPercentileAsync(asset, fiat, percentile).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(expectedValue);
@@ -168,7 +168,7 @@ public class HistoricalSpreadAnalysisServiceTests
         _mockHistoryRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, Arg.Any<int>()).Returns(history);
 
         // Act
-        Func<Task> action = async () => await _historicalSpreadAnalysisService.GetSpreadPercentileAsync(asset, fiat, 101);
+        Func<Task> action = async () => await _historicalSpreadAnalysisService.GetSpreadPercentileAsync(asset, fiat, 101).ConfigureAwait(false);
 
         // Assert
         await action.Should().ThrowAsync<ArgumentOutOfRangeException>()
@@ -183,7 +183,7 @@ public class HistoricalSpreadAnalysisServiceTests
             .Returns(new List<PriceHistory>());
 
         // Act
-        var result = await _historicalSpreadAnalysisService.GetRollingWindowAveragesAsync("USDT", "UAH");
+        var result = await _historicalSpreadAnalysisService.GetRollingWindowAveragesAsync("USDT", "UAH").ConfigureAwait(false);
 
         // Assert
         result.Should().BeEmpty();

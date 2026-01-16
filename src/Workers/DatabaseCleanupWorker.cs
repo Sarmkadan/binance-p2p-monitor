@@ -33,14 +33,14 @@ public class DatabaseCleanupWorker : BackgroundService
         _logger.LogInformation("Database cleanup worker started");
 
         // Initial delay to avoid running during startup
-        await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+        await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken).ConfigureAwait(false);
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await CleanupOldRecordsAsync(stoppingToken);
-                await Task.Delay(TimeSpan.FromHours(6), stoppingToken);
+                await CleanupOldRecordsAsync(stoppingToken).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromHours(6), stoppingToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -50,7 +50,7 @@ public class DatabaseCleanupWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during database cleanup");
-                await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken).ConfigureAwait(false);
             }
         }
     }

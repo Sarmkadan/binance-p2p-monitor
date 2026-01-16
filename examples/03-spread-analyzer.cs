@@ -38,7 +38,7 @@ class SpreadAnalyzerExample
             var fiat = "USD";
 
             // Analyze each asset
-            var spreads = await spreadService.AnalyzeAssetsAsync(assets, fiat);
+            var spreads = await spreadService.AnalyzeAssetsAsync(assets, fiat).ConfigureAwait(false);
 
             DisplayAnalysis(spreads.ToList());
 
@@ -47,7 +47,7 @@ class SpreadAnalyzerExample
 
             foreach (var asset in assets)
             {
-                var avgSpread = await spreadService.CalculateAverageSpreadAsync(asset, fiat, hours: 24);
+                var avgSpread = await spreadService.CalculateAverageSpreadAsync(asset, fiat, hours: 24).ConfigureAwait(false);
                 Console.WriteLine(
                     $"{asset}/{fiat,-3}: " +
                     $"24h Avg Spread = {avgSpread:F2}%");
