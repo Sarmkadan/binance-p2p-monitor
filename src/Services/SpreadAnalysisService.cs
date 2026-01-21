@@ -33,16 +33,19 @@ public class SpreadAnalysisService : ISpreadAnalysisService
         }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     private readonly IPriceRepository _priceRepository;
+    private readonly IPriceHistoryService _historyService;
     private readonly AppSettings _settings;
     private readonly ILogger<SpreadAnalysisService> _logger;
     private readonly Dictionary<string, Spread> _spreadCache;
 
     public SpreadAnalysisService(
         IPriceRepository priceRepository,
+        IPriceHistoryService historyService,
         AppSettings settings,
         ILogger<SpreadAnalysisService> logger)
     {
         _priceRepository = priceRepository ?? throw new ArgumentNullException(nameof(priceRepository));
+        _historyService = historyService ?? throw new ArgumentNullException(nameof(historyService));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _spreadCache = new Dictionary<string, Spread>();
@@ -56,25 +59,49 @@ public class SpreadAnalysisService : ISpreadAnalysisService
         try
         {
             var key = $"{asset}/{fiat}";
-
-            if (_spreadCache.TryGetValue(key, out var cachedSpread))
-                return cachedSpread;
-
-            var price = await _priceRepository.GetLatestByAssetAndFiatAsync(asset, fiat).ConfigureAwait(false);
-            if (price is null)
-                return null;
-
-            var spread = new Spread
+            if (!_spreadCache.TryGetValue(key, out var spread))
             {
-                Asset = asset,
-                Fiat = fiat,
-                CurrentSpreadPercent = price.CalculateSpread(),
-                LastUpdatedAt = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow,
-                SampleCount = 1
-            };
+                // Initialize spread with historical data if available
+                var historicalPrices = await _historyService.GetHistoryAsync(asset, fiat, _settings.SpreadAnalysisHistoryHours).ConfigureAwait(false);
+                if (historicalPrices != null && historicalPrices.Any())
+                {
+                    var historicalSpreads = historicalPrices.Select(p => p.CalculateSpread()).ToList();
 
-            _spreadCache[key] = spread;
+                    spread = new Spread
+                    {
+                        Asset = asset,
+                        Fiat = fiat,
+                        MinSpreadPercent = historicalSpreads.Min(),
+                        MaxSpreadPercent = historicalSpreads.Max(),
+                        AverageSpreadPercent = historicalSpreads.Average(),
+                        CurrentSpreadPercent = historicalSpreads.Last(), // Or calculate from latest price
+                        SampleCount = historicalSpreads.Count,
+                        LastUpdatedAt = historicalPrices.Max(p => p.Timestamp),
+                        CreatedAt = historicalPrices.Min(p => p.Timestamp),
+                        StandardDeviation = CalculateStandardDeviation(historicalSpreads)
+                    };
+                }
+                else
+                {
+                    spread = new Spread
+                    {
+                        Asset = asset,
+                        Fiat = fiat,
+                        LastUpdatedAt = DateTime.UtcNow,
+                        CreatedAt = DateTime.UtcNow,
+                        SampleCount = 0
+                    };
+                }
+                _spreadCache[key] = spread;
+            }
+
+            var latestPrice = await _priceRepository.GetLatestByAssetAndFiatAsync(asset, fiat).ConfigureAwait(false);
+            if (latestPrice is null)
+                return spread.SampleCount > 0 ? spread : null; // Return existing if any, else null
+
+            var currentSpreadPercent = latestPrice.CalculateSpread();
+            spread.UpdateStatistics(currentSpreadPercent);
+            
             return spread;
         }
         catch (Exception ex)
@@ -193,9 +220,17 @@ public class SpreadAnalysisService : ISpreadAnalysisService
     }
 
     /// <summary>
-    /// Finds anomalous spreads using z-score outlier detection.
-    /// Uses ArrayPool to avoid a temporary heap allocation for the values buffer.
+    /// Calculates the population standard deviation for a list of decimal values.
     /// </summary>
+    private static decimal CalculateStandardDeviation(List<decimal> values)
+    {
+        if (values == null || !values.Any())
+            return 0;
+
+        var mean = values.Average();
+        var sumOfSquaresOfDifferences = values.Sum(v => (v - mean) * (v - mean));
+        return (decimal)Math.Sqrt((double)(sumOfSquaresOfDifferences / values.Count));
+    }
     public async Task<IEnumerable<(string Asset, string Fiat, decimal Spread)>> FindAnomalousSpreadAsync(decimal zScoreThreshold = 2.0m)
     {
         try
