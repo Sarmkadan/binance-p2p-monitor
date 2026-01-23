@@ -192,25 +192,51 @@ public class SpreadAnalysisService : ISpreadAnalysisService
         try
         {
             var prices = await _priceRepository.GetAllActiveAsync().ConfigureAwait(false);
-            var spreads = new Dictionary<string, Spread>();
-
+            
             foreach (var price in prices)
             {
                 var key = $"{price.Asset}/{price.Fiat}";
-                var spread = new Spread
+                if (!_spreadCache.TryGetValue(key, out var spread))
                 {
-                    Asset = price.Asset,
-                    Fiat = price.Fiat,
-                    CurrentSpreadPercent = price.CalculateSpread(),
-                    LastUpdatedAt = price.UpdatedAt,
-                    CreatedAt = price.CreatedAt,
-                    SampleCount = 1
-                };
+                    // Initialize spread with historical data if available
+                    var historicalPrices = await _historyService.GetHistoryAsync(price.Asset, price.Fiat, _settings.SpreadAnalysisHistoryHours).ConfigureAwait(false);
+                    if (historicalPrices != null && historicalPrices.Any())
+                    {
+                        var historicalSpreads = historicalPrices.Select(p => p.CalculateSpread()).ToList();
 
-                spreads[key] = spread;
+                        spread = new Spread
+                        {
+                            Asset = price.Asset,
+                            Fiat = price.Fiat,
+                            MinSpreadPercent = historicalSpreads.Min(),
+                            MaxSpreadPercent = historicalSpreads.Max(),
+                            AverageSpreadPercent = historicalSpreads.Average(),
+                            CurrentSpreadPercent = historicalSpreads.Last(),
+                            SampleCount = historicalSpreads.Count,
+                            LastUpdatedAt = historicalPrices.Max(p => p.Timestamp),
+                            CreatedAt = historicalPrices.Min(p => p.Timestamp),
+                            StandardDeviation = CalculateStandardDeviation(historicalSpreads)
+                        };
+                    }
+                    else
+                    {
+                        spread = new Spread
+                        {
+                            Asset = price.Asset,
+                            Fiat = price.Fiat,
+                            LastUpdatedAt = DateTime.UtcNow,
+                            CreatedAt = DateTime.UtcNow,
+                            SampleCount = 0
+                        };
+                    }
+                    _spreadCache[key] = spread;
+                }
+
+                var currentSpreadPercent = price.CalculateSpread();
+                spread.UpdateStatistics(currentSpreadPercent);
             }
 
-            return spreads;
+            return _spreadCache;
         }
         catch (Exception ex)
         {
