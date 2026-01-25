@@ -12,9 +12,9 @@ namespace BinanceP2pMonitor.Integration;
 public class TelegramNotificationClient
 {
     private readonly TelegramBotClient _botClient;
-    private readonly string _chatId;
     private readonly ILogger<TelegramNotificationClient> _logger;
     private readonly ICache _cache;
+    private readonly AppSettings _appSettings;
 
     public TelegramNotificationClient(
         AppSettings appSettings,
@@ -22,23 +22,21 @@ public class TelegramNotificationClient
         ICache cache)
     {
         _botClient = new TelegramBotClient(appSettings.TelegramBotToken);
-        _chatId = appSettings.TelegramAdminChatId;
         _logger = logger;
         _cache = cache;
+        _appSettings = appSettings;
     }
 
     /// <summary>
     /// Sends a text message via Telegram
     /// </summary>
-    public async Task<bool> SendMessageAsync(string message, CancellationToken ct = default)
+    public async Task<bool> SendMessageAsync(long chatId, string message, CancellationToken ct = default)
     {
         try
         {
-            _logger.LogDebug("Sending Telegram message: {Message}", message.Truncate(100));
-
-            var chatIdParsed = long.Parse(_chatId);
+            _logger.LogDebug("Sending Telegram message to {ChatId}: {Message}", chatId, message.Truncate(100));
             var sentMessage = await _botClient.SendTextMessageAsync(
-                chatId: chatIdParsed,
+                chatId: chatId,
                 text: message,
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
@@ -48,7 +46,7 @@ public class TelegramNotificationClient
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send Telegram message");
+            _logger.LogError(ex, "Failed to send Telegram message to {ChatId}", chatId);
             return false;
         }
     }
@@ -67,8 +65,7 @@ public class TelegramNotificationClient
 <b>Reason:</b> {alertReason}
 <b>Time:</b> {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC
 ";
-
-        return await SendMessageAsync(message, ct).ConfigureAwait(false);
+        return await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId), message, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -77,7 +74,7 @@ public class TelegramNotificationClient
     public async Task<bool> SendTestMessageAsync(CancellationToken ct = default)
     {
         var message = $"✅ BinanceP2pMonitor is running\n⏰ {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
-        return await SendMessageAsync(message, ct).ConfigureAwait(false);
+        return await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId), message, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -94,7 +91,7 @@ public class TelegramNotificationClient
             return false;
         }
 
-        var success = await SendMessageAsync(message, ct).ConfigureAwait(false);
+        var success = await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId), message, ct).ConfigureAwait(false);
         if (success)
         {
             await _cache.SetAsync(lastSentKey, DateTime.UtcNow, rateLimitWindow, ct).ConfigureAwait(false);
