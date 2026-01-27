@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -131,7 +132,7 @@ class PriceExporterExample
         // Fetch hourly data (would need actual aggregation logic in service)
         var hourly = await service.GetAggregatedAsync(asset, fiat, TimeSpan.FromHours(1));
 
-        if (hourly != null)
+        if (hourly is not null)
         {
             csv.AppendLine($"{hourly.Timestamp:O}," +
                 $"{hourly.Asset}," +

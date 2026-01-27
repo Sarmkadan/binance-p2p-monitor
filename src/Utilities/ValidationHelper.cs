@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -90,7 +91,7 @@ public static class ValidationHelper
     /// </summary>
     public static bool IsValidCollection<T>(IEnumerable<T>? collection)
     {
-        return collection != null && collection.Any();
+        return collection is not null && collection.Any();
     }
 
     /// <summary>

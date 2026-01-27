@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -28,11 +29,11 @@ public class BinanceP2pException : Exception
 
     public override string ToString()
     {
-        var contextInfo = Context != null && Context.Count > 0
+        var contextInfo = Context is not null && Context.Count > 0
             ? $"\nContext: {string.Join(", ", Context.Select(kv => $"{kv.Key}={kv.Value}"))}"
             : string.Empty;
 
-        return $"{base.ToString()}{contextInfo}{(ErrorCode != null ? $"\nErrorCode: {ErrorCode}" : string.Empty)}";
+        return $"{base.ToString()}{contextInfo}{(ErrorCode is not null ? $"\nErrorCode: {ErrorCode}" : string.Empty)}";
     }
 }
 

@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -149,7 +150,7 @@ public class HistoryRepository : IHistoryRepository
     {
         try
         {
-            if (history == null || !history.IsValid())
+            if (history is null || !history.IsValid())
                 throw new InvalidPriceException("Price history data is invalid");
 
             const string sql = @"
@@ -177,7 +178,7 @@ public class HistoryRepository : IHistoryRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql, parameters);
-                return result != null ? Convert.ToInt32(result) : 0;
+                return result is not null ? Convert.ToInt32(result) : 0;
             });
         }
         catch (Exception ex)
@@ -215,7 +216,7 @@ public class HistoryRepository : IHistoryRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql);
-                return result != null ? Convert.ToInt64(result) : 0;
+                return result is not null ? Convert.ToInt64(result) : 0;
             });
         }
         catch (Exception ex)
@@ -244,7 +245,7 @@ public class HistoryRepository : IHistoryRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql, parameters);
-                return result != null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
+                return result is not null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
             });
         }
         catch (Exception ex)
@@ -273,7 +274,7 @@ public class HistoryRepository : IHistoryRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql, parameters);
-                return result != null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
+                return result is not null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
             });
         }
         catch (Exception ex)

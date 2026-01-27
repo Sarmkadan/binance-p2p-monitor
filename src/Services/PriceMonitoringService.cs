@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -77,7 +78,7 @@ public class PriceMonitoringService : IPriceMonitoringService
     {
         try
         {
-            if (price == null || !price.IsValid())
+            if (price is null || !price.IsValid())
                 throw new InvalidPriceException("Invalid price data");
 
             var added = await _priceRepository.AddAsync(price);
@@ -153,7 +154,7 @@ public class PriceMonitoringService : IPriceMonitoringService
         try
         {
             var price = await GetCurrentPriceAsync(asset, fiat);
-            if (price == null)
+            if (price is null)
                 return new Dictionary<string, decimal>();
 
             var spread = price.CalculateSpread();

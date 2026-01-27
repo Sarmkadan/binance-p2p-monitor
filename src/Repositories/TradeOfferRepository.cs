@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -82,7 +83,7 @@ public class TradeOfferRepository : ITradeOfferRepository
                 while (reader.Read())
                 {
                     var offer = MapToTradeOfferAsync(reader).Result;
-                    if (offer != null)
+                    if (offer is not null)
                         offers.Add(offer);
                 }
                 return offers;
@@ -114,7 +115,7 @@ public class TradeOfferRepository : ITradeOfferRepository
                 while (reader.Read())
                 {
                     var offer = MapToTradeOfferAsync(reader).Result;
-                    if (offer != null)
+                    if (offer is not null)
                         offers.Add(offer);
                 }
                 return offers;
@@ -144,7 +145,7 @@ public class TradeOfferRepository : ITradeOfferRepository
                 while (reader.Read())
                 {
                     var offer = MapToTradeOfferAsync(reader).Result;
-                    if (offer != null)
+                    if (offer is not null)
                         offers.Add(offer);
                 }
                 return offers;
@@ -177,7 +178,7 @@ public class TradeOfferRepository : ITradeOfferRepository
                 while (reader.Read())
                 {
                     var offer = MapToTradeOfferAsync(reader).Result;
-                    if (offer != null)
+                    if (offer is not null)
                         offers.Add(offer);
                 }
                 return offers;
@@ -193,7 +194,7 @@ public class TradeOfferRepository : ITradeOfferRepository
     {
         try
         {
-            if (offer == null || !offer.IsValid())
+            if (offer is null || !offer.IsValid())
                 throw new InvalidPriceException("Trade offer data is invalid");
 
             const string sql = @"
@@ -225,7 +226,7 @@ public class TradeOfferRepository : ITradeOfferRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql, parameters);
-                return result != null ? Convert.ToInt32(result) : 0;
+                return result is not null ? Convert.ToInt32(result) : 0;
             });
         }
         catch (Exception ex)
@@ -238,7 +239,7 @@ public class TradeOfferRepository : ITradeOfferRepository
     {
         try
         {
-            if (offer == null || offer.Id <= 0)
+            if (offer is null || offer.Id <= 0)
                 throw new InvalidPriceException("Trade offer data is invalid");
 
             const string sql = @"
@@ -295,7 +296,7 @@ public class TradeOfferRepository : ITradeOfferRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql, parameters);
-                return result != null ? Convert.ToInt64(result) : 0;
+                return result is not null ? Convert.ToInt64(result) : 0;
             });
         }
         catch (Exception ex)
@@ -317,7 +318,7 @@ public class TradeOfferRepository : ITradeOfferRepository
             return await Task.Run(() =>
             {
                 var result = _context.ExecuteScalar(sql, parameters);
-                return result != null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
+                return result is not null && result != DBNull.Value ? Convert.ToDecimal(result) : 0;
             });
         }
         catch (Exception ex)
