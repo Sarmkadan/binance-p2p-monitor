@@ -13,6 +13,7 @@ public class HistoryCommand : ICommand
 {
     private readonly IPriceHistoryService _historyService;
     private readonly ConsoleOutputWriter _output;
+    private readonly IEnumerable<IOutputFormatter> _formatters;
     private readonly ILogger<HistoryCommand> _logger;
 
     public string Name => "history";
@@ -21,10 +22,12 @@ public class HistoryCommand : ICommand
     public HistoryCommand(
         IPriceHistoryService historyService,
         ConsoleOutputWriter output,
+        IEnumerable<IOutputFormatter> formatters,
         ILogger<HistoryCommand> logger)
     {
         _historyService = historyService;
         _output = output;
+        _formatters = formatters;
         _logger = logger;
     }
 
@@ -75,11 +78,17 @@ Examples:
     {
         try
         {
-            var asset = context.GetOption("asset");
-            var fiat = context.GetOption("fiat");
-            var days = int.Parse(context.GetOption("days", "7"));
+            var asset = context.GetOption("asset", string.Empty);
+            var fiat = context.GetOption("fiat", string.Empty);
+            var daysString = context.GetOption("days", "7");
             var format = context.GetOption("format", "table");
             var showStats = context.HasFlag("stats");
+
+            if (!int.TryParse(daysString, out int days) || days <= 0)
+            {
+                _output.WriteError("Invalid value for --days. Must be a positive integer.");
+                return 1;
+            }
 
             _output.WriteHeader($"Price History");
 
@@ -89,25 +98,32 @@ Examples:
                 return 1;
             }
 
-            _output.WriteInfo($"Fetching {days} days of history for {asset}/{fiat}");
-
-            var startDate = DateTime.UtcNow.AddDays(-days);
-            // Fetch historical data
-            var historyRecords = new List<object>();
-
-            if (!historyRecords.Any())
+            var formatter = _formatters.FirstOrDefault(f => f.FormatType.Equals(format, StringComparison.OrdinalIgnoreCase));
+            if (formatter is null)
             {
-                _output.WriteInfo("No historical data found");
-                return 0;
+                _output.WriteError($"Unsupported format: {format}. Available formats: {string.Join(", ", _formatters.Select(f => f.FormatType))}");
+                return 1;
             }
-
-            _output.WriteSection($"Price Data ({asset}/{fiat})");
-            _output.WriteInfo($"Records: {historyRecords.Count}");
 
             if (showStats)
             {
-                _output.WriteSection("Statistics");
-                _output.WriteInfo("Price statistics would be displayed here");
+                _output.WriteSection($"Statistical Analysis ({asset}/{fiat}, last {days} days)");
+                var analysis = await _historyService.GetDetailedAnalysisAsync(asset, fiat, days * 24).ConfigureAwait(false);
+                _output.WriteRaw(formatter.Format(analysis));
+            }
+            else
+            {
+                _output.WriteInfo($"Fetching {days} days of history for {asset}/{fiat}...");
+                var historyRecords = await _historyService.GetHistoryAsync(asset, fiat, days * 24).ConfigureAwait(false);
+
+                if (!historyRecords.Any())
+                {
+                    _output.WriteInfo("No historical data found");
+                    return 0;
+                }
+
+                _output.WriteSection($"Price Data ({asset}/{fiat}) - Last {days} Days");
+                _output.WriteRaw(formatter.Format(historyRecords.Cast<object>()));
             }
 
             return 0;
