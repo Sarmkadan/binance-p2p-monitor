@@ -35,8 +35,8 @@ public class AppSettings
     public string LogLevel { get; set; } = "Information";
     public string LogPath { get; set; } = "./logs";
 
-    public List<string> MonitoredAssets { get; set; } = new();
-    public List<string> MonitoredFiats { get; set; } = new();
+    public List<string> MonitoredAssets { get; set; } = new() { "USDT" };
+    public List<string> MonitoredFiats { get; set; } = new() { "RUB", "USD", "EUR" };
 
     /// <summary>
     /// Validates the settings
@@ -80,6 +80,14 @@ public class AppSettings
 
         if (DefaultSpreadThreshold < 0)
             errors.Add("DefaultSpreadThreshold cannot be negative");
+
+        if (EnableWebSocket)
+        {
+            if (!MonitoredAssets.Any())
+                errors.Add("MonitoredAssets cannot be empty if WebSocket is enabled");
+            if (!MonitoredFiats.Any())
+                errors.Add("MonitoredFiats cannot be empty if WebSocket is enabled");
+        }
 
         if (errors.Any())
             throw new Exceptions.ConfigurationException(

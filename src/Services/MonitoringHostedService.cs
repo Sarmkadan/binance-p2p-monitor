@@ -44,29 +44,14 @@ public class MonitoringHostedService : BackgroundService
 
         try
         {
-            // Start the price monitoring service
-            var monitoringTask = _priceMonitoringService.StartMonitoringAsync(stoppingToken);
+            // Start the price monitoring service (this will setup WebSocket subscriptions)
+            await _priceMonitoringService.StartMonitoringAsync(stoppingToken).ConfigureAwait(false);
 
-            // Main monitoring loop
+            // Main monitoring loop for periodic tasks like cleanup
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    // Get and update all monitored prices
-                    var prices = await _priceMonitoringService.GetAllCurrentPricesAsync().ConfigureAwait(false);
-
-                    foreach (var price in prices)
-                    {
-                        try
-                        {
-                            await _priceMonitoringService.UpdatePriceAsync(price).ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error updating price for {Asset}/{Fiat}", price.Asset, price.Fiat);
-                        }
-                    }
-
                     // Perform periodic cleanup
                     if ((DateTime.UtcNow - _lastCleanupTime).TotalHours >= 1)
                     {
@@ -74,8 +59,9 @@ public class MonitoringHostedService : BackgroundService
                         _lastCleanupTime = DateTime.UtcNow;
                     }
 
-                    // Wait for next monitoring interval
-                    await Task.Delay(_settings.MonitoringIntervalSeconds * 1000, stoppingToken).ConfigureAwait(false);
+                    // Wait for next monitoring interval. This interval now primarily governs cleanup frequency
+                    // and keeps the hosted service alive.
+                    await Task.Delay(TimeSpan.FromSeconds(_settings.MonitoringIntervalSeconds), stoppingToken).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
@@ -84,16 +70,14 @@ public class MonitoringHostedService : BackgroundService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error in monitoring service loop");
+                    _logger.LogError(ex, "Error in monitoring service loop (periodic tasks)");
                     await Task.Delay(5000, stoppingToken).ConfigureAwait(false); // Brief delay before retry
                 }
             }
-
-            await monitoringTask;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Fatal error in monitoring hosted service");
+            _logger.LogError(ex, "Fatal error in monitoring hosted service startup");
             throw;
         }
     }
