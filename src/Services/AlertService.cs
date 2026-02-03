@@ -9,6 +9,7 @@ using BinanceP2pMonitor.Constants;
 using BinanceP2pMonitor.Exceptions;
 using BinanceP2pMonitor.Models;
 using BinanceP2pMonitor.Repositories;
+using BinanceP2pMonitor.Integration;
 using Microsoft.Extensions.Logging;
 
 namespace BinanceP2pMonitor.Services;
@@ -22,17 +23,20 @@ public class AlertService : IAlertService
     private readonly AppSettings _settings;
     private readonly ILogger<AlertService> _logger;
     private readonly TelegramNotificationClient _telegramNotificationClient;
+    private readonly WebhookNotificationClient _webhookNotificationClient;
 
     public AlertService(
         IAlertRepository alertRepository,
         AppSettings settings,
         ILogger<AlertService> logger,
-        TelegramNotificationClient telegramNotificationClient)
+        TelegramNotificationClient telegramNotificationClient,
+        WebhookNotificationClient webhookNotificationClient)
     {
         _alertRepository = alertRepository ?? throw new ArgumentNullException(nameof(alertRepository));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _telegramNotificationClient = telegramNotificationClient ?? throw new ArgumentNullException(nameof(telegramNotificationClient));
+        _webhookNotificationClient = webhookNotificationClient ?? throw new ArgumentNullException(nameof(webhookNotificationClient));
     }
 
     /// <summary>
@@ -146,6 +150,17 @@ public class AlertService : IAlertService
                     triggeredAlerts.Add(alert);
 
                     _logger.LogInformation("Alert triggered: {AlertDescription}", alert.GetDescription());
+
+                    // Deliver webhook notification when configured
+                    if (_settings.EnableWebhookNotifications && !string.IsNullOrWhiteSpace(_settings.WebhookUrl))
+                    {
+                        await _webhookNotificationClient.SendPriceAlertAsync(
+                            currentPrice.Asset,
+                            currentPrice.Fiat,
+                            currentPrice.BuyPrice,
+                            currentPrice.SellPrice,
+                            alert.GetDescription()).ConfigureAwait(false);
+                    }
                 }
             }
 

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using BinanceP2pMonitor.Backtesting;
 using BinanceP2pMonitor.Configuration;
 using BinanceP2pMonitor.Extensions;
+using BinanceP2pMonitor.Integration;
 using BinanceP2pMonitor.Services;
 using BinanceP2pMonitor.Repositories;
 using BinanceP2pMonitor.Data;
@@ -69,6 +70,7 @@ class Program
                 services.AddHttpClient();
                 services.AddSingleton<HttpClientFactory>();
                 services.AddSingleton<TelegramNotificationClient>();
+                services.AddSingleton<WebhookNotificationClient>();
 
                 // Register rate limiter
                 services.AddSingleton(new RateLimiter(100, TimeSpan.FromMinutes(1)));
