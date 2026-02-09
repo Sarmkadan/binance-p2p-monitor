@@ -4,6 +4,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+using BinanceP2pMonitor.Models;
+
 namespace BinanceP2pMonitor.Infrastructure;
 
 /// <summary>
@@ -70,13 +72,13 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
         return await _innerService.GetPricesWithSignificantChangeAsync(changePercentThreshold).ConfigureAwait(false);
     }
 
-    public async Task<Dictionary<string, decimal>> GetSpreadAnalysisAsync(string asset, string fiat)
+    public async Task<Spread?> GetSpreadAnalysisAsync(string asset, string fiat)
     {
         var cacheKey = $"spread_{asset}_{fiat}";
         return await _cache.GetOrCreateAsync(
             cacheKey,
             async token => await _innerService.GetSpreadAnalysisAsync(asset, fiat),
-            _cacheDuration) ?? new Dictionary<string, decimal>();
+            _cacheDuration);
     }
 
     public async Task StartMonitoringAsync(CancellationToken cancellationToken)
