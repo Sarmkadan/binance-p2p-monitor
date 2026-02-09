@@ -92,6 +92,7 @@ class Program
                 services.AddHostedService<MonitoringHostedService>();
                 services.AddHostedService<StatisticsCollectorWorker>();
                 services.AddHostedService<DatabaseCleanupWorker>();
+                services.AddHostedService<DailySummaryService>();
 
                 // Register logging
                 services.AddLogging(builder =>
