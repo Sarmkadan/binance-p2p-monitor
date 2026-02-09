@@ -11,17 +11,18 @@ namespace BinanceP2pMonitor.Integration;
 /// </summary>
 public class TelegramNotificationClient
 {
-    private readonly TelegramBotClient _botClient;
+    private readonly ITelegramBotClientWrapper _botClient;
     private readonly ILogger<TelegramNotificationClient> _logger;
     private readonly ICache _cache;
     private readonly AppSettings _appSettings;
 
     public TelegramNotificationClient(
+        ITelegramBotClientWrapper botClientWrapper,
         AppSettings appSettings,
         ILogger<TelegramNotificationClient> logger,
         ICache cache)
     {
-        _botClient = new TelegramBotClient(appSettings.TelegramBotToken);
+        _botClient = botClientWrapper;
         _logger = logger;
         _cache = cache;
         _appSettings = appSettings;
