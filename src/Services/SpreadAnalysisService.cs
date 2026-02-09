@@ -76,8 +76,8 @@ public class SpreadAnalysisService : ISpreadAnalysisService
                         AverageSpreadPercent = historicalSpreads.Average(),
                         CurrentSpreadPercent = historicalSpreads.Last(), // Or calculate from latest price
                         SampleCount = historicalSpreads.Count,
-                        LastUpdatedAt = historicalPrices.Max(p => p.Timestamp),
-                        CreatedAt = historicalPrices.Min(p => p.Timestamp),
+                        LastUpdatedAt = historicalPrices.Max(p => p.RecordedAt),
+                        CreatedAt = historicalPrices.Min(p => p.RecordedAt),
                         StandardDeviation = CalculateStandardDeviation(historicalSpreads)
                     };
                 }
@@ -213,8 +213,8 @@ public class SpreadAnalysisService : ISpreadAnalysisService
                             AverageSpreadPercent = historicalSpreads.Average(),
                             CurrentSpreadPercent = historicalSpreads.Last(),
                             SampleCount = historicalSpreads.Count,
-                            LastUpdatedAt = historicalPrices.Max(p => p.Timestamp),
-                            CreatedAt = historicalPrices.Min(p => p.Timestamp),
+                            LastUpdatedAt = historicalPrices.Max(p => p.RecordedAt),
+                            CreatedAt = historicalPrices.Min(p => p.RecordedAt),
                             StandardDeviation = CalculateStandardDeviation(historicalSpreads)
                         };
                     }
@@ -257,8 +257,71 @@ public class SpreadAnalysisService : ISpreadAnalysisService
         var sumOfSquaresOfDifferences = values.Sum(v => (v - mean) * (v - mean));
         return (decimal)Math.Sqrt((double)(sumOfSquaresOfDifferences / values.Count));
     }
-    public async Task<IEnumerable<(string Asset, string Fiat, decimal Spread)>> FindAnomalousSpreadAsync(decimal zScoreThreshold = 2.0m)
+    /// <summary>
+    /// Calculates the arbitrage spread between the same asset priced in two different fiat currencies.
+    /// </summary>
+    public async Task<CrossCurrencySpread?> GetCrossCurrencySpreadAsync(
+        string asset,
+        string baseFiat,
+        string quoteFiat,
+        decimal conversionRate)
     {
+        if (string.IsNullOrWhiteSpace(asset))
+            throw new ArgumentException("Asset must not be empty", nameof(asset));
+        if (string.IsNullOrWhiteSpace(baseFiat))
+            throw new ArgumentException("BaseFiat must not be empty", nameof(baseFiat));
+        if (string.IsNullOrWhiteSpace(quoteFiat))
+            throw new ArgumentException("QuoteFiat must not be empty", nameof(quoteFiat));
+        if (conversionRate <= 0)
+            throw new ArgumentException("Conversion rate must be positive", nameof(conversionRate));
+
+        try
+        {
+            var basePrice = await _priceRepository
+                .GetLatestByAssetAndFiatAsync(asset, baseFiat)
+                .ConfigureAwait(false);
+
+            var quotePrice = await _priceRepository
+                .GetLatestByAssetAndFiatAsync(asset, quoteFiat)
+                .ConfigureAwait(false);
+
+            if (basePrice is null || quotePrice is null)
+            {
+                _logger.LogWarning(
+                    "Cross-currency spread unavailable: missing price data for {Asset}/{BaseFiat} or {Asset}/{QuoteFiat}",
+                    asset, baseFiat, asset, quoteFiat);
+                return null;
+            }
+
+            // Convert the quote-fiat sell price into base-fiat units so both sides are comparable.
+            var sellPriceConverted = quotePrice.SellPrice * conversionRate;
+            var spreadPercent = basePrice.BuyPrice > 0
+                ? ((sellPriceConverted - basePrice.BuyPrice) / basePrice.BuyPrice) * 100
+                : 0m;
+
+            _logger.LogInformation(
+                "Cross-currency spread {Asset} {BaseFiat}/{QuoteFiat}: buy={BuyPrice}, sell(converted)={SellConverted}, spread={Spread:F4}%",
+                asset, baseFiat, quoteFiat, basePrice.BuyPrice, sellPriceConverted, spreadPercent);
+
+            return new CrossCurrencySpread(
+                Asset: asset,
+                BaseFiat: baseFiat,
+                QuoteFiat: quoteFiat,
+                ConversionRate: conversionRate,
+                BuyPriceInBaseFiat: basePrice.BuyPrice,
+                SellPriceInBaseFiat: sellPriceConverted,
+                SpreadPercent: Math.Round(spreadPercent, 4),
+                CalculatedAt: DateTime.UtcNow);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calculating cross-currency spread for {Asset} {BaseFiat}/{QuoteFiat}",
+                asset, baseFiat, quoteFiat);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<(string Asset, string Fiat, decimal Spread)>> FindAnomalousSpreadAsync(decimal zScoreThreshold = 2.0m)    {
         try
         {
             var spreads = await GetAllSpreadsAsync().ConfigureAwait(false);

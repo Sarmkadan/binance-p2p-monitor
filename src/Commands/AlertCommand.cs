@@ -139,7 +139,16 @@ Examples:
             var alerts = await _alertService.GetUserAlertsAsync(1); // Assuming UserId = 1 for CLI for now
             if (alerts.Any())
             {
-                _output.WriteTable(alerts);
+                var rows = alerts.Select(a => new Dictionary<string, string>
+                {
+                    ["Id"] = a.Id.ToString(),
+                    ["Asset"] = a.Asset,
+                    ["Fiat"] = a.Fiat,
+                    ["Type"] = a.AlertType.ToString(),
+                    ["Threshold"] = a.Threshold.ToString("F2"),
+                    ["Active"] = a.IsEnabled.ToString(),
+                });
+                _output.WriteTable(rows);
             }
             else
             {
