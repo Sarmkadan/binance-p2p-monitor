@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -81,7 +82,7 @@ public class PriceAlert
     /// </summary>
     public bool IsInCooldownPeriod(int cooldownMinutes = 5)
     {
-        if (LastTriggeredAt == null)
+        if (LastTriggeredAt is null)
             return false;
 
         var lastTrigger = DateTime.FromBinary(LastTriggeredAt.Value);

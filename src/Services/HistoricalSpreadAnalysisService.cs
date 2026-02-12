@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -143,7 +144,7 @@ public class HistoricalSpreadAnalysisService : IHistoricalSpreadAnalysisService
             var results = await Task.WhenAll(analysisTasks);
 
             var anomalies = results
-                .Where(r => r != null && Math.Abs(r.ZScore) >= zScoreThreshold)
+                .Where(r => r is not null && Math.Abs(r.ZScore) >= zScoreThreshold)
                 .Select(r => r!)
                 .ToList();
 

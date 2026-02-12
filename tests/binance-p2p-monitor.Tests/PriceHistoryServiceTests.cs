@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -71,7 +72,7 @@ public class PriceHistoryServiceTests
     {
         _repoMock
             .Setup(r => r.GetHistoryByAssetAndFiatAsync("BTC", "USD", 24))
-            .ReturnsAsync(Array.Empty<PriceHistory>());
+            .ReturnsAsync(PriceHistory[]());
 
         var service = CreateService();
         var trend = await service.GetPriceTrendAsync("BTC", "USD", 24);
@@ -84,7 +85,7 @@ public class PriceHistoryServiceTests
     {
         _repoMock
             .Setup(r => r.GetHistoryByAssetAndFiatAsync("BTC", "USD", 24))
-            .ReturnsAsync(Array.Empty<PriceHistory>());
+            .ReturnsAsync(PriceHistory[]());
 
         var service = CreateService();
         var (high, low, avg) = await service.GetPriceStatsAsync("BTC", "USD", 24);

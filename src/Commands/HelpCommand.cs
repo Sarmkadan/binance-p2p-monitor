@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -54,7 +55,7 @@ Examples:
         if (!string.IsNullOrEmpty(commandArg))
         {
             var command = _commandFactory.CreateCommand(commandArg);
-            if (command != null)
+            if (command is not null)
             {
                 Console.WriteLine(command.GetHelp());
                 return Task.FromResult(0);
@@ -73,7 +74,7 @@ Examples:
         foreach (var cmdName in commands.OrderBy(c => c))
         {
             var cmd = _commandFactory.CreateCommand(cmdName);
-            if (cmd != null)
+            if (cmd is not null)
             {
                 Console.WriteLine($"  {cmd.Name.PadRight(15)} - {cmd.Description}");
             }

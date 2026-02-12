@@ -1,3 +1,4 @@
+#nullable enable
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
@@ -74,7 +75,7 @@ public static class LoggingExtensions
         string reason,
         Dictionary<string, string>? metadata = null)
     {
-        var metadataStr = metadata != null
+        var metadataStr = metadata is not null
             ? " | " + string.Join(", ", metadata.Select(kvp => $"{kvp.Key}={kvp.Value}"))
             : string.Empty;
 
@@ -146,7 +147,7 @@ internal class FileLogger : ILogger
         var message = formatter(state, exception);
         var logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [{logLevel}] [{_categoryName}] {message}";
 
-        if (exception != null)
+        if (exception is not null)
             logEntry += Environment.NewLine + exception;
 
         try
