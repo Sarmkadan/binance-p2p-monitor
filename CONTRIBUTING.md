@@ -28,6 +28,50 @@ If you have found a bug, please open a GitHub Issue. When filing an issue, make 
 
 - **.NET 10.0 SDK** or later.
 
+## Building Locally
+
+```bash
+# Clone the repository
+git clone https://github.com/sarmkadan/binance-p2p-monitor.git
+cd binance-p2p-monitor
+
+# Restore dependencies
+dotnet restore
+
+# Build (Release configuration)
+dotnet build --configuration Release
+
+# Or use the provided build script
+./build.sh          # Linux / macOS
+build.bat           # Windows
+```
+
+## Running Tests
+
+```bash
+# Run all tests
+dotnet test --configuration Release --verbosity normal
+
+# Run tests with detailed output and results file
+dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+# Run a specific test project
+dotnet test tests/binance-p2p-monitor.Tests/ --configuration Release
+```
+
+## Running the Application
+
+```bash
+# Copy and edit configuration
+cp appsettings.example.json appsettings.json
+
+# Run monitor
+dotnet run --project . -- monitor
+
+# Run with Docker
+docker-compose up --build
+```
+
 ## Code Style
 
 - Follow the existing conventions found in the codebase.
