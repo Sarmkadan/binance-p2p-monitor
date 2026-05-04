@@ -192,6 +192,47 @@ var rawResponse = await httpClientFactory.GetStringAsync(
 );
 ```
 
+## IWebhookNotificationClient
+
+The `IWebhookNotificationClient` interface defines methods for sending webhook notifications to external monitoring systems. It provides two main methods: `SendAlertAsync` for generic alerts and `SendPriceAlertAsync` for price-specific notifications. Both methods return a boolean indicating whether the webhook was successfully delivered.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Integration;
+using Microsoft.Extensions.Logging;
+
+// Create services
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var logger = loggerFactory.CreateLogger<WebhookNotificationClient>();
+var httpClientFactory = new HttpClientFactory(new HttpClient(), logger);
+var appSettings = new AppSettings { WebhookUrl = "https://your-webhook-endpoint.com/api/alerts" };
+
+// Create webhook notification client
+var webhookClient = new WebhookNotificationClient(httpClientFactory, appSettings, logger);
+
+// Send a generic alert
+var alertResult = await webhookClient.SendAlertAsync(new WebhookPayload
+{
+    Event = "system_alert",
+    Asset = "USDT",
+    Fiat = "EUR",
+    BuyPrice = 100.50m,
+    SellPrice = 101.25m,
+    AlertReason = "API rate limit exceeded",
+    CustomData = "{\"service\": \"binance-p2p-monitor\"}"
+});
+
+// Send a price-specific alert (convenience method)
+var priceAlertResult = await webhookClient.SendPriceAlertAsync(
+    asset: "BTC",
+    fiat: "USDT",
+    buyPrice: 50000.50m,
+    sellPrice: 50010.75m,
+    alertReason: "Price threshold exceeded"
+);
+```
+
 ## EventBus
 
 The `EventBus` class implements an in-memory event bus using the publish-subscribe pattern. It allows components to communicate asynchronously through strongly-typed events without direct dependencies. The bus supports both single event publishing and batch operations, with thread-safe subscription management and comprehensive logging.
