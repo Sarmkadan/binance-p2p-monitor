@@ -169,8 +169,8 @@ public class HistoryRepository : IHistoryRepository
                 { "SellPrice", history.SellPrice },
                 { "RecordedAt", history.RecordedAt },
                 { "CreatedAt", history.CreatedAt },
-                { "SpreadPercentage", history.SpreadPercentage ?? (object)DBNull.Value },
-                { "PriceChangePercent", history.PriceChangePercent ?? (object)DBNull.Value },
+                { "SpreadPercentage", (object)history.SpreadPercentage },
+                { "PriceChangePercent", (object)history.PriceChangePercent },
                 { "Notes", history.Notes ?? (object)DBNull.Value }
             };
 
@@ -294,8 +294,8 @@ public class HistoryRepository : IHistoryRepository
             SellPrice = (decimal)reader.GetDouble(5),
             RecordedAt = reader.GetDateTime(6),
             CreatedAt = reader.GetDateTime(7),
-            SpreadPercentage = reader.IsDBNull(8) ? null : (decimal)reader.GetDouble(8),
-            PriceChangePercent = reader.IsDBNull(9) ? null : (decimal)reader.GetDouble(9),
+            SpreadPercentage = reader.IsDBNull(8) ? 0m : (decimal)reader.GetDouble(8),
+            PriceChangePercent = reader.IsDBNull(9) ? 0m : (decimal)reader.GetDouble(9),
             Notes = reader.IsDBNull(10) ? null : reader.GetString(10)
         };
     }

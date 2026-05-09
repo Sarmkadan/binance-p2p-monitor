@@ -25,7 +25,7 @@ public class DataExporter
         try
         {
             _logger.LogInformation("Exporting data to JSON: {FilePath}", filePath);
-            var json = JsonConvert.SerializeObject(data, Formatting.Indented);
+            var json = JsonSerializer.Serialize(data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(filePath, json, ct);
             _logger.LogInformation("Exported to {FilePath}", filePath);
         }
