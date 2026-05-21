@@ -13,13 +13,23 @@ public class RetryPolicy
 {
     private readonly int _maxRetries;
     private readonly TimeSpan _initialDelay;
+    private readonly TimeSpan _maxDelay;
     private readonly double _backoffMultiplier;
     private readonly ILogger _logger;
 
-    public RetryPolicy(int maxRetries = 3, TimeSpan? initialDelay = null, double backoffMultiplier = 2.0, ILogger? logger = null)
+    /// <summary>
+    /// Creates a new retry policy with exponential backoff.
+    /// </summary>
+    /// <param name="maxRetries">Maximum number of retry attempts.</param>
+    /// <param name="initialDelay">Delay before the first retry. Defaults to 1 second.</param>
+    /// <param name="backoffMultiplier">Multiplier applied to the delay after each retry.</param>
+    /// <param name="maxDelay">Maximum delay between retries to prevent unbounded waits. Defaults to 30 seconds.</param>
+    /// <param name="logger">Optional logger instance.</param>
+    public RetryPolicy(int maxRetries = 3, TimeSpan? initialDelay = null, double backoffMultiplier = 2.0, TimeSpan? maxDelay = null, ILogger? logger = null)
     {
         _maxRetries = maxRetries;
         _initialDelay = initialDelay ?? TimeSpan.FromSeconds(1);
+        _maxDelay = maxDelay ?? TimeSpan.FromSeconds(30);
         _backoffMultiplier = backoffMultiplier;
         _logger = logger ?? new NullLogger();
     }
@@ -50,8 +60,9 @@ public class RetryPolicy
                     throw;
                 }
 
-                _logger.LogWarning(ex, "Attempt {Attempt} failed, retrying in {DelayMs}ms", attempt, delay.TotalMilliseconds);
-                await Task.Delay(delay, ct).ConfigureAwait(false);
+                var actualDelay = delay > _maxDelay ? _maxDelay : delay;
+                _logger.LogWarning(ex, "Attempt {Attempt}/{MaxAttempts} failed, retrying in {DelayMs}ms", attempt, _maxRetries, actualDelay.TotalMilliseconds);
+                await Task.Delay(actualDelay, ct).ConfigureAwait(false);
                 delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * _backoffMultiplier);
             }
         }
