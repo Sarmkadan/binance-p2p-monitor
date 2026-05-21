@@ -54,7 +54,7 @@ public class PriceHistoryService : IPriceHistoryService
                 PriceChangePercent = price.BuyChangePercent
             };
 
-            return await _historyRepository.AddAsync(history);
+            return await _historyRepository.AddAsync(history).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -70,7 +70,7 @@ public class PriceHistoryService : IPriceHistoryService
     {
         try
         {
-            return await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours);
+            return await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -86,7 +86,7 @@ public class PriceHistoryService : IPriceHistoryService
     {
         try
         {
-            var history = await GetHistoryAsync(asset, fiat, hours);
+            var history = await GetHistoryAsync(asset, fiat, hours).ConfigureAwait(false);
             var records = history.OrderBy(h => h.RecordedAt).ToList();
 
             if (records.Count < 2)
@@ -117,7 +117,7 @@ public class PriceHistoryService : IPriceHistoryService
     {
         try
         {
-            var history = await GetHistoryAsync(asset, fiat, hours);
+            var history = await GetHistoryAsync(asset, fiat, hours).ConfigureAwait(false);
             var records = history.ToList();
 
             if (records.Count == 0)
@@ -145,7 +145,7 @@ public class PriceHistoryService : IPriceHistoryService
     {
         try
         {
-            return await _historyRepository.DeleteOldRecordsAsync(daysOld);
+            return await _historyRepository.DeleteOldRecordsAsync(daysOld).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -161,7 +161,7 @@ public class PriceHistoryService : IPriceHistoryService
     {
         try
         {
-            return await _historyRepository.GetTotalHistoryCountAsync();
+            return await _historyRepository.GetTotalHistoryCountAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -177,9 +177,9 @@ public class PriceHistoryService : IPriceHistoryService
     {
         try
         {
-            var history = await GetHistoryAsync(asset, fiat, hours);
-            var (high, low, average) = await GetPriceStatsAsync(asset, fiat, hours);
-            var trend = await GetPriceTrendAsync(asset, fiat, hours);
+            var history = await GetHistoryAsync(asset, fiat, hours).ConfigureAwait(false);
+            var (high, low, average) = await GetPriceStatsAsync(asset, fiat, hours).ConfigureAwait(false);
+            var trend = await GetPriceTrendAsync(asset, fiat, hours).ConfigureAwait(false);
 
             var records = history.ToList();
             var spreadValues = records.Select(r => r.SpreadPercentage).ToList();

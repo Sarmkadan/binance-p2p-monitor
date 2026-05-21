@@ -196,7 +196,7 @@ public class AlertRepository : IAlertRepository
                 { "Notes", alert.Notes ?? (object)DBNull.Value }
             };
 
-            return await Task.Run(() => _context.ExecuteCommand(sql, parameters) > 0);
+            return await Task.Run(() => _context.ExecuteCommand(sql, parameters) > 0).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -209,7 +209,7 @@ public class AlertRepository : IAlertRepository
         try
         {
             const string sql = "DELETE FROM PriceAlerts WHERE Id = @Id";
-            return await Task.Run(() => _context.ExecuteCommand(sql, new Dictionary<string, object> { { "Id", id } }) > 0);
+            return await Task.Run(() => _context.ExecuteCommand(sql, new Dictionary<string, object> { { "Id", id } }) > 0).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -222,7 +222,7 @@ public class AlertRepository : IAlertRepository
         try
         {
             const string sql = "DELETE FROM PriceAlerts WHERE UserId = @UserId";
-            return await Task.Run(() => _context.ExecuteCommand(sql, new Dictionary<string, object> { { "UserId", userId } }) > 0);
+            return await Task.Run(() => _context.ExecuteCommand(sql, new Dictionary<string, object> { { "UserId", userId } }) > 0).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

@@ -40,7 +40,7 @@ public class RetryPolicy
             try
             {
                 attempt++;
-                return await operation(ct);
+                return await operation(ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -51,7 +51,7 @@ public class RetryPolicy
                 }
 
                 _logger.LogWarning(ex, "Attempt {Attempt} failed, retrying in {DelayMs}ms", attempt, delay.TotalMilliseconds);
-                await Task.Delay(delay, ct);
+                await Task.Delay(delay, ct).ConfigureAwait(false);
                 delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * _backoffMultiplier);
             }
         }
@@ -66,7 +66,7 @@ public class RetryPolicy
         CancellationToken ct = default)
     {
         await ExecuteAsync(
-            async token => { await operation(token); return true; },
+            async token => { await operation(token).ConfigureAwait(false); return true; },
             shouldRetry,
             ct);
     }

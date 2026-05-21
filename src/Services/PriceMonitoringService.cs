@@ -46,7 +46,7 @@ public class PriceMonitoringService : IPriceMonitoringService
     {
         try
         {
-            return await _priceRepository.GetLatestByAssetAndFiatAsync(asset, fiat);
+            return await _priceRepository.GetLatestByAssetAndFiatAsync(asset, fiat).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -62,7 +62,7 @@ public class PriceMonitoringService : IPriceMonitoringService
     {
         try
         {
-            return await _priceRepository.GetAllActiveAsync();
+            return await _priceRepository.GetAllActiveAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -81,12 +81,12 @@ public class PriceMonitoringService : IPriceMonitoringService
             if (price is null || !price.IsValid())
                 throw new InvalidPriceException("Invalid price data");
 
-            var added = await _priceRepository.AddAsync(price);
+            var added = await _priceRepository.AddAsync(price).ConfigureAwait(false);
             if (added > 0)
             {
                 // Record history and check alerts
-                await _historyService.RecordPriceAsync(price);
-                var triggeredAlerts = await _alertService.CheckTriggersAsync(price);
+                await _historyService.RecordPriceAsync(price).ConfigureAwait(false);
+                var triggeredAlerts = await _alertService.CheckTriggersAsync(price).ConfigureAwait(false);
 
                 _logger.LogInformation("Updated price {Asset}/{Fiat}: Buy={Buy:F8}, Sell={Sell:F8}",
                     price.Asset, price.Fiat, price.BuyPrice, price.SellPrice);
@@ -110,7 +110,7 @@ public class PriceMonitoringService : IPriceMonitoringService
     {
         try
         {
-            return await _priceRepository.GetAveragePriceAsync(asset, fiat, hours);
+            return await _priceRepository.GetAveragePriceAsync(asset, fiat, hours).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -126,7 +126,7 @@ public class PriceMonitoringService : IPriceMonitoringService
     {
         try
         {
-            var prices = await GetAllCurrentPricesAsync();
+            var prices = await GetAllCurrentPricesAsync().ConfigureAwait(false);
 
             return prices.Where(p =>
                 Math.Abs(p.BuyChangePercent) > changePercentThreshold ||
@@ -153,12 +153,12 @@ public class PriceMonitoringService : IPriceMonitoringService
 
         try
         {
-            var price = await GetCurrentPriceAsync(asset, fiat);
+            var price = await GetCurrentPriceAsync(asset, fiat).ConfigureAwait(false);
             if (price is null)
                 return new Dictionary<string, decimal>();
 
             var spread = price.CalculateSpread();
-            var avgPrice = await GetAveragePriceAsync(asset, fiat, 24);
+            var avgPrice = await GetAveragePriceAsync(asset, fiat, 24).ConfigureAwait(false);
 
             return new Dictionary<string, decimal>
             {
@@ -190,7 +190,7 @@ public class PriceMonitoringService : IPriceMonitoringService
         {
             while (!cancellationToken.IsCancellationRequested && _isMonitoring)
             {
-                await Task.Delay(_settings.MonitoringIntervalSeconds * 1000, cancellationToken);
+                await Task.Delay(_settings.MonitoringIntervalSeconds * 1000, cancellationToken).ConfigureAwait(false);
                 // Monitoring logic will be called by background service
             }
         }
