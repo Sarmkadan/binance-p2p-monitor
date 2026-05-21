@@ -60,7 +60,7 @@ public class SpreadAnalysisService : ISpreadAnalysisService
             if (_spreadCache.TryGetValue(key, out var cachedSpread))
                 return cachedSpread;
 
-            var price = await _priceRepository.GetLatestByAssetAndFiatAsync(asset, fiat);
+            var price = await _priceRepository.GetLatestByAssetAndFiatAsync(asset, fiat).ConfigureAwait(false);
             if (price is null)
                 return null;
 
@@ -91,7 +91,7 @@ public class SpreadAnalysisService : ISpreadAnalysisService
     {
         try
         {
-            var spreads = await GetAllSpreadsAsync();
+            var spreads = await GetAllSpreadsAsync().ConfigureAwait(false);
 
             return spreads.Values
                 .Where(s =>
@@ -164,7 +164,7 @@ public class SpreadAnalysisService : ISpreadAnalysisService
     {
         try
         {
-            var prices = await _priceRepository.GetAllActiveAsync();
+            var prices = await _priceRepository.GetAllActiveAsync().ConfigureAwait(false);
             var spreads = new Dictionary<string, Spread>();
 
             foreach (var price in prices)
@@ -200,7 +200,7 @@ public class SpreadAnalysisService : ISpreadAnalysisService
     {
         try
         {
-            var spreads = await GetAllSpreadsAsync();
+            var spreads = await GetAllSpreadsAsync().ConfigureAwait(false);
             int count = spreads.Count;
 
             if (count == 0)

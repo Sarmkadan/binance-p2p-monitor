@@ -53,11 +53,11 @@ public class AlertServiceTests
         _mockAlertRepository.AddAsync(Arg.Any<PriceAlert>()).Returns(1);
 
         // Act
-        var result = await _alertService.CreateAlertAsync(alert);
+        var result = await _alertService.CreateAlertAsync(alert).ConfigureAwait(false);
 
         // Assert
         result.Should().Be(1);
-        await _mockAlertRepository.Received(1).AddAsync(Arg.Is<PriceAlert>(a => a.UserId == alert.UserId));
+        await _mockAlertRepository.Received(1).AddAsync(Arg.Is<PriceAlert>(a => a.UserId == alert.UserId)).ConfigureAwait(false);
     }
 
     [Fact]
@@ -67,12 +67,12 @@ public class AlertServiceTests
         var invalidAlert = new PriceAlert { UserId = 1 }; // Missing required fields
 
         // Act
-        Func<Task> action = async () => await _alertService.CreateAlertAsync(invalidAlert);
+        Func<Task> action = async () => await _alertService.CreateAlertAsync(invalidAlert).ConfigureAwait(false);
 
         // Assert
         await action.Should().ThrowAsync<InvalidAlertException>()
             .WithMessage("Alert configuration is invalid");
-        await _mockAlertRepository.DidNotReceive().AddAsync(Arg.Any<PriceAlert>());
+        await _mockAlertRepository.DidNotReceive().AddAsync(Arg.Any<PriceAlert>()).ConfigureAwait(false);
     }
 
     [Fact]
@@ -91,12 +91,12 @@ public class AlertServiceTests
         _mockAlertRepository.GetUserAlertCountAsync(alert.UserId).Returns(_appSettings.MaxAlertsPerUser);
 
         // Act
-        Func<Task> action = async () => await _alertService.CreateAlertAsync(alert);
+        Func<Task> action = async () => await _alertService.CreateAlertAsync(alert).ConfigureAwait(false);
 
         // Assert
         await action.Should().ThrowAsync<InvalidAlertException>()
             .WithMessage($"Maximum number of alerts ({_appSettings.MaxAlertsPerUser}) reached");
-        await _mockAlertRepository.DidNotReceive().AddAsync(Arg.Any<PriceAlert>());
+        await _mockAlertRepository.DidNotReceive().AddAsync(Arg.Any<PriceAlert>()).ConfigureAwait(false);
     }
 
     [Fact]
@@ -116,11 +116,11 @@ public class AlertServiceTests
         _mockAlertRepository.UpdateAsync(Arg.Any<PriceAlert>()).Returns(true);
 
         // Act
-        var result = await _alertService.UpdateAlertAsync(existingAlert);
+        var result = await _alertService.UpdateAlertAsync(existingAlert).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        await _mockAlertRepository.Received(1).UpdateAsync(Arg.Is<PriceAlert>(a => a.Id == existingAlert.Id));
+        await _mockAlertRepository.Received(1).UpdateAsync(Arg.Is<PriceAlert>(a => a.Id == existingAlert.Id)).ConfigureAwait(false);
     }
 
     [Fact]
@@ -140,11 +140,11 @@ public class AlertServiceTests
         _mockAlertRepository.UpdateAsync(Arg.Any<PriceAlert>()).Returns(false);
 
         // Act
-        var result = await _alertService.UpdateAlertAsync(nonExistentAlert);
+        var result = await _alertService.UpdateAlertAsync(nonExistentAlert).ConfigureAwait(false);
 
         // Assert
         result.Should().BeFalse();
-        await _mockAlertRepository.Received(1).UpdateAsync(Arg.Is<PriceAlert>(a => a.Id == nonExistentAlert.Id));
+        await _mockAlertRepository.Received(1).UpdateAsync(Arg.Is<PriceAlert>(a => a.Id == nonExistentAlert.Id)).ConfigureAwait(false);
     }
 
     [Fact]
@@ -154,12 +154,12 @@ public class AlertServiceTests
         var invalidAlert = new PriceAlert { Id = 1, UserId = 1 }; // Missing required fields
 
         // Act
-        Func<Task> action = async () => await _alertService.UpdateAlertAsync(invalidAlert);
+        Func<Task> action = async () => await _alertService.UpdateAlertAsync(invalidAlert).ConfigureAwait(false);
 
         // Assert
         await action.Should().ThrowAsync<InvalidAlertException>()
             .WithMessage("Alert configuration is invalid");
-        await _mockAlertRepository.DidNotReceive().UpdateAsync(Arg.Any<PriceAlert>());
+        await _mockAlertRepository.DidNotReceive().UpdateAsync(Arg.Any<PriceAlert>()).ConfigureAwait(false);
     }
 
     [Fact]
@@ -170,11 +170,11 @@ public class AlertServiceTests
         _mockAlertRepository.DeleteAsync(alertId).Returns(true);
 
         // Act
-        var result = await _alertService.DeleteAlertAsync(alertId);
+        var result = await _alertService.DeleteAlertAsync(alertId).ConfigureAwait(false);
 
         // Assert
         result.Should().BeTrue();
-        await _mockAlertRepository.Received(1).DeleteAsync(alertId);
+        await _mockAlertRepository.Received(1).DeleteAsync(alertId).ConfigureAwait(false);
     }
 
     [Fact]
@@ -190,10 +190,10 @@ public class AlertServiceTests
         _mockAlertRepository.GetUserAlertsAsync(userId).Returns(alerts);
 
         // Act
-        var result = await _alertService.GetUserAlertsAsync(userId);
+        var result = await _alertService.GetUserAlertsAsync(userId).ConfigureAwait(false);
 
         // Assert
         result.Should().BeEquivalentTo(alerts);
-        await _mockAlertRepository.Received(1).GetUserAlertsAsync(userId);
+        await _mockAlertRepository.Received(1).GetUserAlertsAsync(userId).ConfigureAwait(false);
     }
 }
