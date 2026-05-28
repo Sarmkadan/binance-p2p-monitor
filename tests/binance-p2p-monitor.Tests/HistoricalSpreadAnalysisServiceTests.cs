@@ -1,9 +1,4 @@
 #nullable enable
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
-
 using BinanceP2pMonitor.Configuration;
 using BinanceP2pMonitor.Events;
 using BinanceP2pMonitor.Models;
