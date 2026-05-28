@@ -22,15 +22,15 @@ public class AlertService : IAlertService
     private readonly IAlertRepository _alertRepository;
     private readonly AppSettings _settings;
     private readonly ILogger<AlertService> _logger;
-    private readonly TelegramNotificationClient _telegramNotificationClient;
-    private readonly WebhookNotificationClient _webhookNotificationClient;
+    private readonly ITelegramNotificationClient _telegramNotificationClient;
+    private readonly IWebhookNotificationClient _webhookNotificationClient;
 
     public AlertService(
         IAlertRepository alertRepository,
         AppSettings settings,
         ILogger<AlertService> logger,
-        TelegramNotificationClient telegramNotificationClient,
-        WebhookNotificationClient webhookNotificationClient)
+        ITelegramNotificationClient telegramNotificationClient,
+        IWebhookNotificationClient webhookNotificationClient)
     {
         _alertRepository = alertRepository ?? throw new ArgumentNullException(nameof(alertRepository));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));

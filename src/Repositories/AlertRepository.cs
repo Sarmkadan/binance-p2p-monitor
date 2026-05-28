@@ -4,7 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Data.SQLite;
+
 using BinanceP2pMonitor.Constants;
 using BinanceP2pMonitor.Data;
 using BinanceP2pMonitor.Exceptions;
@@ -247,7 +247,7 @@ public class AlertRepository : IAlertRepository
         }
     }
 
-    private PriceAlert MapToPriceAlert(SQLiteDataReader reader)
+    private PriceAlert MapToPriceAlert(SqliteDataReader reader)
     {
         return new PriceAlert
         {
