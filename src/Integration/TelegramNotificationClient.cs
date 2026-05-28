@@ -1,36 +1,39 @@
 #nullable enable
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
+
+using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
+using BinanceP2pMonitor.Caching;
+using BinanceP2pMonitor.Configuration;
+using BinanceP2pMonitor.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace BinanceP2pMonitor.Integration;
 
-/// <summary>
-/// Client for sending Telegram notifications
-/// </summary>
-public class TelegramNotificationClient
+public interface ITelegramNotificationClient
 {
-    private readonly ITelegramBotClientWrapper _botClient;
+    Task<bool> SendMessageAsync(long chatId, string message, CancellationToken ct = default);
+    Task<bool> SendPriceAlertAsync(string asset, string fiat, decimal buyPrice, decimal sellPrice, string alertReason, CancellationToken ct = default);
+    Task<bool> SendRateLimitedAsync(string cacheKey, string message, TimeSpan rateLimitWindow, CancellationToken ct = default);
+}
+
+public class TelegramNotificationClient : ITelegramNotificationClient
+{
+    private readonly TelegramBotClient _botClient;
     private readonly ILogger<TelegramNotificationClient> _logger;
     private readonly ICache _cache;
     private readonly AppSettings _appSettings;
 
     public TelegramNotificationClient(
-        ITelegramBotClientWrapper botClientWrapper,
         AppSettings appSettings,
         ILogger<TelegramNotificationClient> logger,
         ICache cache)
     {
-        _botClient = botClientWrapper;
-        _logger = logger;
-        _cache = cache;
-        _appSettings = appSettings;
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _botClient = new TelegramBotClient(appSettings.TelegramBotToken);
     }
 
-    /// <summary>
-    /// Sends a text message via Telegram
-    /// </summary>
     public async Task<bool> SendMessageAsync(long chatId, string message, CancellationToken ct = default)
     {
         try
@@ -42,7 +45,7 @@ public class TelegramNotificationClient
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
 
-            _logger.LogInformation("Message sent successfully. Message ID: {MessageId}", sentMessage.MessageId);
+            _logger.LogInformation("Message sent. MessageId: {MessageId}", sentMessage.MessageId);
             return true;
         }
         catch (Exception ex)
@@ -52,40 +55,20 @@ public class TelegramNotificationClient
         }
     }
 
-    /// <summary>
-    /// Sends an alert with price information
-    /// </summary>
     public async Task<bool> SendPriceAlertAsync(string asset, string fiat, decimal buyPrice, decimal sellPrice, string alertReason, CancellationToken ct = default)
     {
-        var message = $@"
-<b>⚠️ Price Alert: {asset}/{fiat}</b>
-
-<b>Buy Price:</b> {buyPrice:F8}
-<b>Sell Price:</b> {sellPrice:F8}
-
-<b>Reason:</b> {alertReason}
-<b>Time:</b> {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC
-";
+        var message = $"<b>Price Alert: {asset}/{fiat}</b>\n\n" +
+                      $"<b>Buy:</b> {buyPrice:F4}\n" +
+                      $"<b>Sell:</b> {sellPrice:F4}\n\n" +
+                      $"<b>Reason:</b> {alertReason}\n" +
+                      $"<b>Time:</b> {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
         return await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId), message, ct).ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Sends a test message to verify connection
-    /// </summary>
-    public async Task<bool> SendTestMessageAsync(CancellationToken ct = default)
-    {
-        var message = $"✅ BinanceP2pMonitor is running\n⏰ {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
-        return await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId), message, ct).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Rate limits message sending (max 1 message per 5 seconds)
-    /// </summary>
     public async Task<bool> SendRateLimitedAsync(string cacheKey, string message, TimeSpan rateLimitWindow, CancellationToken ct = default)
     {
         var lastSentKey = $"telegram_ratelimit_{cacheKey}";
         var exists = await _cache.ExistsAsync(lastSentKey, ct).ConfigureAwait(false);
-
         if (exists)
         {
             _logger.LogWarning("Message rate limited for key: {CacheKey}", cacheKey);
@@ -94,9 +77,7 @@ public class TelegramNotificationClient
 
         var success = await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId), message, ct).ConfigureAwait(false);
         if (success)
-        {
             await _cache.SetAsync(lastSentKey, DateTime.UtcNow, rateLimitWindow, ct).ConfigureAwait(false);
-        }
 
         return success;
     }

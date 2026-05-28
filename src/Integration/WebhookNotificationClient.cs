@@ -12,10 +12,13 @@ using Microsoft.Extensions.Logging;
 
 namespace BinanceP2pMonitor.Integration;
 
-/// <summary>
-/// Client for delivering alert notifications to a configurable HTTP webhook endpoint
-/// </summary>
-public class WebhookNotificationClient
+public interface IWebhookNotificationClient
+{
+    Task<bool> SendAlertAsync(WebhookPayload payload, CancellationToken ct = default);
+    Task<bool> SendPriceAlertAsync(string asset, string fiat, decimal buyPrice, decimal sellPrice, string alertReason, CancellationToken ct = default);
+}
+
+public class WebhookNotificationClient : IWebhookNotificationClient
 {
     private readonly HttpClient _httpClient;
     private readonly AppSettings _appSettings;

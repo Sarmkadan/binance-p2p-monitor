@@ -4,7 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Data.SQLite;
+
 using BinanceP2pMonitor.Data;
 using BinanceP2pMonitor.Exceptions;
 using BinanceP2pMonitor.Models;
@@ -327,7 +327,7 @@ public class TradeOfferRepository : ITradeOfferRepository
         }
     }
 
-    private async Task<TradeOffer?> MapToTradeOfferAsync(SQLiteDataReader reader)
+    private async Task<TradeOffer?> MapToTradeOfferAsync(SqliteDataReader reader)
     {
         return await Task.FromResult(new TradeOffer
         {
