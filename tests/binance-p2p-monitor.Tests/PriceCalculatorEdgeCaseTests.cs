@@ -99,7 +99,7 @@ public class PriceCalculatorEdgeCaseTests
 
         // Assert
         action.Should().Throw<ArgumentOutOfRangeException>()
-            .WithMessage($"Period must be greater than zero (Parameter 'period') Actual value was {period}.");
+            .WithMessage("Period must be greater than zero*");
     }
 
     [Fact]

@@ -5,7 +5,7 @@
 // =============================================================================
 
 using System.Data;
-using System.Data.SQLite;
+
 using BinanceP2pMonitor.Configuration;
 using BinanceP2pMonitor.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -17,9 +17,9 @@ namespace BinanceP2pMonitor.Data;
 /// </summary>
 public class DatabaseContext : IDisposable
 {
-    private readonly AppSettings _settings;
-    private readonly ILogger<DatabaseContext> _logger;
-    private SQLiteConnection? _connection;
+    private readonly AppSettings? _settings;
+    private readonly ILogger<DatabaseContext>? _logger;
+    private SqliteConnection? _connection;
 
     public DatabaseContext(AppSettings settings, ILogger<DatabaseContext> logger)
     {
@@ -28,16 +28,24 @@ public class DatabaseContext : IDisposable
     }
 
     /// <summary>
+    /// Constructor that accepts an already-open connection (for testing)
+    /// </summary>
+    public DatabaseContext(SqliteConnection connection)
+    {
+        _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+    }
+
+    /// <summary>
     /// Gets or creates database connection
     /// </summary>
-    public SQLiteConnection GetConnection()
+    public SqliteConnection GetConnection()
     {
         try
         {
             if (_connection?.State != ConnectionState.Open)
             {
                 _connection?.Dispose();
-                _connection = new SQLiteConnection(_settings.GetResolvedConnectionString());
+                _connection = new SqliteConnection(_settings!.GetResolvedConnectionString());
                 _connection.Open();
                 EnableForeignKeys();
             }
@@ -57,18 +65,18 @@ public class DatabaseContext : IDisposable
     {
         try
         {
-            _logger.LogInformation("Initializing database schema");
+            _logger?.LogInformation("Initializing database schema");
             var connection = GetConnection();
 
             // Create tables
             CreateTables(connection);
             CreateIndexes(connection);
 
-            _logger.LogInformation("Database initialization completed successfully");
+            _logger?.LogInformation("Database initialization completed successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Database initialization failed");
+            _logger?.LogError(ex, "Database initialization failed");
             throw new DataAccessException("Database initialization failed", ex);
         }
     }
@@ -82,7 +90,7 @@ public class DatabaseContext : IDisposable
         {
             using var command = GetConnection().CreateCommand();
             command.CommandText = commandText;
-            command.CommandTimeout = _settings.DatabaseCommandTimeoutSeconds;
+            command.CommandTimeout = _settings?.DatabaseCommandTimeoutSeconds ?? 30;
 
             if (parameters is not null)
             {
@@ -103,13 +111,13 @@ public class DatabaseContext : IDisposable
     /// <summary>
     /// Executes a query and returns a data reader
     /// </summary>
-    public SQLiteDataReader ExecuteReader(string commandText, Dictionary<string, object>? parameters = null)
+    public SqliteDataReader ExecuteReader(string commandText, Dictionary<string, object>? parameters = null)
     {
         try
         {
             var command = GetConnection().CreateCommand();
             command.CommandText = commandText;
-            command.CommandTimeout = _settings.DatabaseCommandTimeoutSeconds;
+            command.CommandTimeout = _settings?.DatabaseCommandTimeoutSeconds ?? 30;
 
             if (parameters is not null)
             {
@@ -136,7 +144,7 @@ public class DatabaseContext : IDisposable
         {
             using var command = GetConnection().CreateCommand();
             command.CommandText = commandText;
-            command.CommandTimeout = _settings.DatabaseCommandTimeoutSeconds;
+            command.CommandTimeout = _settings?.DatabaseCommandTimeoutSeconds ?? 30;
 
             if (parameters is not null)
             {
@@ -165,7 +173,7 @@ public class DatabaseContext : IDisposable
     /// <summary>
     /// Creates all required tables
     /// </summary>
-    private void CreateTables(SQLiteConnection connection)
+    private void CreateTables(SqliteConnection connection)
     {
         var tables = new[]
         {
@@ -190,7 +198,7 @@ public class DatabaseContext : IDisposable
     /// <summary>
     /// Creates indexes for performance
     /// </summary>
-    private void CreateIndexes(SQLiteConnection connection)
+    private void CreateIndexes(SqliteConnection connection)
     {
         var indexes = new[]
         {

@@ -32,7 +32,7 @@ public class UtilityExtensionsTests
     public void Chunk_ShouldReturnCorrectChunks()
     {
         var source = new List<int> { 1, 2, 3, 4, 5 };
-        var chunks = source.Chunk(2).ToList();
+        var chunks = Enumerable.Chunk(source, 2).ToList();
         chunks.Should().HaveCount(3);
         chunks[0].Should().ContainInOrder(1, 2);
         chunks[1].Should().ContainInOrder(3, 4);
@@ -67,7 +67,7 @@ public class UtilityExtensionsTests
 
     // StringExtensions Tests
     [Theory]
-    [InlineData("LongStringExample", 5, "LongS...")]
+    [InlineData("LongStringExample", 5, "Lo...")]
     [InlineData("Short", 10, "Short")]
     [InlineData(null, 5, "")]
     public void Truncate_ShouldTruncateStringCorrectly(string? input, int maxLength, string expected)

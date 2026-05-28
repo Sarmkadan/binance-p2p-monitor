@@ -4,7 +4,7 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Data.SQLite;
+
 using BinanceP2pMonitor.Data;
 using BinanceP2pMonitor.Exceptions;
 using BinanceP2pMonitor.Models;
@@ -193,7 +193,7 @@ public class HistoryRepository : IHistoryRepository
         {
             const string sql = @"
                 DELETE FROM PriceHistory
-                WHERE datetime(CreatedAt) <= datetime('now', '-' || @DaysOld || ' days')";
+                WHERE datetime(RecordedAt) <= datetime('now', '-' || @DaysOld || ' days')";
 
             return await Task.Run(() =>
             {
@@ -283,7 +283,7 @@ public class HistoryRepository : IHistoryRepository
         }
     }
 
-    private PriceHistory MapToPriceHistory(SQLiteDataReader reader)
+    private PriceHistory MapToPriceHistory(SqliteDataReader reader)
     {
         return new PriceHistory
         {
