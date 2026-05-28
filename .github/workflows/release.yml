@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
   release:
@@ -17,38 +16,34 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
 
-    - name: Restore dependencies
+    - name: Restore
       run: dotnet restore
 
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-
     - name: Test
-      run: dotnet test --no-build --configuration Release --verbosity normal
+      run: dotnet test --configuration Release
 
-    - name: Pack NuGet
-      run: dotnet pack --no-build --configuration Release --output ./nupkg
+    - name: Publish linux-x64
+      run: dotnet publish -c Release -r linux-x64 --self-contained true -o ./dist/linux-x64
 
-    - name: Push to NuGet
-      run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-      env:
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+    - name: Publish win-x64
+      run: dotnet publish -c Release -r win-x64 --self-contained true -o ./dist/win-x64
+
+    - name: Archive artifacts
+      run: |
+        cd dist
+        tar -czf binance-p2p-monitor-linux-x64.tar.gz linux-x64/
+        zip -r binance-p2p-monitor-win-x64.zip win-x64/
 
     - name: Create GitHub Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ github.ref_name }}
-        release_name: ${{ github.ref_name }}
         generate_release_notes: true
-        draft: false
-        prerelease: ${{ contains(github.ref_name, '-') }}
+        files: |
+          dist/binance-p2p-monitor-linux-x64.tar.gz
+          dist/binance-p2p-monitor-win-x64.zip
