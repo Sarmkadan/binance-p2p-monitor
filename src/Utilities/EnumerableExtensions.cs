@@ -12,29 +12,6 @@ namespace BinanceP2pMonitor.Utilities;
 public static class EnumerableExtensions
 {
     /// <summary>
-    /// Chunks enumerable into batches of specified size
-    /// </summary>
-    public static IEnumerable<IEnumerable<T>> Chunk<T>(this IEnumerable<T> source, int size)
-    {
-        if (size <= 0)
-            throw new ArgumentException("Chunk size must be greater than zero", nameof(size));
-
-        var batch = new List<T>(size);
-        foreach (var item in source)
-        {
-            batch.Add(item);
-            if (batch.Count == size)
-            {
-                yield return batch;
-                batch = new List<T>(size);
-            }
-        }
-
-        if (batch.Count > 0)
-            yield return batch;
-    }
-
-    /// <summary>
     /// Safely gets first item or returns null
     /// </summary>
     public static T? FirstOrNull<T>(this IEnumerable<T> source) where T : class
@@ -92,17 +69,4 @@ public static class EnumerableExtensions
         return false;
     }
 
-    /// <summary>
-    /// Returns distinct items by a key selector
-    /// </summary>
-    public static IEnumerable<T> DistinctBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector)
-    {
-        var seen = new HashSet<TKey>();
-        foreach (var item in source)
-        {
-            var key = keySelector(item);
-            if (seen.Add(key))
-                yield return item;
-        }
-    }
 }
