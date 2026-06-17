@@ -1,10 +1,10 @@
-![CI](https://github.com/sarmkadan/binance-p2p-monitor/actions/workflows/ci.yml/badge.svg)
+# Binance P2P Monitor
+
+A CLI tool for monitoring Binance P2P prices, tracking spread anomalies, and sending Telegram alerts.
+
+![Build](https://github.com/sarmkadan/binance-p2p-monitor/actions/workflows/build.yml/badge.svg)
 ![License](https://img.shields.io/github/license/sarmkadan/binance-p2p-monitor)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
-
-# binance-p2p-monitor
-
-CLI tool for monitoring Binance P2P prices, tracking spread anomalies, and sending Telegram alerts. Stores history in SQLite.
 
 ## Features
 
