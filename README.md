@@ -56,6 +56,14 @@ dotnet run -- backtest
 dotnet run -- help
 ```
 
+## Examples
+
+Check the [examples/](examples/) directory for practical implementation guidance:
+
+- [BasicUsage.cs](examples/BasicUsage.cs) - Minimal setup
+- [AdvancedUsage.cs](examples/AdvancedUsage.cs) - Custom configuration
+- [IntegrationExample.cs](examples/IntegrationExample.cs) - ASP.NET DI integration
+
 ## Docker
 
 ```bash
