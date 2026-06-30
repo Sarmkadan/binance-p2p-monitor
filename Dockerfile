@@ -39,6 +39,8 @@ ENV AppSettings__LogPath=/app/logs
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD ["dotnet", "/app/binance-p2p-monitor.dll", "status", "||", "exit", "1"]
 
+EXPOSE 8080
+
 # Entry point
 ENTRYPOINT ["dotnet", "binance-p2p-monitor.dll"]
 CMD ["monitor"]
