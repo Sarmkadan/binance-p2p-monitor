@@ -51,10 +51,10 @@ public class PriceHistoryService : IPriceHistoryService
 
             return await _historyRepository.AddAsync(history).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not BinanceP2pException)
         {
             _logger.LogError(ex, "Error recording price history for {Asset}/{Fiat}", price?.Asset, price?.Fiat);
-            throw;
+            throw new DataAccessException("Failed to record price history", ex);
         }
     }
 
@@ -67,10 +67,10 @@ public class PriceHistoryService : IPriceHistoryService
         {
             return await _historyRepository.GetHistoryByAssetAndFiatAsync(asset, fiat, hours).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not BinanceP2pException)
         {
             _logger.LogError(ex, "Error retrieving price history for {Asset}/{Fiat}", asset, fiat);
-            throw;
+            throw new DataAccessException("Failed to retrieve price history", ex);
         }
     }
 
@@ -98,10 +98,10 @@ public class PriceHistoryService : IPriceHistoryService
 
             return ((lastPrice - firstPrice) / firstPrice) * 100;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not BinanceP2pException)
         {
             _logger.LogError(ex, "Error calculating price trend for {Asset}/{Fiat}", asset, fiat);
-            throw;
+            throw new DataAccessException("Failed to calculate price trend", ex);
         }
     }
 
@@ -126,10 +126,10 @@ public class PriceHistoryService : IPriceHistoryService
                 (decimal)prices.Average()
             );
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not BinanceP2pException)
         {
             _logger.LogError(ex, "Error calculating price statistics for {Asset}/{Fiat}", asset, fiat);
-            throw;
+            throw new DataAccessException("Failed to calculate price statistics", ex);
         }
     }
 
