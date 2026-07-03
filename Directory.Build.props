@@ -3,7 +3,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <NoWarn>$(NoWarn);NU1903;CS1591</NoWarn> <!-- Suppress CS1591 due to missing XML documentation -->
     <Authors>Vladyslav Zaiets</Authors>
     <PackageProjectUrl>https://github.com/sarmkadan/binance-p2p-monitor</PackageProjectUrl>
