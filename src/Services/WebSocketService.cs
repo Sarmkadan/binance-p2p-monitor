@@ -283,7 +283,7 @@ public class WebSocketService : IWebSocketService, IDisposable
                 {
                     break;
                 }
-                catch (WebSocketException wsEx) when (wsEx is not ApiException)
+                catch (WebSocketException wsEx)
                 {
                     _isConnected = false;
                     _logger.LogError(wsEx, "WebSocket connection lost unexpectedly. Reconnecting...");
