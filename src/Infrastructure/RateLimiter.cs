@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Infrastructure;
 /// <summary>
 /// Implements token bucket rate limiting algorithm
 /// </summary>
-public class RateLimiter
+public sealed class RateLimiter
 {
     private readonly int _maxRequests;
     private readonly TimeSpan _timeWindow;

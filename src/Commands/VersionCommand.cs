@@ -4,7 +4,7 @@ namespace BinanceP2pMonitor.Commands;
 /// <summary>
 /// Command to display version information
 /// </summary>
-public class VersionCommand : ICommand
+public sealed class VersionCommand : ICommand
 {
     private readonly ConsoleOutputWriter _output;
 
