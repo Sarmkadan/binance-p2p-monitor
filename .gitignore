@@ -63,3 +63,6 @@ Desktop.ini
 
 ## dotnet tool
 .dotnet/
+
+# aider internal state - never commit
+.aider*
