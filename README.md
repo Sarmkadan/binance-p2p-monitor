@@ -44,6 +44,54 @@ Copy `appsettings.json` and set your values:
 }
 ```
 
+> **Tip:** Use the provided `appsettings.example.json` as a template and rename it to `appsettings.json` before editing.
+
+## Configuration
+
+The application reads its configuration from the **AppSettings** section of `appsettings.json`.  
+All settings are bound to the `BinanceP2PMonitorOptions` class and validated at startup.
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| **DatabaseConnectionString** | `string` | *required* | SQLite connection string for the local database. |
+| **BinanceApiKey** | `string` (optional) | empty | API key for Binance (required when `EnableWebSocket` is `true`). |
+| **BinanceApiSecret** | `string` (optional) | empty | API secret for Binance. |
+| **TelegramBotToken** | `string` (optional) | empty | Bot token for Telegram notifications. |
+| **TelegramAdminChatId** | `string` (optional) | empty | Chat ID of the admin to receive alerts. |
+| **MonitoringIntervalSeconds** | `int` | `30` | How often (in seconds) the monitor polls Binance. |
+| **AlertCooldownMinutes** | `int` | `5` | Minimum minutes between alerts for the same condition. |
+| **MaxAlertsPerUser** | `int` | `20` | Upper limit of alerts a single user can receive per day. |
+| **DefaultPriceChangeThreshold** | `double` | `2.0` | Percentage change that triggers a price‑change alert. |
+| **DefaultSpreadThreshold** | `double` | `1.5` | Percentage spread that triggers a spread alert. |
+| **HistoryRetentionDays** | `int` | `30` | Number of days to keep price history records. |
+| **MaxHistoryRecords** | `int` | `100000` | Maximum number of history rows stored in the DB. |
+| **DatabaseCommandTimeoutSeconds** | `int` | `30` | Timeout for SQLite commands. |
+| **EnableWebSocket** | `bool` | `true` | Turn on/off Binance WebSocket streaming. |
+| **EnableTelegramNotifications** | `bool` | `true` | Turn on/off Telegram notifications. |
+| **EnableAutoCleanup** | `bool` | `true` | Automatically purge old history according to retention settings. |
+| **DailySummaryHourUtc** | `int` (0‑23) | `9` | Hour (UTC) when the daily summary is sent. |
+| **LogLevel** | `string` | `Information` | Minimum log level for the application. |
+| **LogPath** | `string` | `./logs` | Directory where log files are written. |
+| **MonitoredAssets** | `string[]` | `[ "BTC", "ETH", "BNB", "USDT" ]` | List of crypto assets to monitor. |
+| **MonitoredFiats** | `string[]` | `[ "USD", "EUR", "GBP" ]` | List of fiat currencies to monitor. |
+
+### Using the Options
+
+```csharp
+builder.Services.Configure<BinanceP2PMonitorOptions>(builder.Configuration.GetSection("AppSettings"));
+builder.Services.AddOptions<BinanceP2PMonitorOptions>()
+                .Bind(builder.Configuration.GetSection("AppSettings"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+```
+
+The above registration ensures the application will fail to start if any required setting is missing or contains an invalid value.
+
+### Example file
+
+An example configuration file without real secrets is provided as `appsettings.example.json`.  
+Copy it to `appsettings.json` and fill in your own values before running the application.
+
 ## Usage
 
 ```bash
@@ -103,8 +151,6 @@ dotnet test
 This project includes performance benchmarks using [BenchmarkDotNet](https://benchmarkdotnet.org/).
 
 ### Running Benchmarks
-
-To run the performance benchmarks, use the following command from the project root:
 
 ```bash
 dotnet run -c Release --project benchmarks/binance-p2p-monitor.Benchmarks/
