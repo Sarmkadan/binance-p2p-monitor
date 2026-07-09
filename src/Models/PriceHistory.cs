@@ -50,6 +50,7 @@ public class PriceHistory
     /// <summary>
     /// Calculates the mid-price between buy and sell
     /// </summary>
+    /// <returns>The average price between buy and sell prices.</returns>
     public decimal GetMidPrice()
     {
         return (BuyPrice + SellPrice) / 2;
@@ -58,6 +59,7 @@ public class PriceHistory
     /// <summary>
     /// Calculates the spread percentage
     /// </summary>
+    /// <returns>The spread percentage between buy and sell prices.</returns>
     public decimal CalculateSpread()
     {
         if (BuyPrice == 0)
@@ -69,16 +71,18 @@ public class PriceHistory
     /// <summary>
     /// Validates historical price data
     /// </summary>
+    /// <returns>True if the historical price data is valid; otherwise, false.</returns>
     public bool IsValid()
     {
         return BuyPrice > 0 && SellPrice > 0 && SellPrice >= BuyPrice &&
-               !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat) &&
-               RecordedAt <= DateTime.UtcNow;
+        !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat) &&
+        RecordedAt <= DateTime.UtcNow;
     }
 
     /// <summary>
     /// Checks if this record is recent (within last hour)
     /// </summary>
+    /// <returns>True if the record was created within the last hour; otherwise, false.</returns>
     public bool IsRecent()
     {
         var elapsed = DateTime.UtcNow - RecordedAt;
@@ -88,6 +92,7 @@ public class PriceHistory
     /// <summary>
     /// Gets age of this record in minutes
     /// </summary>
+    /// <returns>The age of the record in minutes.</returns>
     public int GetAgeInMinutes()
     {
         var elapsed = DateTime.UtcNow - RecordedAt;
@@ -97,6 +102,8 @@ public class PriceHistory
     /// <summary>
     /// Compares this history record with another to determine trend
     /// </summary>
+    /// <param name="other">The other price history record to compare against.</param>
+    /// <returns>The percentage change from the other record to this one.</returns>
     public decimal CompareTo(PriceHistory other)
     {
         if (other is null || other.BuyPrice == 0)
