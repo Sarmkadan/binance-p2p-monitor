@@ -7,14 +7,18 @@ using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Xunit;
 
-namespace BinanceP2pMonitor.Tests;
-
+/// <summary>
+/// Tests for the AlertRepository class.
+/// </summary>
 public class AlertRepositoryTests : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly DatabaseContext _context;
     private readonly AlertRepository _alertRepository;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AlertRepositoryTests"/> class.
+    /// </summary>
     public AlertRepositoryTests()
     {
         // Use an in-memory SQLite database for testing
@@ -52,12 +56,22 @@ public class AlertRepositoryTests : IDisposable
             );");
     }
 
+    /// <summary>
+    /// Releases unmanaged resources and performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
     public void Dispose()
     {
         _connection.Close();
         _connection.Dispose();
     }
 
+    /// <summary>
+    /// Creates a test alert with the specified user ID, asset, and fiat.
+    /// </summary>
+    /// <param name="userId">The ID of the user who owns the alert.</param>
+    /// <param name="asset">The asset associated with the alert.</param>
+    /// <param name="fiat">The fiat currency associated with the alert.</param>
+    /// <returns>A test alert with the specified properties.</returns>
     private PriceAlert CreateTestAlert(int userId = 1, string asset = "USDT", string fiat = "UAH")
     {
         return new PriceAlert
@@ -76,6 +90,9 @@ public class AlertRepositoryTests : IDisposable
         };
     }
 
+    /// <summary>
+    /// Tests that adding an alert and retrieving it by ID returns the correct ID and alert.
+    /// </summary>
     [Fact]
     public async Task AddAsync_ShouldAddAlertAndReturnId()
     {
@@ -93,6 +110,9 @@ public class AlertRepositoryTests : IDisposable
         storedAlert.Threshold.Should().Be(alert.Threshold);
     }
 
+    /// <summary>
+    /// Tests that retrieving an alert by ID returns the correct alert when the alert exists.
+    /// </summary>
     [Fact]
     public async Task GetByIdAsync_ShouldReturnAlert_WhenAlertExists()
     {
@@ -109,6 +129,9 @@ public class AlertRepositoryTests : IDisposable
         storedAlert.Asset.Should().Be(alert.Asset);
     }
 
+    /// <summary>
+    /// Tests that retrieving an alert by ID returns null when the alert does not exist.
+    /// </summary>
     [Fact]
     public async Task GetByIdAsync_ShouldReturnNull_WhenAlertDoesNotExist()
     {
@@ -119,6 +142,9 @@ public class AlertRepositoryTests : IDisposable
         storedAlert.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that updating an alert and retrieving it by ID returns the updated alert.
+    /// </summary>
     [Fact]
     public async Task UpdateAsync_ShouldUpdateAlertAndReturnTrue()
     {
@@ -139,6 +165,9 @@ public class AlertRepositoryTests : IDisposable
         updatedAlert.Notes.Should().Be("Updated Test Alert");
     }
 
+    /// <summary>
+    /// Tests that updating an alert returns false when the alert does not exist.
+    /// </summary>
     [Fact]
     public async Task UpdateAsync_ShouldReturnFalse_WhenAlertDoesNotExist()
     {
@@ -153,6 +182,9 @@ public class AlertRepositoryTests : IDisposable
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that deleting an alert and retrieving it by ID returns null.
+    /// </summary>
     [Fact]
     public async Task DeleteAsync_ShouldDeleteAlertAndReturnTrue()
     {
@@ -169,6 +201,9 @@ public class AlertRepositoryTests : IDisposable
         deletedAlert.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that deleting an alert returns false when the alert does not exist.
+    /// </summary>
     [Fact]
     public async Task DeleteAsync_ShouldReturnFalse_WhenAlertDoesNotExist()
     {
@@ -179,6 +214,9 @@ public class AlertRepositoryTests : IDisposable
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that retrieving user alerts returns the correct alerts for the specified user.
+    /// </summary>
     [Fact]
     public async Task GetUserAlertsAsync_ShouldReturnAlertsForUser()
     {
