@@ -9,6 +9,9 @@ using Moq;
 
 namespace BinanceP2pMonitor.Tests;
 
+/// <summary>
+/// Tests for the SpreadAnalysisService class.
+/// </summary>
 public class SpreadAnalysisServiceTests
 {
     private readonly Mock<IPriceRepository> _priceRepositoryMock = new();
@@ -17,6 +20,9 @@ public class SpreadAnalysisServiceTests
     private readonly Mock<ILogger<SpreadAnalysisService>> _loggerMock = new();
     private readonly SpreadAnalysisService _service;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SpreadAnalysisServiceTests"/> class.
+    /// </summary>
     public SpreadAnalysisServiceTests()
     {
         _service = new SpreadAnalysisService(
@@ -26,6 +32,9 @@ public class SpreadAnalysisServiceTests
             _loggerMock.Object);
     }
 
+    /// <summary>
+    /// Verifies that the AnalyzeSpreadAsync method returns the correct spread when given valid prices.
+    /// </summary>
     [Fact]
     public async Task AnalyzeSpreadAsync_ValidPrices_ReturnsCorrectSpread()
     {
@@ -33,6 +42,9 @@ public class SpreadAnalysisServiceTests
         result.Should().Be(2.0m);
     }
 
+    /// <summary>
+    /// Verifies that the AnalyzeSpreadAsync method throws an InvalidPriceException when given a zero buy price.
+    /// </summary>
     [Fact]
     public async Task AnalyzeSpreadAsync_ZeroBuyPrice_ThrowsInvalidPriceException()
     {
@@ -40,6 +52,9 @@ public class SpreadAnalysisServiceTests
         await act.Should().ThrowAsync<InvalidPriceException>();
     }
 
+    /// <summary>
+    /// Verifies that the UpdateSpreadAsync method returns true when given a valid spread.
+    /// </summary>
     [Fact]
     public async Task UpdateSpreadAsync_ValidSpread_ReturnsTrue()
     {
@@ -59,6 +74,9 @@ public class SpreadAnalysisServiceTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that the UpdateSpreadAsync method throws an InvalidPriceException when given an invalid spread.
+    /// </summary>
     [Fact]
     public async Task UpdateSpreadAsync_InvalidSpread_ThrowsInvalidPriceException()
     {
@@ -67,6 +85,9 @@ public class SpreadAnalysisServiceTests
         await act.Should().ThrowAsync<InvalidPriceException>();
     }
 
+    /// <summary>
+    /// Verifies that the GetCrossCurrencySpreadAsync method returns the spread when given valid data.
+    /// </summary>
     [Fact]
     public async Task GetCrossCurrencySpreadAsync_ValidData_ReturnsSpread()
     {
@@ -88,6 +109,9 @@ public class SpreadAnalysisServiceTests
         result!.SpreadPercent.Should().Be(8.0m);
     }
 
+    /// <summary>
+    /// Verifies that the GetCrossCurrencySpreadAsync method returns null when given missing data.
+    /// </summary>
     [Fact]
     public async Task GetCrossCurrencySpreadAsync_MissingData_ReturnsNull()
     {
