@@ -3,17 +3,23 @@
 namespace BinanceP2pMonitor.Exceptions;
 
 /// <summary>
-/// Extension methods for BinanceP2pException and its derived types
+/// Extension methods for <see cref="BinanceP2pException"/> and its derived types.
+/// Provides utility methods for exception classification and enrichment.
 /// </summary>
 public static class BinanceP2pExceptionExtensions
 {
     /// <summary>
-    /// Determines if the exception is a fatal error that should not be retried
+    /// Determines if the exception is a fatal error that should not be retried.
+    /// Fatal exceptions represent configuration errors, validation failures, or missing resources
+    /// that are unlikely to succeed on subsequent attempts.
     /// </summary>
-    /// <param name="exception">The exception to check</param>
-    /// <returns>True if the exception is fatal (configuration, validation, or resource not found)</returns>
+    /// <param name="exception">The exception to check. Must not be <see langword="null"/>.</param>
+    /// <returns>True if the exception is fatal (configuration, validation, or resource not found); otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is <see langword="null"/>.</exception>
     public static bool IsFatal(this BinanceP2pException exception)
     {
+        ArgumentNullException.ThrowIfNull(exception);
+
         return exception switch
         {
             ConfigurationException => true,
@@ -24,12 +30,23 @@ public static class BinanceP2pExceptionExtensions
     }
 
     /// <summary>
-    /// Determines if the exception is a transient error that may succeed on retry
+    /// Determines if the exception is a transient error that may succeed on retry.
+    /// Transient exceptions are typically network-related, rate-limiting, or temporary service issues.
     /// </summary>
-    /// <param name="exception">The exception to check</param>
-    /// <returns>True if the exception is likely transient (API errors, data access errors)</returns>
+    /// <param name="exception">The exception to check. Must not be <see langword="null"/>.</param>
+    /// <returns>
+    /// True if the exception is likely transient:
+    /// <list type="bullet">
+    /// <item><see cref="ApiException"/> with null status code or 5xx server errors</item>
+    /// <item><see cref="DataAccessException"/></item>
+    /// </list>
+    /// False for validation, configuration, and business rule violations.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is <see langword="null"/>.</exception>
     public static bool IsTransient(this BinanceP2pException exception)
     {
+        ArgumentNullException.ThrowIfNull(exception);
+
         return exception switch
         {
             ApiException apiEx => apiEx.HttpStatusCode is null or >= 500,
@@ -41,12 +58,15 @@ public static class BinanceP2pExceptionExtensions
     }
 
     /// <summary>
-    /// Gets a user-friendly error message for the exception
+    /// Gets a user-friendly error message for the exception.
     /// </summary>
-    /// <param name="exception">The exception</param>
-    /// <returns>A user-friendly error message</returns>
+    /// <param name="exception">The exception to format. Must not be <see langword="null"/>.</param>
+    /// <returns>A user-friendly error message suitable for display to end users.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is <see langword="null"/>.</exception>
     public static string GetFriendlyMessage(this BinanceP2pException exception)
     {
+        ArgumentNullException.ThrowIfNull(exception);
+
         return exception switch
         {
             ValidationException validationEx =>
@@ -64,19 +84,24 @@ public static class BinanceP2pExceptionExtensions
     }
 
     /// <summary>
-    /// Adds context to an exception if it has a Context dictionary
+    /// Adds context to an exception if it has a Context dictionary.
+    /// If the Context dictionary does not exist, it is initialized.
     /// </summary>
-    /// <param name="exception">The exception to add context to</param>
-    /// <param name="key">Context key</param>
-    /// <param name="value">Context value</param>
-    /// <returns>The same exception instance for method chaining</returns>
+    /// <typeparam name="T">The type of exception, constrained to <see cref="BinanceP2pException"/>.</typeparam>
+    /// <param name="exception">The exception to add context to. Must not be <see langword="null"/>.</param>
+    /// <param name="key">Context key. Must not be <see langword="null"/> or empty.</param>
+    /// <param name="value">Context value.</param>
+    /// <returns>The same exception instance for method chaining.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="exception"/> is <see langword="null"/>,
+    /// or when <paramref name="key"/> is <see langword="null"/> or empty.
+    /// </exception>
     public static T AddContext<T>(this T exception, string key, object value) where T : BinanceP2pException
     {
-        if (exception.Context is null)
-        {
-            exception.Context = new Dictionary<string, object>();
-        }
+        ArgumentNullException.ThrowIfNull(exception);
+        ArgumentException.ThrowIfNullOrEmpty(key);
 
+        exception.Context ??= new Dictionary<string, object>();
         exception.Context[key] = value;
         return exception;
     }
