@@ -16,17 +16,18 @@ public static class CurrencyExtensions
     /// <param name="currency">The currency instance</param>
     /// <param name="value">The value to format</param>
     /// <returns>Formatted string with currency symbol</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="currency"/> is <see langword="null"/></exception>
     public static string FormatCurrencyValue(this Currency currency, decimal value)
     {
+        ArgumentNullException.ThrowIfNull(currency);
+
         var roundedValue = currency.RoundValue(value);
         var format = currency.GetDisplayFormat();
+        var decimalPlaces = currency.DecimalPlaces;
 
-        if (!string.IsNullOrWhiteSpace(currency.Symbol))
-        {
-            return currency.Symbol + roundedValue.ToString("N" + currency.DecimalPlaces);
-        }
-
-        return format + " " + roundedValue.ToString("N" + currency.DecimalPlaces);
+        return !string.IsNullOrWhiteSpace(currency.Symbol)
+            ? currency.Symbol + roundedValue.ToString("N" + decimalPlaces, CultureInfo.InvariantCulture)
+            : format + " " + roundedValue.ToString("N" + decimalPlaces, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -34,14 +35,14 @@ public static class CurrencyExtensions
     /// </summary>
     /// <param name="currency">The currency instance</param>
     /// <returns>Formatted display string</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="currency"/> is <see langword="null"/></exception>
     public static string GetCurrencyDisplay(this Currency currency)
     {
-        if (!string.IsNullOrWhiteSpace(currency.Symbol))
-        {
-            return currency.Name + " (" + currency.Symbol + ") [" + currency.Code + "]";
-        }
+        ArgumentNullException.ThrowIfNull(currency);
 
-        return currency.Name + " [" + currency.Code + "]";
+        return !string.IsNullOrWhiteSpace(currency.Symbol)
+            ? $"{currency.Name} ({currency.Symbol}) [{currency.Code}]"
+            : $"{currency.Name} [{currency.Code}]";
     }
 
     /// <summary>
@@ -50,8 +51,12 @@ public static class CurrencyExtensions
     /// <param name="currency">The currency instance</param>
     /// <param name="other">Other currency to compare with</param>
     /// <returns>True if this currency is more popular</returns>
-    public static bool IsMorePopularThan(this Currency currency, Currency other)
+    /// <exception cref="ArgumentNullException"><paramref name="currency"/> or <paramref name="other"/> is <see langword="null"/></exception>
+    public static bool IsMorePopularThan(this Currency currency, Currency? other)
     {
+        ArgumentNullException.ThrowIfNull(currency);
+        ArgumentNullException.ThrowIfNull(other);
+
         return currency.PopularityScore > other.PopularityScore;
     }
 
@@ -60,8 +65,11 @@ public static class CurrencyExtensions
     /// </summary>
     /// <param name="currency">The currency instance</param>
     /// <returns>CSS class name</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="currency"/> is <see langword="null"/></exception>
     public static string GetPopularityCssClass(this Currency currency)
     {
+        ArgumentNullException.ThrowIfNull(currency);
+
         return currency.GetPopularityTier().ToLowerInvariant() switch
         {
             "premium" => "currency-premium",
@@ -77,14 +85,14 @@ public static class CurrencyExtensions
     /// </summary>
     /// <param name="currency">The currency instance</param>
     /// <returns>Short display string</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="currency"/> is <see langword="null"/></exception>
     public static string GetShortDisplayName(this Currency currency)
     {
-        if (!string.IsNullOrWhiteSpace(currency.Symbol))
-        {
-            return currency.Code + " " + currency.Symbol;
-        }
+        ArgumentNullException.ThrowIfNull(currency);
 
-        return currency.Code;
+        return !string.IsNullOrWhiteSpace(currency.Symbol)
+            ? $"{currency.Code} {currency.Symbol}"
+            : currency.Code;
     }
 
     /// <summary>
@@ -92,8 +100,11 @@ public static class CurrencyExtensions
     /// </summary>
     /// <param name="currency">The currency instance</param>
     /// <returns>True if currency should be highlighted</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="currency"/> is <see langword="null"/></exception>
     public static bool ShouldHighlight(this Currency currency)
     {
+        ArgumentNullException.ThrowIfNull(currency);
+
         return currency.IsActive && currency.IsPopular() && currency.PopularityScore >= 80;
     }
 }
