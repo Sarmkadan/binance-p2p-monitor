@@ -131,7 +131,7 @@ Examples:
         try
         {
             _output.WriteSection("Active Price Alerts");
-            var alerts = await _alertService.GetUserAlertsAsync(1); // Assuming UserId = 1 for CLI for now
+            var alerts = await _alertService.GetUserAlertsAsync(ApplicationConstants.DefaultCliUserId).ConfigureAwait(false);
             if (alerts.Any())
             {
                 var rows = alerts.Select(a => new Dictionary<string, string>
@@ -203,7 +203,7 @@ Examples:
                 AlertType = alertType,
                 Threshold = threshold,
                 Condition = condition,
-                UserId = 1, // Assuming UserId = 1 for CLI for now
+                UserId = ApplicationConstants.DefaultCliUserId,
                 IsEnabled = true,
                 Notes = notes
             };

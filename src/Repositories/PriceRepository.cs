@@ -33,7 +33,7 @@ public class PriceRepository : IPriceRepository
             return await Task.Run(() =>
             {
                 using var reader = _context.ExecuteReader(sql, new Dictionary<string, object> { { "Id", id } });
-                return reader.Read() ? MapToPriceAsync(reader).Result : null;
+                return reader.Read() ? MapToPrice(reader) : null;
             });
         }
         catch (Exception ex)
@@ -61,7 +61,7 @@ public class PriceRepository : IPriceRepository
             return await Task.Run(() =>
             {
                 using var reader = _context.ExecuteReader(sql, parameters);
-                return reader.Read() ? MapToPriceAsync(reader).Result : null;
+                return reader.Read() ? MapToPrice(reader) : null;
             });
         }
         catch (Exception ex)
@@ -90,7 +90,7 @@ public class PriceRepository : IPriceRepository
                 using var reader = _context.ExecuteReader(sql);
                 while (reader.Read())
                 {
-                    var price = MapToPriceAsync(reader).Result;
+                    var price = MapToPrice(reader);
                     if (price is not null)
                         prices.Add(price);
                 }
@@ -123,7 +123,7 @@ public class PriceRepository : IPriceRepository
                 using var reader = _context.ExecuteReader(sql, new Dictionary<string, object> { { "Asset", asset } });
                 while (reader.Read())
                 {
-                    var price = MapToPriceAsync(reader).Result;
+                    var price = MapToPrice(reader);
                     if (price is not null)
                         prices.Add(price);
                 }
@@ -156,7 +156,7 @@ public class PriceRepository : IPriceRepository
                 using var reader = _context.ExecuteReader(sql, new Dictionary<string, object> { { "Fiat", fiat } });
                 while (reader.Read())
                 {
-                    var price = MapToPriceAsync(reader).Result;
+                    var price = MapToPrice(reader);
                     if (price is not null)
                         prices.Add(price);
                 }
@@ -286,7 +286,7 @@ public class PriceRepository : IPriceRepository
                 using var reader = _context.ExecuteReader(sql, new Dictionary<string, object> { { "Since", since } });
                 while (reader.Read())
                 {
-                    var price = MapToPriceAsync(reader).Result;
+                    var price = MapToPrice(reader);
                     if (price is not null)
                         prices.Add(price);
                 }
@@ -334,9 +334,9 @@ public class PriceRepository : IPriceRepository
     /// <summary>
     /// Maps SQLite reader to Price object
     /// </summary>
-    private async Task<Price?> MapToPriceAsync(SqliteDataReader reader)
+    private static Price MapToPrice(SqliteDataReader reader)
     {
-        return await Task.FromResult(new Price
+        return new Price
         {
             Id = reader.GetInt32(0),
             Asset = reader.GetString(1),
@@ -349,6 +349,6 @@ public class PriceRepository : IPriceRepository
             CreatedAt = reader.GetDateTime(8),
             UpdatedAt = reader.GetDateTime(9),
             Metadata = reader.IsDBNull(10) ? null : reader.GetString(10)
-        });
+        };
     }
 }

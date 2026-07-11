@@ -30,7 +30,7 @@ public class TradeOfferRepository : ITradeOfferRepository
             return await Task.Run(() =>
             {
                 using var reader = _context.ExecuteReader(sql, new Dictionary<string, object> { { "Id", id } });
-                return reader.Read() ? MapToTradeOfferAsync(reader).Result : null;
+                return reader.Read() ? MapToTradeOffer(reader) : null;
             });
         }
         catch (Exception ex)
@@ -51,7 +51,7 @@ public class TradeOfferRepository : ITradeOfferRepository
             return await Task.Run(() =>
             {
                 using var reader = _context.ExecuteReader(sql, new Dictionary<string, object> { { "BinanceId", binanceId } });
-                return reader.Read() ? MapToTradeOfferAsync(reader).Result : null;
+                return reader.Read() ? MapToTradeOffer(reader) : null;
             });
         }
         catch (Exception ex)
@@ -77,7 +77,7 @@ public class TradeOfferRepository : ITradeOfferRepository
                 using var reader = _context.ExecuteReader(sql);
                 while (reader.Read())
                 {
-                    var offer = MapToTradeOfferAsync(reader).Result;
+                    var offer = MapToTradeOffer(reader);
                     if (offer is not null)
                         offers.Add(offer);
                 }
@@ -109,7 +109,7 @@ public class TradeOfferRepository : ITradeOfferRepository
                 using var reader = _context.ExecuteReader(sql, parameters);
                 while (reader.Read())
                 {
-                    var offer = MapToTradeOfferAsync(reader).Result;
+                    var offer = MapToTradeOffer(reader);
                     if (offer is not null)
                         offers.Add(offer);
                 }
@@ -139,7 +139,7 @@ public class TradeOfferRepository : ITradeOfferRepository
                 using var reader = _context.ExecuteReader(sql, new Dictionary<string, object> { { "TradeType", tradeType } });
                 while (reader.Read())
                 {
-                    var offer = MapToTradeOfferAsync(reader).Result;
+                    var offer = MapToTradeOffer(reader);
                     if (offer is not null)
                         offers.Add(offer);
                 }
@@ -172,7 +172,7 @@ public class TradeOfferRepository : ITradeOfferRepository
                 using var reader = _context.ExecuteReader(sql, parameters);
                 while (reader.Read())
                 {
-                    var offer = MapToTradeOfferAsync(reader).Result;
+                    var offer = MapToTradeOffer(reader);
                     if (offer is not null)
                         offers.Add(offer);
                 }
@@ -322,9 +322,9 @@ public class TradeOfferRepository : ITradeOfferRepository
         }
     }
 
-    private async Task<TradeOffer?> MapToTradeOfferAsync(SqliteDataReader reader)
+    private static TradeOffer MapToTradeOffer(SqliteDataReader reader)
     {
-        return await Task.FromResult(new TradeOffer
+        return new TradeOffer
         {
             Id = reader.GetInt32(0),
             OfferIdFromBinance = reader.GetString(1),
@@ -341,6 +341,6 @@ public class TradeOfferRepository : ITradeOfferRepository
             Timestamp = reader.GetDateTime(12),
             CreatedAt = reader.GetDateTime(13),
             UpdatedAt = reader.GetDateTime(14)
-        });
+        };
     }
 }

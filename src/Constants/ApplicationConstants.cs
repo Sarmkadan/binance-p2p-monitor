@@ -20,6 +20,8 @@ public static class ApplicationConstants
     public const int DefaultHistoryRetentionDays = 30;
 
     // Alert configuration
+    // The CLI runs single-user; all alerts created from the console belong to this profile
+    public const int DefaultCliUserId = 1;
     public const int AlertCooldownMinutes = 5;
     public const int MaxAlertsPerUser = 20;
     public const int DefaultPriceChangeThreshold = 2; // percentage
