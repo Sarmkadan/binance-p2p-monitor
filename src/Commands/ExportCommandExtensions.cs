@@ -13,8 +13,12 @@ public static class ExportCommandExtensions
     /// <param name="command">The ExportCommand instance</param>
     /// <param name="context">The command context</param>
     /// <returns>List of validation errors, empty if valid</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="context"/> is null</exception>
     public static List<string> ValidateOutputPath(this ExportCommand command, CommandContext context)
     {
+        ArgumentNullException.ThrowIfNull(command);
+        ArgumentNullException.ThrowIfNull(context);
+
         var errors = new List<string>();
 
         if (!context.HasOption("output"))
@@ -66,8 +70,12 @@ public static class ExportCommandExtensions
     /// <param name="asset">Optional asset filter</param>
     /// <param name="fiat">Optional fiat filter</param>
     /// <returns>Default output file path</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="asset"/> or <paramref name="fiat"/> are null</exception>
     public static string GetDefaultOutputPath(this ExportCommand command, string? asset = null, string? fiat = null)
     {
+        ArgumentNullException.ThrowIfNull(asset);
+        ArgumentNullException.ThrowIfNull(fiat);
+
         var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
         var assetPart = string.IsNullOrEmpty(asset) ? "all" : asset.ToUpperInvariant();
         var fiatPart = string.IsNullOrEmpty(fiat) ? "all" : fiat.ToUpperInvariant();
@@ -83,8 +91,12 @@ public static class ExportCommandExtensions
     /// <param name="command">The ExportCommand instance</param>
     /// <param name="context">The command context</param>
     /// <returns>The format type (csv, json, etc.)</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="context"/> is null</exception>
     public static string GetFormat(this ExportCommand command, CommandContext context)
     {
+        ArgumentNullException.ThrowIfNull(command);
+        ArgumentNullException.ThrowIfNull(context);
+
         return context.GetOption("format", "csv");
     }
 
@@ -94,8 +106,12 @@ public static class ExportCommandExtensions
     /// <param name="command">The ExportCommand instance</param>
     /// <param name="context">The command context</param>
     /// <returns>Number of days to export</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="context"/> is null</exception>
     public static int GetDaysToExport(this ExportCommand command, CommandContext context)
     {
+        ArgumentNullException.ThrowIfNull(command);
+        ArgumentNullException.ThrowIfNull(context);
+
         var daysString = context.GetOption("days", "7");
 
         if (!int.TryParse(daysString, out int days) || days <= 0)
@@ -112,8 +128,12 @@ public static class ExportCommandExtensions
     /// <param name="command">The ExportCommand instance</param>
     /// <param name="context">The command context</param>
     /// <returns>Asset filter or empty string if not specified</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="context"/> is null</exception>
     public static string GetAssetFilter(this ExportCommand command, CommandContext context)
     {
+        ArgumentNullException.ThrowIfNull(command);
+        ArgumentNullException.ThrowIfNull(context);
+
         return context.GetOption("asset", string.Empty);
     }
 
@@ -123,8 +143,12 @@ public static class ExportCommandExtensions
     /// <param name="command">The ExportCommand instance</param>
     /// <param name="context">The command context</param>
     /// <returns>Fiat filter or empty string if not specified</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="context"/> is null</exception>
     public static string GetFiatFilter(this ExportCommand command, CommandContext context)
     {
+        ArgumentNullException.ThrowIfNull(command);
+        ArgumentNullException.ThrowIfNull(context);
+
         return context.GetOption("fiat", string.Empty);
     }
 
@@ -134,8 +158,12 @@ public static class ExportCommandExtensions
     /// <param name="command">The ExportCommand instance</param>
     /// <param name="context">The command context</param>
     /// <returns>List of validation errors, empty if valid</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="context"/> is null</exception>
     public static List<string> ValidateAssetFiatPair(this ExportCommand command, CommandContext context)
     {
+        ArgumentNullException.ThrowIfNull(command);
+        ArgumentNullException.ThrowIfNull(context);
+
         var errors = new List<string>();
 
         var hasAsset = context.HasOption("asset");
