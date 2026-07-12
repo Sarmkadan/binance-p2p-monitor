@@ -285,4 +285,83 @@ var additionalErrors = new Dictionary<string, string>
 var mergedException = updatedException.WithAdditionalErrors(additionalErrors);
 ```
 
+## CurrencyExtensions
+
+The `CurrencyExtensions` class provides extension methods for the `Currency` model to enhance currency formatting, display, and popularity-based styling. These extensions enable proper currency value formatting, UI display generation, popularity comparisons, and conditional highlighting for currency data presentation.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Models;
+
+
+
+// Create currency instances
+var usdtCurrency = new Currency
+{
+    Code = "USDT",
+    Name = "Tether USD",
+    Symbol = "₮",
+    DecimalPlaces = 2,
+    PopularityScore = 95,
+    IsActive = true
+};
+
+var btcCurrency = new Currency
+{
+    Code = "BTC",
+    Name = "Bitcoin",
+    Symbol = "₿",
+    DecimalPlaces = 8,
+    PopularityScore = 98,
+    IsActive = true
+};
+
+var ethCurrency = new Currency
+{
+    Code = "ETH",
+    Name = "Ethereum",
+    Symbol = "Ξ",
+    DecimalPlaces = 6,
+    PopularityScore = 85,
+    IsActive = true
+};
+
+// Format currency values with proper symbols and decimal places
+string formattedUsdt = usdtCurrency.FormatCurrencyValue(1500.25m);
+// Returns: "₮1,500.25"
+
+string formattedBtc = btcCurrency.FormatCurrencyValue(1.5m);
+// Returns: "₿1.50000000"
+
+// Get display strings for UI elements
+string displayString = usdtCurrency.GetCurrencyDisplay();
+// Returns: "Tether USD (₮) [USDT]"
+
+string shortName = ethCurrency.GetShortDisplayName();
+// Returns: "ETH Ξ"
+
+// Compare currency popularity
+bool isBtcMorePopular = btcCurrency.IsMorePopularThan(usdtCurrency);
+// Returns: true
+
+// Get CSS class for styling based on popularity tier
+string cssClass = ethCurrency.GetPopularityCssClass();
+// Returns: "currency-premium" (since popularity score is 85)
+
+// Check if currency should be highlighted in UI
+bool shouldHighlight = usdtCurrency.ShouldHighlight();
+// Returns: true (since it's active, popular, and has score >= 80)
+
+// Compare multiple currencies
+var mostPopular = new[] { btcCurrency, ethCurrency, usdtCurrency }
+    .OrderByDescending(c => c.PopularityScore)
+    .First();
+
+if (btcCurrency.IsMorePopularThan(ethCurrency))
+{
+    Console.WriteLine($"Bitcoin ({btcCurrency.PopularityScore}) is more popular than Ethereum ({ethCurrency.PopularityScore})");
+}
+```
+
 ## License
