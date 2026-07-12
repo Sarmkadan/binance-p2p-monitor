@@ -7,14 +7,18 @@ using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Xunit;
 
-namespace BinanceP2pMonitor.Tests;
-
+/// <summary>
+/// Tests for the TradeOfferRepository class.
+/// </summary>
 public class TradeOfferRepositoryTests : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly DatabaseContext _context;
     private readonly TradeOfferRepository _tradeOfferRepository;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TradeOfferRepositoryTests"/> class.
+    /// </summary>
     public TradeOfferRepositoryTests()
     {
         _connection = new SqliteConnection("DataSource=:memory:");
@@ -56,12 +60,25 @@ public class TradeOfferRepositoryTests : IDisposable
             );");
     }
 
+    /// <summary>
+    /// Releases unmanaged resources and performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
     public void Dispose()
     {
         _connection.Close();
         _connection.Dispose();
     }
 
+    /// <summary>
+    /// Creates a test trade offer with the specified properties.
+    /// </summary>
+    /// <param name="binanceId">The Binance ID of the trade offer.</param>
+    /// <param name="asset">The asset of the trade offer.</param>
+    /// <param name="fiat">The fiat of the trade offer.</param>
+    /// <param name="tradeType">The trade type of the trade offer.</param>
+    /// <param name="price">The price of the trade offer.</param>
+    /// <param name="isActive">Whether the trade offer is active.</param>
+    /// <returns>A test trade offer with the specified properties.</returns>
     private TradeOffer CreateTestTradeOffer(
         string binanceId = "BINANCE_ID_1",
         string asset = "USDT",
@@ -89,6 +106,10 @@ public class TradeOfferRepositoryTests : IDisposable
         };
     }
 
+    /// <summary>
+    /// Tests that adding a trade offer and returning the ID works correctly.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task AddAsync_ShouldAddTradeOfferAndReturnId()
     {
@@ -105,6 +126,10 @@ public class TradeOfferRepositoryTests : IDisposable
         storedOffer!.OfferIdFromBinance.Should().Be(offer.OfferIdFromBinance);
     }
 
+    /// <summary>
+    /// Tests that getting a trade offer by ID works correctly when the offer exists.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetByIdAsync_ShouldReturnTradeOffer_WhenOfferExists()
     {
@@ -120,6 +145,10 @@ public class TradeOfferRepositoryTests : IDisposable
         storedOffer!.Id.Should().Be(id);
     }
 
+    /// <summary>
+    /// Tests that getting a trade offer by ID returns null when the offer does not exist.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetByIdAsync_ShouldReturnNull_WhenOfferDoesNotExist()
     {
@@ -130,6 +159,10 @@ public class TradeOfferRepositoryTests : IDisposable
         storedOffer.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that getting a trade offer by Binance ID works correctly when the offer exists.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetByBinanceIdAsync_ShouldReturnTradeOffer_WhenOfferExists()
     {
@@ -145,6 +178,10 @@ public class TradeOfferRepositoryTests : IDisposable
         storedOffer!.OfferIdFromBinance.Should().Be("BINANCE_XYZ");
     }
 
+    /// <summary>
+    /// Tests that getting all active trade offers works correctly.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task GetAllActiveAsync_ShouldReturnAllActiveOffers()
     {
@@ -161,6 +198,10 @@ public class TradeOfferRepositoryTests : IDisposable
         activeOffers.Should().AllSatisfy(o => o.IsActive.Should().BeTrue());
     }
 
+    /// <summary>
+    /// Tests that updating a trade offer works correctly.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task UpdateAsync_ShouldUpdateTradeOfferAndReturnTrue()
     {
@@ -181,6 +222,10 @@ public class TradeOfferRepositoryTests : IDisposable
         updatedOffer.IsActive.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that deleting a trade offer works correctly.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     [Fact]
     public async Task DeleteAsync_ShouldDeleteTradeOfferAndReturnTrue()
     {
