@@ -12,8 +12,9 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace BinanceP2pMonitor.Tests;
-
+/// <summary>
+/// Tests for the AlertService class.
+/// </summary>
 public class AlertServiceTests
 {
     private readonly IAlertRepository _mockAlertRepository;
@@ -21,6 +22,9 @@ public class AlertServiceTests
     private readonly ILogger<AlertService> _mockLogger;
     private readonly AlertService _alertService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AlertServiceTests"/> class.
+    /// </summary>
     public AlertServiceTests()
     {
         _mockAlertRepository = Substitute.For<IAlertRepository>();
@@ -38,6 +42,11 @@ public class AlertServiceTests
         _alertService = new AlertService(_mockAlertRepository, _appSettings, _mockLogger, mockTelegram, mockWebhook);
     }
 
+    /// <summary>
+    /// Creates a valid alert with the specified user ID.
+    /// </summary>
+    /// <param name="userId">The user ID.</param>
+    /// <returns>A valid alert.</returns>
     private static PriceAlert ValidAlert(int userId = 1) => new()
     {
         UserId = userId,
@@ -51,6 +60,9 @@ public class AlertServiceTests
         UpdatedAt = DateTime.UtcNow
     };
 
+    /// <summary>
+    /// Tests that creating an alert with a valid configuration and not reaching the maximum number of alerts returns the alert ID.
+    /// </summary>
     [Fact]
     public async Task CreateAlertAsync_ShouldReturnAlertId_WhenAlertIsValidAndMaxAlertsNotReached()
     {
@@ -64,6 +76,9 @@ public class AlertServiceTests
         await _mockAlertRepository.Received(1).AddAsync(Arg.Is<PriceAlert>(a => a.UserId == alert.UserId));
     }
 
+    /// <summary>
+    /// Tests that creating an alert with an invalid configuration throws an <see cref="InvalidAlertException"/>.
+    /// </summary>
     [Fact]
     public async Task CreateAlertAsync_ShouldThrowInvalidAlertException_WhenAlertIsInvalid()
     {
@@ -76,6 +91,9 @@ public class AlertServiceTests
         await _mockAlertRepository.DidNotReceive().AddAsync(Arg.Any<PriceAlert>());
     }
 
+    /// <summary>
+    /// Tests that creating an alert when the maximum number of alerts is reached throws an <see cref="InvalidAlertException"/>.
+    /// </summary>
     [Fact]
     public async Task CreateAlertAsync_ShouldThrowInvalidAlertException_WhenMaxAlertsReached()
     {
@@ -89,6 +107,9 @@ public class AlertServiceTests
         await _mockAlertRepository.DidNotReceive().AddAsync(Arg.Any<PriceAlert>());
     }
 
+    /// <summary>
+    /// Tests that updating an alert with a valid configuration and existing alert returns true.
+    /// </summary>
     [Fact]
     public async Task UpdateAlertAsync_ShouldReturnTrue_WhenAlertIsValidAndExists()
     {
@@ -102,6 +123,9 @@ public class AlertServiceTests
         await _mockAlertRepository.Received(1).UpdateAsync(Arg.Is<PriceAlert>(a => a.Id == alert.Id));
     }
 
+    /// <summary>
+    /// Tests that updating an alert that does not exist returns false.
+    /// </summary>
     [Fact]
     public async Task UpdateAlertAsync_ShouldReturnFalse_WhenAlertDoesNotExist()
     {
@@ -114,6 +138,9 @@ public class AlertServiceTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that deleting an alert returns true when the alert exists.
+    /// </summary>
     [Fact]
     public async Task DeleteAlertAsync_ShouldReturnTrue_WhenAlertExists()
     {
@@ -125,6 +152,9 @@ public class AlertServiceTests
         await _mockAlertRepository.Received(1).DeleteAsync(1);
     }
 
+    /// <summary>
+    /// Tests that getting user alerts returns the alerts when the user has alerts.
+    /// </summary>
     [Fact]
     public async Task GetUserAlertsAsync_ShouldReturnAlerts_WhenUserHasAlerts()
     {
