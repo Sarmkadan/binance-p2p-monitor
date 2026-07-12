@@ -3,8 +3,17 @@ using BinanceP2pMonitor.Utilities;
 
 namespace BinanceP2pMonitor.Tests;
 
+/// <summary>
+/// Contains unit tests for the <see cref="PriceCalculator"/> class methods.
+/// Tests verify the accuracy of price calculation utilities including percentage changes,
+/// spreads, moving averages, standard deviations, and price formatting.
+/// </summary>
 public class PriceCalculatorTests
 {
+    /// <summary>
+    /// Tests that when the new price is higher than the original price,
+    /// the percentage change calculation returns a positive percentage value.
+    /// </summary>
     [Fact]
     public void CalculatePercentageChange_PriceIncreases_ReturnsPositivePercentage()
     {
@@ -13,6 +22,10 @@ public class PriceCalculatorTests
         result.Should().Be(10m);
     }
 
+    /// <summary>
+    /// Tests that when the new price is lower than the original price,
+    /// the percentage change calculation returns a negative percentage value.
+    /// </summary>
     [Fact]
     public void CalculatePercentageChange_PriceDecreases_ReturnsNegativePercentage()
     {
@@ -21,6 +34,10 @@ public class PriceCalculatorTests
         result.Should().Be(-25m);
     }
 
+    /// <summary>
+    /// Tests that when the original price is zero, the percentage change calculation
+    /// returns zero to avoid division by zero errors and maintain mathematical correctness.
+    /// </summary>
     [Fact]
     public void CalculatePercentageChange_ZeroOriginalPrice_ReturnsZero()
     {
