@@ -85,4 +85,26 @@ Console.WriteLine($"Variance from average: {PriceAlertTestsExtensions.GetVarianc
 Console.WriteLine($"Sample count: {PriceAlertTestsExtensions.SampleCount(spread)}");
 ```
 
+## PriceRepositoryTestsExtensions
+
+The `PriceRepositoryTestsExtensions` class provides utility methods for testing price repository functionality. It includes methods for getting a price repository, adding prices, and retrieving prices by ID or asset and fiat.
+
+### Usage
+
+```csharp
+using BinanceP2pMonitor.Tests;
+
+// Get a price repository
+var priceRepository = PriceRepositoryTestsExtensions.GetPriceRepository();
+
+// Add a price and get its ID
+var addedPriceId = await PriceRepositoryTestsExtensions.AddAsync_ShouldReturnValidIdAndPersist(priceRepository, new Price());
+
+// Get a price by ID
+var price = await PriceRepositoryTestsExtensions.GetByIdAsync_ShouldReturnValidPrice(priceRepository, addedPriceId);
+
+// Get the average price
+var averagePrice = await PriceRepositoryTestsExtensions.GetAveragePriceAsync_ShouldReturnNull_WhenNoPricesInTimeRange(priceRepository, DateTime.Now, DateTime.Now.AddHours(-1));
+```
+
 // ... rest of file content ...
