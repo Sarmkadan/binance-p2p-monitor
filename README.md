@@ -1457,9 +1457,95 @@ catch (ArgumentNullException ex)
 }
 ```
 
-## PriceRepositoryTests
+## PriceMonitoringServiceTests
 
-The `PriceRepositoryTests` class contains unit tests for the `PriceRepository` class, verifying price record storage, retrieval, update, and deletion functionality. These tests ensure that the price repository correctly handles adding new price records, retrieving prices by ID, fetching the latest prices by asset/fiat combinations, updating existing prices, deleting prices, and calculating average prices over time windows. The test suite uses an in-memory SQLite database for isolated testing.
+The `PriceMonitoringServiceTests` class contains unit tests for the `PriceMonitoringService` class, verifying price monitoring functionality including retrieving current prices, updating prices, calculating averages, detecting significant changes, and handling invalid price scenarios. These tests ensure that the price monitoring service correctly integrates with repositories, history services, alert services, spread analysis services, and WebSocket services while maintaining proper error handling and validation.
+
+```csharp
+using BinanceP2pMonitor.Configuration;
+using BinanceP2pMonitor.Models;
+using BinanceP2pMonitor.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
+
+// Setup dependency injection with mocked services
+var mockPriceRepository = Substitute.For<IPriceRepository>();
+var mockPriceHistoryService = Substitute.For<IPriceHistoryService>();
+var mockAlertService = Substitute.For<IAlertService>();
+var mockSpreadAnalysisService = Substitute.For<ISpreadAnalysisService>();
+var mockEventBus = Substitute.For<IEventBus>();
+var mockWebSocketService = Substitute.For<IWebSocketService>();
+var appSettings = new AppSettings { DatabaseConnectionString = "DataSource=:memory:", EnableWebSocket = false };
+var mockLogger = Substitute.For<ILogger<PriceMonitoringService>>();
+
+var priceMonitoringService = new PriceMonitoringService(
+    mockPriceRepository,
+    mockPriceHistoryService,
+    mockAlertService,
+    mockSpreadAnalysisService,
+    mockEventBus,
+    mockWebSocketService,
+    appSettings,
+    mockLogger
+);
+
+// Test 1: GetCurrentPriceAsync with existing price
+var existingPrice = new Price { Asset = "BTC", Fiat = "USDT", BuyPrice = 50000.50m, SellPrice = 50010.25m };
+mockPriceRepository.GetLatestByAssetAndFiatAsync("BTC", "USDT").Returns(existingPrice);
+
+var currentPrice = await priceMonitoringService.GetCurrentPriceAsync("BTC", "USDT");
+currentPrice.Should().NotBeNull();
+currentPrice!.BuyPrice.Should().Be(50000.50m);
+
+// Test 2: GetCurrentPriceAsync with non-existent price
+mockPriceRepository.GetLatestByAssetAndFiatAsync("ETH", "USDT").Returns((Price?)null);
+var nullPrice = await priceMonitoringService.GetCurrentPriceAsync("ETH", "USDT");
+nullPrice.Should().BeNull();
+
+// Test 3: UpdatePriceAsync with valid price
+var newPrice = new Price
+{
+    Asset = "BTC",
+    Fiat = "USDT",
+    BuyPrice = 50100.75m,
+    SellPrice = 50110.50m,
+    Timestamp = DateTime.UtcNow,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+mockPriceRepository.AddAsync(Arg.Any<Price>()).Returns(1);
+mockAlertService.CheckTriggersAsync(Arg.Any<Price>()).Returns(new List<PriceAlert>());
+
+var updateResult = await priceMonitoringService.UpdatePriceAsync(newPrice);
+updateResult.Should().BeTrue();
+await mockPriceRepository.Received(1).AddAsync(Arg.Any<Price>());
+await mockPriceHistoryService.Received(1).RecordPriceAsync(Arg.Any<Price>());
+await mockAlertService.Received(1).CheckTriggersAsync(Arg.Any<Price>());
+
+// Test 4: UpdatePriceAsync with invalid price (should throw exception)
+var invalidPrice = new Price { Asset = "BTC", BuyPrice = -1.0m };
+Func<Task> invalidAction = async () => await priceMonitoringService.UpdatePriceAsync(invalidPrice);
+await invalidAction.Should().ThrowAsync<ArgumentException>();
+
+// Test 5: GetAveragePriceAsync
+mockPriceRepository.GetAveragePriceAsync("BTC", "USDT", 24).Returns(50050.25m);
+var averagePrice = await priceMonitoringService.GetAveragePriceAsync("BTC", "USDT", 24);
+averagePrice.Should().Be(50050.25m);
+
+// Test 6: GetPricesWithSignificantChangeAsync
+var prices = new List<Price>
+{
+    new() { Asset = "BTC", Fiat = "USDT", BuyPrice = 50000m, BuyChangePercent = 5.0m },
+    new() { Asset = "ETH", Fiat = "USDT", BuyPrice = 3500m, BuyChangePercent = 1.0m }
+};
+mockPriceRepository.GetAllActiveAsync().Returns(prices);
+
+var significantChanges = await priceMonitoringService.GetPricesWithSignificantChangeAsync(3.0m);
+significantChanges.Should().ContainSingle(p => p.Asset == "BTC");
+```
+
+## PriceRepositoryTests
 
 ```csharp
 using BinanceP2pMonitor.Tests;
