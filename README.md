@@ -515,6 +515,89 @@ webSocketService.OnPriceUpdate += (sender, args) =>
 await webSocketService.DisconnectAsync();
 ```
 
+## SpreadAnalysisService
+
+The `SpreadAnalysisService` provides comprehensive spread analysis functionality for identifying trading opportunities and market anomalies. It calculates spreads between buy and sell prices, tracks historical spread patterns, identifies arbitrage opportunities across different fiat currencies, and detects anomalous spreads using statistical methods like Z-score analysis. This service is essential for arbitrage trading strategies and monitoring market inefficiencies.
+
+```csharp
+using BinanceP2pMonitor.Services;
+using BinanceP2pMonitor.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+    .AddLogging()
+    .AddSingleton<IPriceRepository, PriceRepository>()
+    .AddSingleton<IPriceHistoryService, PriceHistoryService>()
+    .AddSingleton<AppSettings>(new AppSettings {
+        SpreadAnalysisHistoryHours = 24,
+        DefaultSpreadThreshold = 1.5m
+    })
+    .AddSingleton<ISpreadAnalysisService, SpreadAnalysisService>()
+    .BuildServiceProvider();
+
+var spreadAnalysisService = services.GetRequiredService<ISpreadAnalysisService>() as SpreadAnalysisService;
+
+// Get spread analysis for a trading pair
+var spreadAnalysis = await spreadAnalysisService.GetSpreadAnalysisAsync("BTC", "USDT");
+if (spreadAnalysis != null)
+{
+    Console.WriteLine($"Spread analysis for BTC/USDT:");
+    Console.WriteLine($" Current spread: {spreadAnalysis.CurrentSpreadPercent:F4}%");
+    Console.WriteLine($" Average spread: {spreadAnalysis.AverageSpreadPercent:F4}%");
+    Console.WriteLine($" Min spread: {spreadAnalysis.MinSpreadPercent:F4}%");
+    Console.WriteLine($" Max spread: {spreadAnalysis.MaxSpreadPercent:F4}%");
+    Console.WriteLine($" Sample count: {spreadAnalysis.SampleCount}");
+    Console.WriteLine($" Standard deviation: {spreadAnalysis.StandardDeviation:F4}%");
+    Console.WriteLine($" Risk level: {spreadAnalysis.GetRiskLevel()}");
+}
+
+// Get top spread opportunities (spreads above threshold)
+var topOpportunities = await spreadAnalysisService.GetTopSpreadOpportunitiesAsync(limit: 5);
+Console.WriteLine($"Top {topOpportunities.Count()} spread opportunities:");
+foreach (var spread in topOpportunities)
+{
+    Console.WriteLine($" {spread.Asset}/{spread.Fiat}: {spread.CurrentSpreadPercent:F4}%");
+}
+
+// Analyze spread between two prices
+var spreadPercent = await spreadAnalysisService.AnalyzeSpreadAsync(50000.50m, 50010.25m);
+Console.WriteLine($"Spread between prices: {spreadPercent:F4}%");
+
+// Update spread analysis
+var updated = await spreadAnalysisService.UpdateSpreadAsync(spreadAnalysis);
+Console.WriteLine($"Spread updated: {updated}");
+
+// Get all spreads
+var allSpreads = await spreadAnalysisService.GetAllSpreadsAsync();
+Console.WriteLine($"Total spreads tracked: {allSpreads.Count}");
+
+// Calculate cross-currency spread (e.g., BTC in USD vs EUR)
+var crossSpread = await spreadAnalysisService.GetCrossCurrencySpreadAsync(
+    asset: "BTC",
+    baseFiat: "USD",
+    quoteFiat: "EUR",
+    conversionRate: 0.92m
+);
+if (crossSpread != null)
+{
+    Console.WriteLine($"Cross-currency spread for BTC:");
+    Console.WriteLine($" Base: {crossSpread.BaseFiat}, Quote: {crossSpread.QuoteFiat}");
+    Console.WriteLine($" Spread: {crossSpread.SpreadPercent:F4}%");
+    Console.WriteLine($" Buy price (base): {crossSpread.BuyPriceInBaseFiat:C}");
+    Console.WriteLine($" Sell price (converted): {crossSpread.SellPriceInBaseFiat:C}");
+}
+
+// Find anomalous spreads using Z-score analysis
+var anomalies = await spreadAnalysisService.FindAnomalousSpreadAsync(zScoreThreshold: 2.0m);
+Console.WriteLine($"Found {anomalies.Count()} anomalous spreads:");
+foreach (var (asset, fiat, spread) in anomalies)
+{
+    Console.WriteLine($" {asset}/{fiat}: {spread:F4}%");
+}
+```
+
 ## IHistoricalSpreadAnalysisService
 
 The `IHistoricalSpreadAnalysisService` interface provides statistical analysis of historical spread data across configurable time windows. It enables detection of anomalous spreads, percentile-based spread analysis, and rolling-window averages for monitoring price arbitrage opportunities and market anomalies.
