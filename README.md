@@ -217,6 +217,50 @@ foreach (var cmd in availableCommands)
 }
 ```
 
+## CommandContext
+
+`CommandContext` carries all information required to execute a CLI command: the command name, raw arguments, parsed options and flags, a service provider for dependency resolution, and a cancellation token for graceful shutdown. It also offers helper methods to query options/flags and retrieve services from the injected `IServiceProvider`.
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using BinanceP2pMonitor.CLI;
+using Microsoft.Extensions.DependencyInjection;
+
+// Build a simple service provider (registering a string for demo purposes)
+var services = new ServiceCollection()
+    .AddSingleton<string>("demo-service")
+    .BuildServiceProvider();
+
+// Create a command context
+var context = new CommandContext
+{
+    CommandName = "monitor",
+    Arguments = new[] { "BTC", "USDT" },
+    Options = new Dictionary<string, string> { ["interval"] = "5m" },
+    Flags = new Dictionary<string, string> { ["verbose"] = "" },
+    ServiceProvider = services,
+    CancellationToken = CancellationToken.None
+};
+
+// Use helper methods
+if (context.HasOption("interval"))
+{
+    var interval = context.GetOption("interval", "1m");
+    Console.WriteLine($"Running with interval: {interval}");
+}
+
+if (context.HasFlag("verbose"))
+{
+    Console.WriteLine("Verbose output enabled.");
+}
+
+// Resolve a registered service
+var demo = context.GetRequiredService<string>();
+Console.WriteLine($"Resolved service value: {demo}");
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
