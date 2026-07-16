@@ -1080,6 +1080,64 @@ using BinanceP2pMonitor.Repositories;
 // ... rest of HistoryRepository content ...
 ```
 
+## MemoryCache
+
+The `MemoryCache` class provides an in-memory caching mechanism for storing and retrieving frequently accessed data in the Binance P2P Monitor application. It supports asynchronous operations for getting, setting, and removing cache entries, and provides methods to check for existence, clear the cache, and get or create values with automatic cache population. The cache automatically manages expiration based on absolute time-to-live (TTL) and provides a simple interface for managing application-wide caching needs.
+
+```csharp
+using BinanceP2pMonitor.Caching;
+using System;
+
+// Create a new MemoryCache instance
+var cache = new MemoryCache(TimeSpan.FromMinutes(5));
+
+// Get a value from cache (returns null if not found)
+var cachedValue = await cache.GetAsync<string>("config_key");
+Console.WriteLine($"Cached value: {cachedValue ?? "null"}");
+
+// Set a value in cache with 5-minute expiration
+await cache.SetAsync("config_key", "configuration_value");
+Console.WriteLine("Value cached successfully");
+
+// Check if a key exists in cache
+var exists = await cache.ExistsAsync("config_key");
+Console.WriteLine($"Key exists: {exists}");
+
+// Get or create a value with automatic cache population
+var value = await cache.GetOrCreateAsync("expensive_operation_key", async () => {
+    // This expensive operation will only run if the key doesn't exist
+    await Task.Delay(100); // Simulate expensive operation
+    return "expensive_result";
+});
+Console.WriteLine($"Value from cache or created: {value}");
+
+// Remove a value from cache
+await cache.RemoveAsync("config_key");
+Console.WriteLine("Value removed from cache");
+
+// Check if key still exists
+var removedExists = await cache.ExistsAsync("config_key");
+Console.WriteLine($"Key exists after removal: {removedExists}");
+
+// Clear the entire cache
+await cache.ClearAsync();
+Console.WriteLine("Cache cleared");
+
+// Access the underlying cache value directly (if needed)
+var directValue = cache.Value;
+Console.WriteLine($"Underlying cache object: {directValue}");
+
+// Access expiration information
+if (cache.ExpiresAt.HasValue)
+{
+    Console.WriteLine($"Cache expires at: {cache.ExpiresAt.Value}");
+}
+
+// Dispose the cache when done (implements IDisposable)
+cache.Dispose();
+Console.WriteLine("Cache disposed");
+```
+
 ## TradeOfferRepository
 
 The `TradeOfferRepository` class provides data access methods for managing trade offer data from Binance P2P. It serves as the primary interface for interacting with trade offers in the database, offering methods to retrieve, add, update, and delete trade offers. The repository includes functionality to fetch offers by ID, Binance offer ID, asset/fiat combinations, trade type, and to retrieve the best available offers based on price and trader rating. It also provides aggregate methods for counting total offers and calculating average prices.
