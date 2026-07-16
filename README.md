@@ -899,6 +899,86 @@ var exampleOptions = new BinanceP2PMonitorOptions
 };
 ```
 
+## AlertRepository
+
+The `AlertRepository` class provides data access methods for storing, retrieving, updating, and deleting price alert records in the Binance P2P Monitor application. It serves as the primary interface for interacting with price alert data in the database, offering methods to fetch alerts by ID, user ID, asset/fiat combinations, and active status. The repository supports comprehensive alert management including enabling/disabling alerts, tracking trigger history, and managing user-specific alert configurations.
+
+```csharp
+using BinanceP2pMonitor.Repositories;
+using BinanceP2pMonitor.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+    .AddLogging()
+    .AddSingleton<IAlertRepository, AlertRepository>()
+    .BuildServiceProvider();
+
+var alertRepository = services.GetRequiredService<IAlertRepository>() as AlertRepository;
+
+// Add a new price alert
+var newAlert = new PriceAlert
+{
+    Asset = "BTC",
+    Fiat = "USDT",
+    AlertType = AlertType.PriceAbove,
+    Threshold = 51000.00m,
+    Condition = AlertCondition.GreaterThan,
+    IsEnabled = true,
+    UserId = 123,
+    Notes = "Notify when BTC price exceeds $51,000",
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+var alertId = await alertRepository.AddAsync(newAlert);
+Console.WriteLine($"Alert created with ID: {alertId}");
+
+// Get an alert by ID
+var retrievedAlert = await alertRepository.GetByIdAsync(alertId);
+if (retrievedAlert != null)
+{
+    Console.WriteLine($"Retrieved alert: {retrievedAlert.GetDescription()}");
+    Console.WriteLine($"Threshold: {retrievedAlert.Threshold:C}");
+    Console.WriteLine($"Enabled: {retrievedAlert.IsEnabled}");
+}
+
+// Get all enabled alerts (alerts that are active and not disabled)
+var enabledAlerts = await alertRepository.GetEnabledAlertsAsync();
+Console.WriteLine($"Total enabled alerts: {enabledAlerts.Count()}");
+
+// Get all alerts for a specific user
+var userAlerts = await alertRepository.GetUserAlertsAsync(123);
+Console.WriteLine($"User has {userAlerts.Count()} active alerts");
+
+// Get alerts for a specific asset/fiat combination
+var btcAlerts = await alertRepository.GetAlertsByAssetAndFiatAsync("BTC", "USDT");
+Console.WriteLine($"BTC/USDT alerts: {btcAlerts.Count()}");
+
+// Update an existing alert
+if (retrievedAlert != null)
+{
+    retrievedAlert.Threshold = 51500.00m;
+    retrievedAlert.UpdatedAt = DateTime.UtcNow;
+    
+    var updateResult = await alertRepository.UpdateAsync(retrievedAlert);
+    Console.WriteLine($"Alert updated successfully: {updateResult}");
+}
+
+// Delete an alert
+var deleteResult = await alertRepository.DeleteAsync(alertId);
+Console.WriteLine($"Alert deleted successfully: {deleteResult}");
+
+// Delete all alerts for a specific user
+var userDeleteResult = await alertRepository.DeleteUserAlertsAsync(123);
+Console.WriteLine($"User alerts deleted: {userDeleteResult}");
+
+// Get the count of active alerts for a user
+var alertCount = await alertRepository.GetUserAlertCountAsync(123);
+Console.WriteLine($"User has {alertCount} active alerts");
+```
+
 ## PriceRepository
 
 The `PriceRepository` class provides data access methods for storing, retrieving, updating, and deleting price records in the Binance P2P Monitor application. It serves as the primary interface for interacting with price data in the database, offering methods to fetch prices by ID, asset/fiat combinations, active status, and time-based queries. The repository also includes methods for calculating average prices and detecting price changes over time periods.
