@@ -1543,6 +1543,75 @@ bool matchesPattern = ValidationHelper.MatchesPattern("BTCUSDT", "^[A-Z0-9]{6,12
 Console.WriteLine($"Matches pattern: {matchesPattern}");
 ```
 
+## FormatHelper
+
+The `FormatHelper` utility class provides static methods for formatting various types of data for display and output in the Binance P2P Monitor application. It includes methods for formatting currencies, percentages, timestamps, time intervals, large numbers, trading pairs, alert descriptions, price changes, and market information. The class also provides text wrapping functionality for formatting long strings across multiple lines.
+
+```csharp
+using BinanceP2pMonitor.Utilities;
+
+// Format a currency value with commas and 2 decimal places
+var formattedCurrency = FormatHelper.FormatCurrency(50000.5m);
+Console.WriteLine(formattedCurrency); // "50,000.50"
+
+// Format a currency value with custom decimal places
+var formattedCurrency2 = FormatHelper.FormatCurrency(50000.5678m, 4);
+Console.WriteLine(formattedCurrency2); // "50,000.5678"
+
+// Format a percentage with 2 decimal places
+var formattedPercentage = FormatHelper.FormatPercentage(2.3456m);
+Console.WriteLine(formattedPercentage); // "2.35%"
+
+// Format a timestamp in a specific format
+dateTime = DateTime.UtcNow;
+var formattedTimestamp = FormatHelper.FormatTimestamp(dateTime, "yyyy-MM-dd HH:mm:ss");
+Console.WriteLine(formattedTimestamp); // "2024-01-15 14:30:45"
+
+// Format time elapsed since a given date
+var priceUpdateTime = DateTime.UtcNow.AddMinutes(-45);
+var timeAgo = FormatHelper.FormatTimeAgo(priceUpdateTime);
+Console.WriteLine(timeAgo); // "45m ago"
+
+// Format a large number with abbreviation (K, M, B)
+var formattedLargeNumber = FormatHelper.FormatLargeNumber(1500000);
+Console.WriteLine(formattedLargeNumber); // "1.5M"
+
+var formattedLargeNumber2 = FormatHelper.FormatLargeNumber(2500000000);
+Console.WriteLine(formattedLargeNumber2); // "2.5B"
+
+// Format a trading pair identifier
+var formattedTradingPair = FormatHelper.FormatTradingPair("BTC", "USDT");
+Console.WriteLine(formattedTradingPair); // "BTC/USDT"
+
+// Format an alert description
+var alertDescription = FormatHelper.FormatAlertDescription("BTC/USDT", "Price above threshold", 51000.00m);
+Console.WriteLine(alertDescription); // "Alert on BTC/USDT: Price above threshold 51000.00%"
+
+// Format a price change indicator (with arrow and percentage)
+var formattedPriceChange = FormatHelper.FormatPriceChange(2.5m);
+Console.WriteLine(formattedPriceChange); // "↑ 2.50%"
+
+var formattedPriceChange2 = FormatHelper.FormatPriceChange(-1.25m);
+Console.WriteLine(formattedPriceChange2); // "↓ 1.25%"
+
+// Format a price change with ANSI color codes for terminal output
+var formattedPriceChangeWithColors = FormatHelper.FormatPriceChange(3.75m, includeColorCodes: true);
+Console.WriteLine(formattedPriceChangeWithColors); // "[32m↑ 3.75%[0m"
+
+// Format market information for a trading pair
+var formattedMarketInfo = FormatHelper.FormatMarketInfo("BTC", "USDT", 50000.50m, 2.5m);
+Console.WriteLine(formattedMarketInfo); // "BTC/USDT: 50,000.50 ↑ 2.50%"
+
+// Wrap a long text string into multiple lines with max width
+var longText = "This is a very long error message that needs to be wrapped across multiple lines for proper display in the console interface";
+var wrappedLines = FormatHelper.WrapText(longText, 40);
+Console.WriteLine("Wrapped text:");
+foreach (var line in wrappedLines)
+{
+    Console.WriteLine(line);
+}
+```
+
 ## ValidationException
 
 The `ValidationException` class is a custom exception type used throughout the Binance P2P Monitor application to handle validation failures. It extends the standard `Exception` class and provides additional functionality to track multiple validation errors through a `List<string> Errors` property. This exception is particularly useful for scenarios where multiple validation checks fail simultaneously, allowing all errors to be collected and reported together rather than throwing multiple exceptions.
