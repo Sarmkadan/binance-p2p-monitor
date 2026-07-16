@@ -1372,9 +1372,95 @@ var alertCount = await alertRepository.GetUserAlertCountAsync(123);
 Console.WriteLine($"User has {alertCount} active alerts");
 ```
 
-## PriceRepository
+## PriceRepositoryTests
 
-The `PriceRepository` class provides data access methods for storing, retrieving, updating, and deleting price records in the Binance P2P Monitor application. It serves as the primary interface for interacting with price data in the database, offering methods to fetch prices by ID, asset/fiat combinations, active status, and time-based queries. The repository also includes methods for calculating average prices and detecting price changes over time periods.
+The `PriceRepositoryTests` class contains unit tests for the `PriceRepository` class, verifying price record storage, retrieval, update, and deletion functionality. These tests ensure that the price repository correctly handles adding new price records, retrieving prices by ID, fetching the latest prices by asset/fiat combinations, updating existing prices, deleting prices, and calculating average prices over time windows. The test suite uses an in-memory SQLite database for isolated testing.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Data;
+using BinanceP2pMonitor.Models;
+using BinanceP2pMonitor.Repositories;
+using Microsoft.Data.Sqlite;
+using Xunit;
+
+// Create in-memory database for testing
+var connection = new SqliteConnection("DataSource=:memory:");
+connection.Open();
+
+var context = new DatabaseContext(connection);
+var priceRepository = new PriceRepository(context);
+
+// Initialize database schema
+context.ExecuteCommand(@"
+CREATE TABLE Prices (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Asset TEXT NOT NULL,
+    Fiat TEXT NOT NULL,
+    BuyPrice REAL NOT NULL,
+    SellPrice REAL NOT NULL,
+    BuyChangePercent REAL NOT NULL,
+    SellChangePercent REAL NOT NULL,
+    Timestamp TEXT NOT NULL,
+    CreatedAt TEXT NOT NULL,
+    UpdatedAt TEXT NOT NULL,
+    Metadata TEXT
+);");
+
+// Test 1: AddAsync should add price and return ID
+var newPrice = new Price
+{
+    Asset = "BTC",
+    Fiat = "USDT",
+    BuyPrice = 50000.50m,
+    SellPrice = 50010.25m,
+    BuyChangePercent = 0.25m,
+    SellChangePercent = 0.30m,
+    Timestamp = DateTime.UtcNow,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow,
+    Metadata = "{\"source\":\"binance_p2p\",\"version\":\"1.0\"}"
+};
+
+var priceId = await priceRepository.AddAsync(newPrice);
+priceId.Should().BeGreaterThan(0);
+
+// Test 2: GetByIdAsync should return price when exists
+var retrievedPrice = await priceRepository.GetByIdAsync(priceId);
+retrievedPrice.Should().NotBeNull();
+retrievedPrice!.Asset.Should().Be("BTC");
+
+// Test 3: GetByIdAsync should return null when price doesn't exist
+var nullPrice = await priceRepository.GetByIdAsync(999);
+nullPrice.Should().BeNull();
+
+// Test 4: GetLatestByAssetAndFiatAsync should return latest price
+var latestPrice = await priceRepository.GetLatestByAssetAndFiatAsync("BTC", "USDT");
+latestPrice.Should().NotBeNull();
+
+// Test 5: UpdateAsync should update price and return true
+if (retrievedPrice != null)
+{
+    retrievedPrice.BuyPrice = 50100.75m;
+    retrievedPrice.SellPrice = 50110.50m;
+    retrievedPrice.UpdatedAt = DateTime.UtcNow;
+    
+    var updateResult = await priceRepository.UpdateAsync(retrievedPrice);
+    updateResult.Should().BeTrue();
+}
+
+// Test 6: DeleteAsync should delete price and return true
+var deleteResult = await priceRepository.DeleteAsync(priceId);
+deleteResult.Should().BeTrue();
+
+// Test 7: GetAveragePriceAsync should return average price
+var avgPrice = await priceRepository.GetAveragePriceAsync("BTC", "USDT", 24);
+avgPrice.Should().BeGreaterThan(0);
+
+// Cleanup
+connection.Close();
+connection.Dispose();
+```
 
 ```csharp
 using BinanceP2pMonitor.Repositories;
