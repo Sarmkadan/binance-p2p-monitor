@@ -695,6 +695,51 @@ var demo = context.GetRequiredService<string>();
 Console.WriteLine($"Resolved service value: {demo}");
 ```
 
+## NumericExtensions
+
+The `NumericExtensions` class provides extension methods for performing common numeric operations on decimal values. These methods include rounding, percentage calculations, range checks, and formatting utilities that are frequently used throughout the Binance P2P Monitor application for price calculations, spread analysis, and data validation.
+
+```csharp
+using BinanceP2pMonitor.Utilities;
+
+// Round a price to 2 decimal places for display
+var roundedPrice = 50000.5678m.RoundTo(2);
+Console.WriteLine($"Rounded price: {roundedPrice:C}"); // $50,000.57
+
+// Check if a price is within 2% of a target price
+var isWithinRange = 50100.50m.IsWithinPercentage(50000.00m, 2.0m);
+Console.WriteLine($"Within 2% range: {isWithinRange}"); // True
+
+// Calculate percentage change between old and new prices
+var priceChange = 51000.75m.CalculatePercentageChange(50000.00m);
+Console.WriteLine($"Price change: {priceChange:F2}%"); // 2.00%
+
+// Clamp a value between minimum and maximum bounds
+var clampedValue = 150.75m.Clamp(100.00m, 200.00m);
+Console.WriteLine($"Clamped value: {clampedValue:C}"); // $150.75
+
+// Check if a price change is positive or negative
+var isPositiveChange = 2.5m.IsPositive();
+var isNegativeChange = (-1.2m).IsNegative();
+Console.WriteLine($"Positive change: {isPositiveChange}, Negative change: {isNegativeChange}"); // True, True
+
+// Check if a value is within a specific range
+var isInRange = 150.50m.IsBetween(100.00m, 200.00m);
+Console.WriteLine($"In range: {isInRange}"); // True
+
+// Calculate absolute percentage difference between two prices
+var priceDifference = 50000.50m.AbsolutePercentageDifference(50100.75m);
+Console.WriteLine($"Price difference: {priceDifference:F2}%"); // 0.20%
+
+// Format a price as currency string
+var formattedPrice = 50000.50m.ToCurrencyString("₿");
+Console.WriteLine($"Formatted price: {formattedPrice}"); // ₿50,000.50
+
+// Format a price with specific precision
+var precisePrice = 50000.56789m.FormatPrecision(4);
+Console.WriteLine($"Precise price: {precisePrice}"); // 50000.5679
+```
+
 ## DatabaseContext
 
 The `DatabaseContext` class serves as the primary data access layer for the Binance P2P Monitor application. It provides methods for executing SQL commands, queries, and managing SQLite database connections. The context handles database initialization, connection management, and provides various execution methods for interacting with the application's SQLite database.
