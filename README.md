@@ -51,6 +51,55 @@ var tradeSignal = new TradeSignal
 Console.WriteLine($"Generated trade signal for {tradeSignal.Asset} from {tradeSignal.PeriodStart:yyyy-MM-dd} to {tradeSignal.PeriodEnd:yyyy-MM-dd}");
 ```
 
+## TradeOffer
+
+The `TradeOffer` class represents a P2P trade offer from Binance, containing all the necessary information about a trading opportunity including pricing, volume limits, trader reputation, and availability. It provides methods to validate offers, calculate premiums/discounts, and check if specific trade amounts are feasible.
+
+Here is an example of creating and using a `TradeOffer` instance:
+
+```csharp
+using BinanceP2pMonitor.Models;
+
+var tradeOffer = new TradeOffer
+{
+    OfferIdFromBinance = "123456789",
+    Asset = "USDT-BTC",
+    Fiat = "USDT",
+    TradeType = TradeType.Sell,
+    Price = 65000.50m,
+    MinAmount = 100.00m,
+    MaxAmount = 10000.00m,
+    TraderRating = 95.5m,
+    CompletedTrades = 42,
+    PaymentMethods = "Tinkoff, Sberbank",
+    IsActive = true,
+    Timestamp = DateTime.UtcNow,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Validate the offer
+bool isValid = tradeOffer.IsValid();
+Console.WriteLine($"Offer is valid: {isValid}");
+
+// Calculate premium compared to reference price
+decimal referencePrice = 64800.00m;
+decimal premium = tradeOffer.CalculatePremium(referencePrice);
+Console.WriteLine($"Premium: {premium:F2}%");
+
+// Check if offer matches criteria
+bool matchesCriteria = tradeOffer.MatchesCriteria(minRating: 90.0m, minAmount: 50.00m, maxAmount: 15000.00m);
+Console.WriteLine($"Matches criteria: {matchesCriteria}");
+
+// Check if a specific amount can be traded
+bool canTrade = tradeOffer.CanTradeAmount(500.00m);
+Console.WriteLine($"Can trade 500: {canTrade}");
+
+// Get available trading range
+decimal availableRange = tradeOffer.GetAvailableRange();
+Console.WriteLine($"Available range: {availableRange}");
+```
+
 ## ConsoleOutputWriter
 
 // ... rest of content ...
