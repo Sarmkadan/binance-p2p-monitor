@@ -180,6 +180,88 @@ alert.Toggle();
 Console.WriteLine($"Alert enabled: {alert.IsEnabled}");
 ```
 
+## AlertService
+
+The `AlertService` manages price alert creation, retrieval, updates, and deletion. It handles alert triggering logic, notification delivery, and alert status management. This service integrates with repositories and notification channels to provide a complete alert management system for monitoring Binance P2P price thresholds.
+
+```csharp
+using BinanceP2pMonitor.Services;
+using BinanceP2pMonitor.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+  .AddLogging()
+  .AddSingleton<IAlertRepository, AlertRepository>()
+  .AddSingleton<IUserRepository, UserRepository>()
+  .AddSingleton<INotificationService, NotificationService>()
+  .AddSingleton<IEventBus, EventBus>()
+  .AddSingleton<AlertService>()
+  .BuildServiceProvider();
+
+var alertService = services.GetRequiredService<AlertService>();
+
+// Create a new price alert
+var newAlert = new PriceAlert
+{
+  Asset = "BTC",
+  Fiat = "USDT",
+  AlertType = AlertType.PriceAbove,
+  Threshold = 51000.00m,
+  Condition = AlertCondition.GreaterThan,
+  IsEnabled = true,
+  UserId = 123,
+  Notes = "Notify when BTC price exceeds $51,000",
+  CreatedAt = DateTime.UtcNow,
+  UpdatedAt = DateTime.UtcNow
+};
+
+var alertId = await alertService.CreateAlertAsync(newAlert);
+Console.WriteLine($"Alert created with ID: {alertId}");
+
+// Get all alerts for a user
+var userAlerts = await alertService.GetUserAlertsAsync(123);
+Console.WriteLine($"User has {userAlerts.Count()} active alerts");
+
+// Update an existing alert
+newAlert.Threshold = 51500.00m;
+var updateResult = await alertService.UpdateAlertAsync(newAlert);
+Console.WriteLine($"Alert updated successfully: {updateResult}");
+
+// Check if any alerts should trigger based on current prices
+var triggeredAlerts = await alertService.CheckTriggersAsync();
+Console.WriteLine($"Found {triggeredAlerts.Count()} alerts that need to trigger");
+
+// Send notifications for triggered alerts
+foreach (var alert in triggeredAlerts)
+{
+  await alertService.SendNotificationAsync(alert);
+}
+
+// Delete an alert
+var deleteResult = await alertService.DeleteAlertAsync(alertId);
+Console.WriteLine($"Alert deleted successfully: {deleteResult}");
+
+// Get active alert count
+var activeCount = await alertService.GetActiveAlertCountAsync();
+Console.WriteLine($"Total active alerts: {activeCount}");
+
+// Test if an alert would trigger without saving
+var testAlert = new PriceAlert
+{
+  Asset = "ETH",
+  Fiat = "USDT",
+  AlertType = AlertType.PriceBelow,
+  Threshold = 3000.00m,
+  Condition = AlertCondition.LessThan,
+  IsEnabled = true
+};
+
+var wouldTrigger = await alertService.TestAlertAsync(testAlert, 2950.00m);
+Console.WriteLine($"Test alert would trigger: {wouldTrigger}");
+```
+
 ## CommandFactory
 
 The `CommandFactory` class provides centralized registration and creation of CLI commands within the Binance P2P Monitor application. It maintains a registry of available commands and allows dynamic command creation based on registered types. This enables extensible CLI functionality where new commands can be added without modifying the core application flow.
