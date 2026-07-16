@@ -100,6 +100,42 @@ decimal availableRange = tradeOffer.GetAvailableRange();
 Console.WriteLine($"Available range: {availableRange}");
 ```
 
+## UserProfile
+
+The `UserProfile` class manages user-specific settings, including notification preferences, activity tracking, and alert subscriptions for monitoring P2P market opportunities. It provides methods to validate the user configuration, manage active alerts, and update user activity timestamps.
+
+Here is an example of creating and using a `UserProfile` instance:
+
+```csharp
+using BinanceP2pMonitor.Models;
+
+var userProfile = new UserProfile
+{
+    TelegramChatId = 123456789,
+    TelegramUsername = "jdoe",
+    Email = "jdoe@example.com",
+    FirstName = "John",
+    LastName = "Doe",
+    IsActive = true,
+    ReceiveNotifications = true,
+    ReceiveDailyReport = true,
+    DailyReportHourUtc = 9,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Update user activity
+userProfile.UpdateActivity();
+
+// Check user status
+bool isRecent = userProfile.IsRecentlyActive(30);
+bool isValid = userProfile.IsValid();
+int activeAlerts = userProfile.GetActiveAlertCount();
+string fullName = userProfile.GetFullName();
+
+Console.WriteLine($"User {fullName} is active: {isRecent}, valid: {isValid}, active alerts: {activeAlerts}");
+```
+
 ## ConsoleOutputWriter
 
 // ... rest of content ...
