@@ -1372,6 +1372,91 @@ var alertCount = await alertRepository.GetUserAlertCountAsync(123);
 Console.WriteLine($"User has {alertCount} active alerts");
 ```
 
+## PriceHistoryServiceTests
+
+The `PriceHistoryServiceTests` class contains unit tests for the `PriceHistoryService` class, verifying historical price data analysis, statistics calculation, and cleanup operations. These tests ensure that the price history service correctly handles price trend calculations, price statistics (high/low/average), empty history scenarios, and proper delegation to repository methods. The test suite uses mock repositories to isolate service functionality from database concerns.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Configuration;
+using BinanceP2pMonitor.Models;
+using BinanceP2pMonitor.Repositories;
+using BinanceP2pMonitor.Services;
+using Microsoft.Extensions.Logging;
+using Moq;
+
+// Create test dependencies
+var repoMock = new Mock<IHistoryRepository>();
+var settings = new AppSettings { DatabaseConnectionString = "Data Source=:memory:" };
+var logger = Mock.Of<ILogger<PriceHistoryService>>();
+
+// Create the service with mocked dependencies
+var priceHistoryService = new PriceHistoryService(repoMock.Object, settings, logger);
+
+// Test 1: GetPriceTrendAsync with rising prices
+var earlier = new PriceHistory
+{
+    Asset = "BTC",
+    Fiat = "USD",
+    BuyPrice = 40000m,
+    SellPrice = 40100m,
+    RecordedAt = DateTime.UtcNow.AddHours(-2),
+    CreatedAt = DateTime.UtcNow
+};
+var later = new PriceHistory
+{
+    Asset = "BTC",
+    Fiat = "USD",
+    BuyPrice = 44000m,
+    SellPrice = 44100m,
+    RecordedAt = DateTime.UtcNow.AddHours(-1),
+    CreatedAt = DateTime.UtcNow
+};
+
+repoMock.Setup(r => r.GetHistoryByAssetAndFiatAsync("BTC", "USD", 24))
+    .ReturnsAsync(new[] { earlier, later });
+
+var trend = await priceHistoryService.GetPriceTrendAsync("BTC", "USD", 24);
+Console.WriteLine($"Price trend: {trend:F4}%"); // Positive trend
+
+// Test 2: GetPriceStatsAsync with multiple records
+var records = new[]
+{
+    new PriceHistory { Asset = "BTC", Fiat = "USD", BuyPrice = 40000m, SellPrice = 41000m, RecordedAt = DateTime.UtcNow.AddHours(-3), CreatedAt = DateTime.UtcNow },
+    new PriceHistory { Asset = "BTC", Fiat = "USD", BuyPrice = 50000m, SellPrice = 51000m, RecordedAt = DateTime.UtcNow.AddHours(-1), CreatedAt = DateTime.UtcNow }
+};
+
+repoMock.Setup(r => r.GetHistoryByAssetAndFiatAsync("BTC", "USD", 24))
+    .ReturnsAsync(records);
+
+var (high, low, average) = await priceHistoryService.GetPriceStatsAsync("BTC", "USD", 24);
+Console.WriteLine($"High: {high:C}, Low: {low:C}, Average: {average:C}"); // High: $51,000.00, Low: $40,000.00, Average: $45,500.00
+
+// Test 3: GetHistoryCountAsync - delegates to repository
+repoMock.Setup(r => r.GetTotalHistoryCountAsync())
+    .ReturnsAsync(100L);
+
+var totalCount = await priceHistoryService.GetHistoryCountAsync();
+Console.WriteLine($"Total history records: {totalCount}"); // 100
+
+// Test 4: CleanupOldHistoryAsync - delegates to repository
+repoMock.Setup(r => r.DeleteOldRecordsAsync(30))
+    .ReturnsAsync(true);
+
+var cleanupResult = await priceHistoryService.CleanupOldHistoryAsync(daysOld: 30);
+Console.WriteLine($"Cleanup successful: {cleanupResult}"); // true
+
+// Test 5: Constructor validation
+try
+{
+    var invalidService = new PriceHistoryService(null!, settings, logger);
+}
+catch (ArgumentNullException ex)
+{
+    Console.WriteLine($"Constructor validation: {ex.ParamName}"); // historyRepository
+}
+```
+
 ## PriceRepositoryTests
 
 The `PriceRepositoryTests` class contains unit tests for the `PriceRepository` class, verifying price record storage, retrieval, update, and deletion functionality. These tests ensure that the price repository correctly handles adding new price records, retrieving prices by ID, fetching the latest prices by asset/fiat combinations, updating existing prices, deleting prices, and calculating average prices over time windows. The test suite uses an in-memory SQLite database for isolated testing.
