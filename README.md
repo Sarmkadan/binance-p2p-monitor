@@ -515,6 +515,59 @@ webSocketService.OnPriceUpdate += (sender, args) =>
 await webSocketService.DisconnectAsync();
 ```
 
+## IHistoricalSpreadAnalysisService
+
+The `IHistoricalSpreadAnalysisService` interface provides statistical analysis of historical spread data across configurable time windows. It enables detection of anomalous spreads, percentile-based spread analysis, and rolling-window averages for monitoring price arbitrage opportunities and market anomalies.
+
+```csharp
+using BinanceP2pMonitor.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+    .AddLogging()
+    .AddSingleton<IHistoryRepository, HistoryRepository>()
+    .AddSingleton<ISpreadAnalysisService, SpreadAnalysisService>()
+    .AddSingleton<IEventBus, EventBus>()
+    .AddSingleton<AppSettings>(new AppSettings { DefaultSpreadThreshold = 1.5m })
+    .AddSingleton<IHistoricalSpreadAnalysisService, HistoricalSpreadAnalysisService>()
+    .BuildServiceProvider();
+
+var analysisService = services.GetRequiredService<IHistoricalSpreadAnalysisService>();
+
+// Analyze historical spread for a trading pair over 24 hours
+var report = await analysisService.AnalyzeHistoricalSpreadAsync("BTC", "USDT", hours: 24);
+if (report != null)
+{
+    Console.WriteLine($"Spread analysis for BTC/USDT:");
+    Console.WriteLine($"  Mean: {report.Mean:F4}%");
+    Console.WriteLine($"  Median: {report.Median:F4}%");
+    Console.WriteLine($"  Standard deviation: {report.StandardDeviation:F4}%");
+    Console.WriteLine($"  Current spread: {report.CurrentSpread:F4}%");
+    Console.WriteLine($"  Z-score: {report.ZScore:F2}");
+    Console.WriteLine($"  Anomalous: {report.IsAnomalous}");
+    Console.WriteLine($"  Trend slope: {report.TrendSlope:F6}%/min");
+}
+
+// Detect statistical alerts across multiple trading pairs
+var pairs = new[] { ("BTC", "USDT"), ("ETH", "USDT"), ("BNB", "USDT") };
+var anomalies = await analysisService.DetectStatisticalAlertsAsync(pairs, zScoreThreshold: 2.5m);
+Console.WriteLine($"Detected {anomalies.Count()} anomalous spreads");
+
+// Get spread percentile (e.g., 95th percentile)
+var percentile95 = await analysisService.GetSpreadPercentileAsync("BTC", "USDT", percentile: 95, hours: 24);
+Console.WriteLine($"95th percentile spread: {percentile95:F4}%");
+
+// Get rolling window averages (15-minute windows over 24 hours)
+var windowAverages = await analysisService.GetRollingWindowAveragesAsync("BTC", "USDT", windowSizeMinutes: 15, hours: 24);
+Console.WriteLine($"Rolling window averages: {windowAverages.Count()} data points");
+foreach (var (windowEnd, avgSpread) in windowAverages.Take(5))
+{
+    Console.WriteLine($"  {windowEnd:yyyy-MM-dd HH:mm:ss}: {avgSpread:F4}%");
+}
+```
+
 ## CommandContext
 
 `CommandContext` carries all information required to execute a CLI command: the command name, raw arguments, parsed options and flags, a service provider for dependency resolution, and a cancellation token for graceful shutdown. It also offers helper methods to query options/flags and retrieve services from the injected `IServiceProvider`.
