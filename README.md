@@ -1491,6 +1491,46 @@ var deleteResult = await historyRepository.DeleteAsync(historyId);
 Console.WriteLine($"History record deleted successfully: {deleteResult}");
 ```
 
+
+## ValidationException
+
+The `ValidationException` class is a custom exception type used throughout the Binance P2P Monitor application to handle validation failures. It extends the standard `Exception` class and provides additional functionality to track multiple validation errors through a `List<string> Errors` property. This exception is particularly useful for scenarios where multiple validation checks fail simultaneously, allowing all errors to be collected and reported together rather than throwing multiple exceptions.
+
+```csharp
+using BinanceP2pMonitor.Utilities;
+
+// Create a validation exception with a single error message
+var exception1 = new ValidationException("Price cannot be negative");
+Console.WriteLine(exception1.Message); // "Price cannot be negative"
+Console.WriteLine(exception1.Errors.Count); // 1
+
+// Create a validation exception with multiple error messages
+var errors = new List<string> {
+    "Asset cannot be null or empty",
+    "Fiat currency must be specified",
+    "Buy price must be greater than 0"
+};
+var exception2 = new ValidationException(errors);
+Console.WriteLine(exception2.Message); // "Asset cannot be null or empty; Fiat currency must be specified; Buy price must be greater than 0"
+Console.WriteLine(exception2.Errors.Count); // 3
+
+// Create a validation exception with both a base message and multiple errors
+var exception3 = new ValidationException("Price validation failed", errors);
+Console.WriteLine(exception3.Message); // "Price validation failed"
+Console.WriteLine(exception3.Errors.Count); // 3
+
+// Add additional errors to an existing exception
+var exception4 = new ValidationException("Spread calculation error");
+exception4.AddError("Spread percentage exceeds maximum threshold of 5%");
+exception4.AddError("Current spread: 6.25%");
+Console.WriteLine(exception4.Errors.Count); // 2
+
+// Check if a validation exception contains specific errors
+if (exception2.Errors.Any(e => e.Contains("Asset")))
+{
+    Console.WriteLine("Validation exception contains asset-related error");
+}
+```
 ## BacktestOptions
 
 // ... rest of content ...
