@@ -1183,6 +1183,51 @@ cache.Dispose();
 Console.WriteLine("Cache disposed");
 ```
 
+## PriceCalculator
+
+The `PriceCalculator` utility class provides static methods for performing common price calculations, spread analysis, and price formatting operations. It includes methods for calculating percentage changes, spreads, mid-prices, moving averages, standard deviations, and various threshold checks. The class also provides utilities for rounding prices and formatting them for display.
+
+```csharp
+using BinanceP2pMonitor.Utilities;
+
+// Calculate percentage change between two prices
+var changePercent = PriceCalculator.CalculatePercentageChange(51000.75m, 50000.00m);
+Console.WriteLine($"Price change: {changePercent:F2}%"); // 2.00%
+
+// Calculate spread between buy and sell prices
+var spreadPercent = PriceCalculator.CalculateSpread(50000.50m, 50010.25m);
+Console.WriteLine($"Spread: {spreadPercent:F4}%"); // 0.0205%
+
+// Calculate mid-price (average of buy and sell)
+var midPrice = PriceCalculator.CalculateMidPrice(50000.50m, 50010.25m);
+Console.WriteLine($"Mid price: {midPrice:C}"); // $50,005.38
+
+// Check if price is above threshold
+var isAbove = PriceCalculator.IsAboveThreshold(51000.00m, 50000.00m, 2.0m);
+Console.WriteLine($"Above 2% threshold: {isAbove}"); // True
+
+// Check if price is below threshold
+var isBelow = PriceCalculator.IsBelowThreshold(49000.00m, 50000.00m, 2.0m);
+Console.WriteLine($"Below 2% threshold: {isBelow}"); // True
+
+// Round a price to 2 decimal places
+var roundedPrice = PriceCalculator.RoundPrice(50000.5678m, 2);
+Console.WriteLine($"Rounded price: {roundedPrice:C}"); // $50,000.57
+
+// Format a price with currency symbol
+var formattedPrice = PriceCalculator.FormatPrice(50000.50m, "$");
+Console.WriteLine($"Formatted price: {formattedPrice}"); // $50,000.50
+
+// Calculate moving average over a collection of prices
+var prices = new decimal[] { 50000.00m, 50100.50m, 50200.75m, 50300.25m, 50400.00m };
+var movingAvg = PriceCalculator.CalculateMovingAverage(prices, windowSize: 3);
+Console.WriteLine($"3-period moving average: {movingAvg:C}"); // $50,200.50
+
+// Calculate standard deviation of prices
+var stdDev = PriceCalculator.CalculateStandardDeviation(prices);
+Console.WriteLine($"Standard deviation: {stdDev:F4}"); // 163.3012
+```
+
 ## TradeOfferRepository
 
 The `TradeOfferRepository` class provides data access methods for managing trade offer data from Binance P2P. It serves as the primary interface for interacting with trade offers in the database, offering methods to retrieve, add, update, and delete trade offers. The repository includes functionality to fetch offers by ID, Binance offer ID, asset/fiat combinations, trade type, and to retrieve the best available offers based on price and trader rating. It also provides aggregate methods for counting total offers and calculating average prices.
