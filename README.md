@@ -1103,6 +1103,158 @@ The `AlertRepository` class provides data access methods for storing, retrieving
 
 ```csharp
 using BinanceP2pMonitor.Repositories;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+.AddLogging()
+.AddSingleton<IAlertRepository, AlertRepository>()
+.BuildServiceProvider();
+
+var alertRepository = services.GetRequiredService<IAlertRepository>() as AlertRepository;
+
+// Add a new price alert
+var newAlert = new PriceAlert
+{
+Asset = "BTC",
+Fiat = "USDT",
+AlertType = AlertType.PriceAbove,
+Threshold = 51000.00m,
+Condition = AlertCondition.GreaterThan,
+IsEnabled = true,
+UserId = 123,
+Notes = "Notify when BTC price exceeds $51,000",
+CreatedAt = DateTime.UtcNow,
+UpdatedAt = DateTime.UtcNow
+};
+
+var alertId = await alertRepository.AddAsync(newAlert);
+Console.WriteLine($"Alert created with ID: {alertId}");
+
+// Get an alert by ID
+var retrievedAlert = await alertRepository.GetByIdAsync(alertId);
+if (retrievedAlert != null)
+{
+Console.WriteLine($"Retrieved alert: {retrievedAlert.GetDescription()}");
+Console.WriteLine($"Threshold: {retrievedAlert.Threshold:C}");
+Console.WriteLine($"Enabled: {retrievedAlert.IsEnabled}");
+}
+
+// Get all enabled alerts (alerts that are active and not disabled)
+var enabledAlerts = await alertRepository.GetEnabledAlertsAsync();
+Console.WriteLine($"Total enabled alerts: {enabledAlerts.Count()}");
+
+// Get all alerts for a specific user
+var userAlerts = await alertRepository.GetUserAlertsAsync(123);
+Console.WriteLine($"User has {userAlerts.Count()} active alerts");
+
+// Get alerts for a specific asset/fiat combination
+var btcAlerts = await alertRepository.GetAlertsByAssetAndFiatAsync("BTC", "USDT");
+Console.WriteLine($"BTC/USDT alerts: {btcAlerts.Count()}");
+
+// Update an existing alert
+if (retrievedAlert != null)
+{
+retrievedAlert.Threshold = 51500.00m;
+retrievedAlert.UpdatedAt = DateTime.UtcNow;
+
+var updateResult = await alertRepository.UpdateAsync(retrievedAlert);
+Console.WriteLine($"Alert updated successfully: {updateResult}");
+}
+
+// Delete an alert
+var deleteResult = await alertRepository.DeleteAsync(alertId);
+Console.WriteLine($"Alert deleted successfully: {deleteResult}");
+
+// Delete all alerts for a specific user
+var userDeleteResult = await alertRepository.DeleteUserAlertsAsync(123);
+Console.WriteLine($"User alerts deleted: {userDeleteResult}");
+
+// Get the count of active alerts for a user
+var alertCount = await alertRepository.GetUserAlertCountAsync(123);
+Console.WriteLine($"User has {alertCount} active alerts");
+```
+
+## AlertRepositoryTests
+
+The `AlertRepositoryTests` class contains unit tests for the `AlertRepository` class, verifying core alert repository functionality including alert creation, retrieval, updates, and deletion operations. These tests ensure that the alert repository correctly handles CRUD operations, user-specific alert queries, and edge cases like non-existent records.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Models;
+using FluentAssertions;
+using Xunit;
+
+// Create test database setup
+var connection = new SqliteConnection("DataSource=:memory:");
+connection.Open();
+var context = new DatabaseContext(connection);
+var alertRepository = new AlertRepository(context);
+
+// Initialize database schema
+context.ExecuteCommand(@"CREATE TABLE PriceAlerts (...)");
+
+// Test 1: AddAsync should add alert and return ID
+var newAlert = new PriceAlert
+{
+UserId = 1,
+Asset = "USDT",
+Fiat = "UAH",
+AlertType = AlertType.PriceChange,
+Threshold = 1.0m,
+Condition = AlertCondition.GreaterThan,
+IsEnabled = true,
+CreatedAt = DateTime.UtcNow,
+UpdatedAt = DateTime.UtcNow,
+TriggerCount = 0,
+Notes = "Test Alert"
+};
+
+var alertId = await alertRepository.AddAsync(newAlert);
+alertId.Should().BeGreaterThan(0);
+
+// Test 2: GetByIdAsync should return alert when exists
+var retrievedAlert = await alertRepository.GetByIdAsync(alertId);
+retrievedAlert.Should().NotBeNull();
+retrievedAlert!.Asset.Should().Be("USDT");
+
+// Test 3: GetByIdAsync should return null when alert doesn't exist
+var nullAlert = await alertRepository.GetByIdAsync(999);
+nullAlert.Should().BeNull();
+
+// Test 4: UpdateAsync should update alert and return true
+retrievedAlert.Threshold = 2.0m;
+retrievedAlert.Notes = "Updated Test Alert";
+var updateResult = await alertRepository.UpdateAsync(retrievedAlert);
+updateResult.Should().BeTrue();
+
+// Test 5: UpdateAsync should return false when alert doesn't exist
+var fakeAlert = new PriceAlert { Id = 999 };
+var falseResult = await alertRepository.UpdateAsync(fakeAlert);
+falseResult.Should().BeFalse();
+
+// Test 6: DeleteAsync should delete alert and return true
+var deleteResult = await alertRepository.DeleteAsync(alertId);
+deleteResult.Should().BeTrue();
+
+// Test 7: DeleteAsync should return false when alert doesn't exist
+var falseDelete = await alertRepository.DeleteAsync(999);
+falseDelete.Should().BeFalse();
+
+// Test 8: GetUserAlertsAsync should return alerts for user
+var userId = 1;
+await alertRepository.AddAsync(new PriceAlert { UserId = userId });
+await alertRepository.AddAsync(new PriceAlert { UserId = userId });
+await alertRepository.AddAsync(new PriceAlert { UserId = 2 }); // Different user
+
+var userAlerts = await alertRepository.GetUserAlertsAsync(userId);
+userAlerts.Should().HaveCount(2);
+userAlerts.Should().AllSatisfy(a => a.UserId.Should().Be(userId));
+
+// Cleanup
+disposable.Dispose();
+```
+
+## AlertRepository
 using BinanceP2pMonitor.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
