@@ -1833,6 +1833,111 @@ var stdDev = PriceCalculator.CalculateStandardDeviation(prices);
 Console.WriteLine($"Standard deviation: {stdDev:F4}"); // 163.3012
 ```
 
+## PriceCalculatorTests
+
+The `PriceCalculatorTests` class contains unit tests for the `PriceCalculator` utility class, verifying price calculation functionality including percentage changes, spreads, mid-prices, moving averages, standard deviations, and price formatting operations. These tests ensure that all price calculation methods handle edge cases correctly such as zero prices, identical prices, and various threshold scenarios.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Utilities;
+using FluentAssertions;
+using Xunit;
+
+// Test percentage change calculations
+[Fact]
+public void CalculatePercentageChange_PriceIncreases_ReturnsPositivePercentage()
+{
+    var result = PriceCalculator.CalculatePercentageChange(51000.75m, 50000.00m);
+    result.Should().Be(2.00m); // (51000.75 - 50000) / 50000 * 100 = 2.00%
+}
+
+[Fact]
+public void CalculatePercentageChange_PriceDecreases_ReturnsNegativePercentage()
+{
+    var result = PriceCalculator.CalculatePercentageChange(49000.00m, 50000.00m);
+    result.Should().Be(-2.00m); // (49000 - 50000) / 50000 * 100 = -2.00%
+}
+
+[Fact]
+public void CalculatePercentageChange_ZeroOriginalPrice_ReturnsZero()
+{
+    var result = PriceCalculator.CalculatePercentageChange(0m, 50000.00m);
+    result.Should().Be(0m);
+}
+
+// Test spread calculations
+[Fact]
+public void CalculateSpread_BuyAndSellPrices_ReturnsCorrectSpreadPercent()
+{
+    var result = PriceCalculator.CalculateSpread(50000.50m, 50010.25m);
+    result.Should().BeApproximately(0.0195m, 0.0001m); // (50010.25 - 50000.50) / 50000.50 * 100
+}
+
+[Fact]
+public void CalculateSpread_ZeroBuyPrice_ReturnsZero()
+{
+    var result = PriceCalculator.CalculateSpread(0m, 50010.25m);
+    result.Should().Be(0m);
+}
+
+// Test mid-price calculations
+[Fact]
+public void CalculateMidPrice_TwoPrices_ReturnsArithmeticMean()
+{
+    var result = PriceCalculator.CalculateMidPrice(50000.50m, 50010.25m);
+    result.Should().Be(50005.375m); // (50000.50 + 50010.25) / 2
+}
+
+// Test moving average calculations
+[Fact]
+public void CalculateMovingAverage_FewerPricesThanPeriod_ReturnsOverallAverage()
+{
+    var prices = new decimal[] { 50000.00m, 50100.50m, 50200.75m };
+    var result = PriceCalculator.CalculateMovingAverage(prices, windowSize: 5);
+    result.Should().BeApproximately(50100.42m, 0.01m); // Average of all 3 prices
+}
+
+[Fact]
+public void CalculateMovingAverage_ExactPeriod_ReturnsLastNAverage()
+{
+    var prices = new decimal[] { 50000.00m, 50100.50m, 50200.75m, 50300.25m, 50400.00m };
+    var result = PriceCalculator.CalculateMovingAverage(prices, windowSize: 3);
+    result.Should().Be(50300.50m); // Average of last 3 prices: (50200.75 + 50300.25 + 50400.00) / 3
+}
+
+// Test standard deviation calculations
+[Fact]
+public void CalculateStandardDeviation_SinglePrice_ReturnsZero()
+{
+    var prices = new decimal[] { 50000.00m };
+    var result = PriceCalculator.CalculateStandardDeviation(prices);
+    result.Should().Be(0m);
+}
+
+[Fact]
+public void CalculateStandardDeviation_IdenticalPrices_ReturnsZero()
+{
+    var prices = new decimal[] { 50000.00m, 50000.00m, 50000.00m };
+    var result = PriceCalculator.CalculateStandardDeviation(prices);
+    result.Should().Be(0m);
+}
+
+// Test price formatting
+[Fact]
+public void FormatPrice_WithCurrencySymbol_PrependsCurrencySymbol()
+{
+    var result = PriceCalculator.FormatPrice(50000.50m, "$");
+    result.Should().Be("$50,000.50");
+}
+
+[Fact]
+public void FormatPrice_NoCurrencySymbol_ReturnsPlainDecimal()
+{
+    var result = PriceCalculator.FormatPrice(50000.50m, null);
+    result.Should().Be("50000.50");
+}
+```
+
 ## TradeOfferRepository
 
 The `TradeOfferRepository` class provides data access methods for managing trade offer data from Binance P2P. It serves as the primary interface for interacting with trade offers in the database, offering methods to retrieve, add, update, and delete trade offers. The repository includes functionality to fetch offers by ID, Binance offer ID, asset/fiat combinations, trade type, and to retrieve the best available offers based on price and trader rating. It also provides aggregate methods for counting total offers and calculating average prices.
