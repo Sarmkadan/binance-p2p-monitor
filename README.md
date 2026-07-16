@@ -289,6 +289,75 @@ await monitoringService.StopMonitoringAsync();
 Console.WriteLine("Price monitoring stopped.");
 ```
 
+## PriceHistoryService
+
+The `PriceHistoryService` manages historical price data recording, retrieval, and analysis for Binance P2P trading pairs. It provides functionality to record prices, retrieve historical data, calculate price trends and statistics, and perform cleanup operations. This service is essential for tracking price movements over time and generating insights for trading decisions.
+
+```csharp
+using BinanceP2pMonitor.Services;
+using BinanceP2pMonitor.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+.AddLogging()
+.AddSingleton<IHistoryRepository, HistoryRepository>()
+.AddSingleton<AppSettings>(new AppSettings { HistoryRetentionDays = 30 })
+.AddSingleton<IPriceHistoryService, PriceHistoryService>()
+.BuildServiceProvider();
+
+var priceHistoryService = services.GetRequiredService<IPriceHistoryService>() as PriceHistoryService;
+
+// Record a new price
+var price = new Price
+{
+  Id = 1,
+  Asset = "BTC",
+  Fiat = "USDT",
+  BuyPrice = 50000.50m,
+  SellPrice = 50010.25m,
+  BuyChangePercent = 0.25m,
+  SellChangePercent = 0.30m,
+  Timestamp = DateTime.UtcNow,
+  CreatedAt = DateTime.UtcNow,
+  UpdatedAt = DateTime.UtcNow
+};
+
+var recordId = await priceHistoryService.RecordPriceAsync(price);
+Console.WriteLine($"Price recorded with ID: {recordId}");
+
+// Get price history for a trading pair
+var history = await priceHistoryService.GetHistoryAsync("BTC", "USDT", 24);
+Console.WriteLine($"Retrieved {history.Count()} historical records");
+
+// Calculate price trend over last 24 hours
+var trend = await priceHistoryService.GetPriceTrendAsync("BTC", "USDT", 24);
+Console.WriteLine($"24h price trend: {trend:F4}%");
+
+// Get price statistics (high, low, average)
+var (high, low, average) = await priceHistoryService.GetPriceStatsAsync("BTC", "USDT", 24);
+Console.WriteLine($"Price stats - High: {high:C}, Low: {low:C}, Avg: {average:C}");
+
+// Get detailed analysis with multiple metrics
+var analysis = await priceHistoryService.GetDetailedAnalysisAsync("BTC", "USDT", 24);
+Console.WriteLine($"Analysis for BTC/USDT:");
+Console.WriteLine($"  High: {analysis["HighPrice"]}");
+Console.WriteLine($"  Low: {analysis["LowPrice"]}");
+Console.WriteLine($"  Average: {analysis["AveragePrice"]}");
+Console.WriteLine($"  Trend: {analysis["Trend"]}%");
+Console.WriteLine($"  Direction: {analysis["TrendDirection"]}");
+Console.WriteLine($"  Record count: {analysis["RecordCount"]}");
+
+// Clean up old history records (older than 30 days)
+var cleanupResult = await priceHistoryService.CleanupOldHistoryAsync(30);
+Console.WriteLine($"Cleanup completed: {cleanupResult}");
+
+// Get total history count
+var totalCount = await priceHistoryService.GetHistoryCountAsync();
+Console.WriteLine($"Total history records: {totalCount}");
+```
+
 ## IWebSocketService
 
 The `IWebSocketService` interface defines a contract for WebSocket-based real-time price monitoring. It provides methods to connect/disconnect from WebSocket servers and subscribe/unsubscribe to specific trading pairs (asset/fiat combinations). Implementations receive price updates through the `OnPriceUpdate` event, which delivers `PriceUpdateEventArgs` containing buy/sell prices and timestamps.
