@@ -745,6 +745,45 @@ var maskedKey = apiKey.Mask(showChars: 8);
 Console.WriteLine(maskedKey); // "sk_live_************"
 ```
 
+## DateTimeExtensions
+
+The `DateTimeExtensions` class provides utility extension methods for common DateTime operations including Unix timestamp conversion, time formatting, and date/time rounding. These methods are frequently used throughout the Binance P2P Monitor application for API timestamp handling, price history analysis, and scheduling operations.
+
+```csharp
+using BinanceP2pMonitor.Utilities;
+
+// Convert current time to Unix timestamp in milliseconds
+var timestampMs = DateTime.UtcNow.ToUnixTimestampMs();
+Console.WriteLine($"Current Unix timestamp (ms): {timestampMs}");
+
+// Convert Unix timestamp back to DateTime
+var dateTime = DateTimeExtensions.FromUnixTimestampMs(timestampMs);
+Console.WriteLine($"Converted back: {dateTime:yyyy-MM-dd HH:mm:ss}");
+
+// Get human-readable time difference
+var priceUpdateTime = DateTime.UtcNow.AddMinutes(-5);
+var timeAgo = priceUpdateTime.GetTimeAgoString();
+Console.WriteLine($"Price updated {timeAgo}");
+
+// Round to nearest 15-minute interval for scheduled monitoring
+var monitoringTime = DateTime.UtcNow.RoundTo(TimeSpan.FromMinutes(15));
+Console.WriteLine($"Next monitoring window: {monitoringTime:yyyy-MM-dd HH:mm:ss}");
+
+// Get start/end of day for daily price aggregation
+var startOfDay = DateTime.UtcNow.StartOfDay();
+var endOfDay = DateTime.UtcNow.EndOfDay();
+Console.WriteLine($"Price aggregation window: {startOfDay:yyyy-MM-dd HH:mm:ss} to {endOfDay:yyyy-MM-dd HH:mm:ss}");
+
+// Get start of week for weekly reports
+var startOfWeek = DateTime.UtcNow.StartOfWeek();
+Console.WriteLine($"Week starts: {startOfWeek:yyyy-MM-dd}");
+
+// Get start/end of month for monthly statistics
+var startOfMonth = DateTime.UtcNow.StartOfMonth();
+var endOfMonth = DateTime.UtcNow.EndOfMonth();
+Console.WriteLine($"Month: {startOfMonth:yyyy-MM} ({startOfMonth:yyyy-MM-dd} to {endOfMonth:yyyy-MM-dd})");
+```
+
 ## NumericExtensions
 
 The `NumericExtensions` class provides extension methods for performing common numeric operations on decimal values. These methods include rounding, percentage calculations, range checks, and formatting utilities that are frequently used throughout the Binance P2P Monitor application for price calculations, spread analysis, and data validation.
