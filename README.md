@@ -325,6 +325,45 @@ await webSocketService.ConnectAsync();
 await webSocketService.DisconnectAsync();
 ```
 
+## WebSocketService
+
+The `WebSocketService` class provides a concrete implementation of `IWebSocketService` for connecting to Binance's WebSocket API and receiving real-time price updates. It handles connection management, automatic reconnection with exponential backoff, subscription management, and periodic keepalive pings to prevent server-side timeouts. The service parses incoming ticker messages and raises `OnPriceUpdate` events with the latest buy/sell prices.
+
+```csharp
+using BinanceP2pMonitor.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+    .AddLogging()
+    .AddSingleton<IWebSocketService, WebSocketService>()
+    .BuildServiceProvider();
+
+var webSocketService = services.GetRequiredService<IWebSocketService>() as WebSocketService;
+
+// Connect to Binance WebSocket endpoint
+await webSocketService.ConnectAsync();
+
+// Subscribe to multiple trading pairs
+await webSocketService.SubscribeToPairAsync("BTC", "USDT");
+await webSocketService.SubscribeToPairAsync("ETH", "USDT");
+await webSocketService.SubscribeToPairAsync("BNB", "USDT");
+
+// Handle price update events
+webSocketService.OnPriceUpdate += (sender, args) =>
+{
+    Console.WriteLine($"Real-time price update:");
+    Console.WriteLine($"  Pair: {args.Asset}-{args.Fiat}");
+    Console.WriteLine($"  Buy: {args.BuyPrice:C}, Sell: {args.SellPrice:C}");
+    Console.WriteLine($"  Spread: {(args.SellPrice - args.BuyPrice) / args.BuyPrice * 100:F4}%");
+    Console.WriteLine($"  Timestamp: {args.UpdateTime:yyyy-MM-dd HH:mm:ss}");
+};
+
+// Disconnect when done (automatically disposes resources)
+await webSocketService.DisconnectAsync();
+```
+
 ## CommandContext
 
 `CommandContext` carries all information required to execute a CLI command: the command name, raw arguments, parsed options and flags, a service provider for dependency resolution, and a cancellation token for graceful shutdown. It also offers helper methods to query options/flags and retrieve services from the injected `IServiceProvider`.
