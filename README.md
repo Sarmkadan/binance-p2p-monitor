@@ -136,6 +136,54 @@ string fullName = userProfile.GetFullName();
 Console.WriteLine($"User {fullName} is active: {isRecent}, valid: {isValid}, active alerts: {activeAlerts}");
 ```
 
+## PriceHistory
+
+The `PriceHistory` class represents historical pricing data for P2P trading pairs, storing buy/sell prices, spread calculations, and price change metrics over time. It provides methods to compute mid-prices, validate data freshness, and compare historical prices against current market conditions.
+
+Here is an example of creating and using a `PriceHistory` instance:
+
+```csharp
+using BinanceP2pMonitor.Models;
+
+var priceHistory = new PriceHistory
+{
+    PriceId = 1,
+    Asset = "USDT-BTC",
+    Fiat = "USDT",
+    BuyPrice = 64950.25m,
+    SellPrice = 65100.75m,
+    RecordedAt = DateTime.UtcNow.AddMinutes(-30),
+    CreatedAt = DateTime.UtcNow,
+    SpreadPercentage = 0.23m,
+    PriceChangePercent = 1.5m,
+    Notes = "Stable market conditions"
+};
+
+// Calculate mid-price
+decimal midPrice = priceHistory.GetMidPrice();
+Console.WriteLine($"Mid price: {midPrice:C}");
+
+// Validate price data
+bool isValid = priceHistory.IsValid();
+bool isRecent = priceHistory.IsRecent();
+Console.WriteLine($"Price data valid: {isValid}, recent: {isRecent}");
+
+// Calculate age in minutes
+int ageMinutes = priceHistory.GetAgeInMinutes();
+Console.WriteLine($"Price age: {ageMinutes} minutes");
+
+// Compare with current price
+Price? currentPrice = new Price { Value = 65000.00m };
+priceHistory.Price = currentPrice;
+
+bool isBetter = priceHistory.CompareTo(currentPrice.Value);
+Console.WriteLine($"Historical price is better: {isBetter}");
+
+// Calculate spread
+decimal spread = priceHistory.CalculateSpread();
+Console.WriteLine($"Spread: {spread:F4}%");
+```
+
 ## ConsoleOutputWriter
 
 // ... rest of content ...
