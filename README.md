@@ -1867,6 +1867,158 @@ if (exception2.Errors.Any(e => e.Contains("Asset")))
     Console.WriteLine("Validation exception contains asset-related error");
 }
 ```
+## ConfigurationValidationTests
+
+The `ConfigurationValidationTests` class provides unit tests for validating application configuration settings in the Binance P2P Monitor. It verifies that configuration values like database connection strings, monitoring intervals, alert thresholds, and other settings meet expected constraints and business rules. These tests ensure that invalid configurations are caught early and prevent runtime errors.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Configuration;
+using FluentAssertions;
+using Xunit;
+
+// Create test instance
+var configuration = new ConfigurationValidationTests();
+
+// Test 1: Validate_ShouldNotThrowException_WhenSettingsAreValid
+// Create valid configuration
+var validSettings = new AppSettings
+{
+    DatabaseConnectionString = "Data Source=binance-p2p.db;Version=3;",
+    MonitoringIntervalSeconds = 30,
+    AlertCooldownMinutes = 15,
+    MaxAlertsPerUser = 20,
+    DefaultPriceChangeThreshold = 2.5m,
+    DefaultSpreadThreshold = 1.5m,
+    HistoryRetentionDays = 30,
+    EnableWebSocket = true,
+    EnableTelegramNotifications = false
+};
+
+// Should not throw any exception
+var act1 = () => configuration.Validate(validSettings);
+act1.Should().NotThrow();
+
+// Test 2: Validate_ShouldThrowException_WhenDatabaseConnectionStringIsInvalid
+// Create invalid configuration with empty database connection string
+var invalidDbSettings = new AppSettings
+{
+    DatabaseConnectionString = "",
+    MonitoringIntervalSeconds = 30,
+    AlertCooldownMinutes = 15,
+    MaxAlertsPerUser = 20,
+    DefaultPriceChangeThreshold = 2.5m,
+    DefaultSpreadThreshold = 1.5m,
+    HistoryRetentionDays = 30
+};
+
+// Should throw exception
+var act2 = () => configuration.Validate(invalidDbSettings);
+act2.Should().Throw<ValidationException>();
+
+// Test 3: Validate_ShouldThrowException_WhenMonitoringIntervalSecondsIsInvalid
+// Create invalid configuration with negative monitoring interval
+var invalidIntervalSettings = new AppSettings
+{
+    DatabaseConnectionString = "Data Source=binance-p2p.db;Version=3;",
+    MonitoringIntervalSeconds = -1,
+    AlertCooldownMinutes = 15,
+    MaxAlertsPerUser = 20,
+    DefaultPriceChangeThreshold = 2.5m,
+    DefaultSpreadThreshold = 1.5m,
+    HistoryRetentionDays = 30
+};
+
+// Should throw exception
+var act3 = () => configuration.Validate(invalidIntervalSettings);
+act3.Should().Throw<ValidationException>();
+
+// Test 4: Validate_ShouldThrowException_WhenAlertCooldownMinutesIsInvalid
+// Create invalid configuration with zero alert cooldown
+var invalidCooldownSettings = new AppSettings
+{
+    DatabaseConnectionString = "Data Source=binance-p2p.db;Version=3;",
+    MonitoringIntervalSeconds = 30,
+    AlertCooldownMinutes = 0,
+    MaxAlertsPerUser = 20,
+    DefaultPriceChangeThreshold = 2.5m,
+    DefaultSpreadThreshold = 1.5m,
+    HistoryRetentionDays = 30
+};
+
+// Should throw exception
+var act4 = () => configuration.Validate(invalidCooldownSettings);
+act4.Should().Throw<ValidationException>();
+
+// Test 5: Validate_ShouldThrowException_WhenMaxAlertsPerUserIsInvalid
+// Create invalid configuration with negative max alerts
+var invalidMaxAlertsSettings = new AppSettings
+{
+    DatabaseConnectionString = "Data Source=binance-p2p.db;Version=3;",
+    MonitoringIntervalSeconds = 30,
+    AlertCooldownMinutes = 15,
+    MaxAlertsPerUser = -5,
+    DefaultPriceChangeThreshold = 2.5m,
+    DefaultSpreadThreshold = 1.5m,
+    HistoryRetentionDays = 30
+};
+
+// Should throw exception
+var act5 = () => configuration.Validate(invalidMaxAlertsSettings);
+act5.Should().Throw<ValidationException>();
+
+// Test 6: Validate_ShouldThrowException_WhenHistoryRetentionDaysIsInvalid
+// Create invalid configuration with negative retention days
+var invalidRetentionSettings = new AppSettings
+{
+    DatabaseConnectionString = "Data Source=binance-p2p.db;Version=3;",
+    MonitoringIntervalSeconds = 30,
+    AlertCooldownMinutes = 15,
+    MaxAlertsPerUser = 20,
+    DefaultPriceChangeThreshold = 2.5m,
+    DefaultSpreadThreshold = 1.5m,
+    HistoryRetentionDays = -7
+};
+
+// Should throw exception
+var act6 = () => configuration.Validate(invalidRetentionSettings);
+act6.Should().Throw<ValidationException>();
+
+// Test 7: Validate_ShouldThrowException_WhenDefaultPriceChangeThresholdIsNegative
+// Create invalid configuration with negative price change threshold
+var invalidPriceThresholdSettings = new AppSettings
+{
+    DatabaseConnectionString = "Data Source=binance-p2p.db;Version=3;",
+    MonitoringIntervalSeconds = 30,
+    AlertCooldownMinutes = 15,
+    MaxAlertsPerUser = 20,
+    DefaultPriceChangeThreshold = -1.0m,
+    DefaultSpreadThreshold = 1.5m,
+    HistoryRetentionDays = 30
+};
+
+// Should throw exception
+var act7 = () => configuration.Validate(invalidPriceThresholdSettings);
+act7.Should().Throw<ValidationException>();
+
+// Test 8: Validate_ShouldThrowException_WhenDefaultSpreadThresholdIsNegative
+// Create invalid configuration with negative spread threshold
+var invalidSpreadSettings = new AppSettings
+{
+    DatabaseConnectionString = "Data Source=binance-p2p.db;Version=3;",
+    MonitoringIntervalSeconds = 30,
+    AlertCooldownMinutes = 15,
+    MaxAlertsPerUser = 20,
+    DefaultPriceChangeThreshold = 2.5m,
+    DefaultSpreadThreshold = -0.5m,
+    HistoryRetentionDays = 30
+};
+
+// Should throw exception
+var act8 = () => configuration.Validate(invalidSpreadSettings);
+act8.Should().Throw<ValidationException>();
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
