@@ -1492,6 +1492,57 @@ Console.WriteLine($"History record deleted successfully: {deleteResult}");
 ```
 
 
+## ValidationHelper
+
+The `ValidationHelper` utility class provides static methods for validating various types of data used throughout the Binance P2P Monitor application. It includes methods for validating email addresses, cryptocurrency tickers, fiat currency codes, prices, thresholds, Telegram chat IDs, date ranges, collections, decimal precision, and string patterns. These validation methods are used extensively for input validation, API response validation, and data integrity checks.
+
+```csharp
+using BinanceP2pMonitor.Utilities;
+
+// Validate an email address
+bool isValidEmail = ValidationHelper.IsValidEmail("user@example.com");
+Console.WriteLine($"Valid email: {isValidEmail}");
+
+// Validate a cryptocurrency ticker (e.g., BTC, ETH, USDT)
+bool isValidTicker = ValidationHelper.IsValidTicker("BTC");
+Console.WriteLine($"Valid ticker: {isValidTicker}");
+
+// Validate a fiat currency code (3-letter ISO code)
+bool isValidFiat = ValidationHelper.IsValidFiatCode("USDT");
+Console.WriteLine($"Valid fiat code: {isValidFiat}");
+
+// Validate a price (must be between 0.00000001 and 1000000000 by default)
+bool isValidPrice = ValidationHelper.IsValidPrice(50000.50m);
+Console.WriteLine($"Valid price: {isValidPrice}");
+
+// Validate a threshold percentage (must be between 0 and 100 by default)
+bool isValidThreshold = ValidationHelper.IsValidThreshold(2.5m);
+Console.WriteLine($"Valid threshold: {isValidThreshold}");
+
+// Validate a Telegram chat ID (must be positive)
+bool isValidChatId = ValidationHelper.IsValidTelegramChatId(-1001234567890);
+Console.WriteLine($"Valid Telegram chat ID: {isValidChatId}");
+
+// Validate a date range (start must be before end and in the past)
+bool isValidDateRange = ValidationHelper.IsValidDateRange(
+    DateTime.UtcNow.AddDays(-7), 
+    DateTime.UtcNow.AddDays(-1)
+);
+Console.WriteLine($"Valid date range: {isValidDateRange}");
+
+// Validate a collection (must not be null and must contain items)
+bool isValidCollection = ValidationHelper.IsValidCollection(new List<string> { "item1", "item2" });
+Console.WriteLine($"Valid collection: {isValidCollection}");
+
+// Validate decimal precision (must have 2 or fewer decimal places)
+bool isValidPrecision = ValidationHelper.IsValidPrecision(50000.50m, maxDecimalPlaces: 2);
+Console.WriteLine($"Valid precision: {isValidPrecision}");
+
+// Validate if a string matches a specific pattern
+bool matchesPattern = ValidationHelper.MatchesPattern("BTCUSDT", "^[A-Z0-9]{6,12}$");
+Console.WriteLine($"Matches pattern: {matchesPattern}");
+```
+
 ## ValidationException
 
 The `ValidationException` class is a custom exception type used throughout the Binance P2P Monitor application to handle validation failures. It extends the standard `Exception` class and provides additional functionality to track multiple validation errors through a `List<string> Errors` property. This exception is particularly useful for scenarios where multiple validation checks fail simultaneously, allowing all errors to be collected and reported together rather than throwing multiple exceptions.
