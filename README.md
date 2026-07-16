@@ -217,6 +217,78 @@ foreach (var cmd in availableCommands)
 }
 ```
 
+## PriceMonitoringService
+
+The `PriceMonitoringService` is the core service for monitoring Binance P2P prices in real-time. It provides comprehensive price monitoring functionality including retrieving current prices, updating prices, calculating averages, detecting significant changes, analyzing spreads, and managing WebSocket-based price monitoring. This service integrates with repositories, alert services, spread analysis, and WebSocket connections to provide a complete monitoring solution.
+
+```csharp
+using BinanceP2pMonitor.Services;
+using BinanceP2pMonitor.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection (simplified example)
+var services = new ServiceCollection()
+    .AddLogging()
+    .AddSingleton<IPriceRepository, PriceRepository>()
+    .AddSingleton<IPriceHistoryService, PriceHistoryService>()
+    .AddSingleton<IAlertService, AlertService>()
+    .AddSingleton<ISpreadAnalysisService, SpreadAnalysisService>()
+    .AddSingleton<IEventBus, EventBus>()
+    .AddSingleton<IWebSocketService, WebSocketService>()
+    .AddSingleton<AppSettings>(new AppSettings { EnableWebSocket = true, MonitoredAssets = new[] { "BTC", "ETH" }, MonitoredFiats = new[] { "USDT", "USDC" } })
+    .AddSingleton<PriceMonitoringService>()
+    .BuildServiceProvider();
+
+var monitoringService = services.GetRequiredService<PriceMonitoringService>();
+
+// Get current price for a trading pair
+var currentPrice = await monitoringService.GetCurrentPriceAsync("BTC", "USDT");
+Console.WriteLine($"Current BTC/USDT price: Buy={currentPrice?.BuyPrice:C}, Sell={currentPrice?.SellPrice:C}");
+
+// Get all current prices
+var allPrices = await monitoringService.GetAllCurrentPricesAsync();
+Console.WriteLine($"Total active prices: {allPrices.Count()}");
+
+// Update a price
+var newPrice = new Price
+{
+    Asset = "BTC",
+    Fiat = "USDT",
+    BuyPrice = 50000.50m,
+    SellPrice = 50010.25m,
+    Timestamp = DateTime.UtcNow,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+var updated = await monitoringService.UpdatePriceAsync(newPrice);
+Console.WriteLine($"Price updated successfully: {updated}");
+
+// Get average price over last 24 hours
+var avgPrice = await monitoringService.GetAveragePriceAsync("BTC", "USDT", 24);
+Console.WriteLine($"24h average BTC/USDT price: {avgPrice:C}");
+
+// Get prices with significant change (e.g., > 2%)
+var significantChanges = await monitoringService.GetPricesWithSignificantChangeAsync(2.0m);
+Console.WriteLine($"Prices with >2% change: {significantChanges.Count()}");
+
+// Analyze spread for a trading pair
+var spreadAnalysis = await monitoringService.GetSpreadAnalysisAsync("BTC", "USDT");
+if (spreadAnalysis != null)
+{
+    Console.WriteLine($"Current spread: {spreadAnalysis.CurrentSpreadPercent:F4}%");
+    Console.WriteLine($"Spread risk level: {spreadAnalysis.GetRiskLevel()}");
+}
+
+// Start monitoring via WebSocket
+await monitoringService.StartMonitoringAsync(CancellationToken.None);
+Console.WriteLine("Price monitoring started...");
+
+// Stop monitoring
+await monitoringService.StopMonitoringAsync();
+Console.WriteLine("Price monitoring stopped.");
+```
+
 ## CommandContext
 
 `CommandContext` carries all information required to execute a CLI command: the command name, raw arguments, parsed options and flags, a service provider for dependency resolution, and a cancellation token for graceful shutdown. It also offers helper methods to query options/flags and retrieve services from the injected `IServiceProvider`.
