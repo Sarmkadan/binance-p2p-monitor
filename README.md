@@ -695,6 +695,82 @@ var demo = context.GetRequiredService<string>();
 Console.WriteLine($"Resolved service value: {demo}");
 ```
 
+## DatabaseContext
+
+The `DatabaseContext` class serves as the primary data access layer for the Binance P2P Monitor application. It provides methods for executing SQL commands, queries, and managing SQLite database connections. The context handles database initialization, connection management, and provides various execution methods for interacting with the application's SQLite database.
+
+```csharp
+using BinanceP2pMonitor.Data;
+using Microsoft.Data.Sqlite;
+
+// Create a new DatabaseContext instance
+var databaseContext = new DatabaseContext();
+
+// Initialize the database (creates tables if they don't exist)
+databaseContext.Initialize();
+
+// Get the underlying SQLite connection
+using var connection = databaseContext.GetConnection();
+Console.WriteLine($"Database connection state: {connection.State}");
+
+// Execute a raw SQL command (e.g., CREATE TABLE, INSERT, UPDATE, DELETE)
+var createTableResult = databaseContext.ExecuteCommand(
+    @"CREATE TABLE IF NOT EXISTS TestPrices (
+        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+        Asset TEXT NOT NULL,
+        Fiat TEXT NOT NULL,
+        BuyPrice DECIMAL(18, 2) NOT NULL,
+        SellPrice DECIMAL(18, 2) NOT NULL,
+        Timestamp DATETIME NOT NULL,
+        CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )"
+);
+Console.WriteLine($"Table created: {createTableResult > 0}");
+
+// Execute a SELECT query and read results
+using var reader = databaseContext.ExecuteReader(
+    @"SELECT Id, Asset, Fiat, BuyPrice, SellPrice, Timestamp 
+      FROM TestPrices 
+     WHERE Asset = @asset AND Fiat = @fiat",
+    new SqliteParameter("@asset", "BTC"),
+    new SqliteParameter("@fiat", "USDT")
+);
+
+while (reader.Read())
+{
+    var id = reader.GetInt32(0);
+    var asset = reader.GetString(1);
+    var fiat = reader.GetString(2);
+    var buyPrice = reader.GetDecimal(3);
+    var sellPrice = reader.GetDecimal(4);
+    var timestamp = reader.GetDateTime(5);
+    
+    Console.WriteLine($"Price record #{id}: {asset}/{fiat} = Buy:{buyPrice:C}, Sell:{sellPrice:C} at {timestamp}");
+}
+
+// Execute a scalar query to get a single value
+var count = databaseContext.ExecuteScalar(
+    @"SELECT COUNT(*) FROM TestPrices WHERE Asset = @asset",
+    new SqliteParameter("@asset", "BTC")
+);
+Console.WriteLine($"Total BTC price records: {count}");
+
+// Execute an INSERT command with parameters
+var insertResult = databaseContext.ExecuteCommand(
+    @"INSERT INTO TestPrices (Asset, Fiat, BuyPrice, SellPrice, Timestamp)
+      VALUES (@asset, @fiat, @buyPrice, @sellPrice, @timestamp)",
+    new SqliteParameter("@asset", "ETH"),
+    new SqliteParameter("@fiat", "USDT"),
+    new SqliteParameter("@buyPrice", 3500.75m),
+    new SqliteParameter("@sellPrice", 3502.50m),
+    new SqliteParameter("@timestamp", DateTime.UtcNow)
+);
+Console.WriteLine($"Rows inserted: {insertResult}");
+
+// The DatabaseContext implements IDisposable for proper resource cleanup
+databaseContext.Dispose();
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
