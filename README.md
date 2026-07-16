@@ -1070,6 +1070,97 @@ var significantChanges = await priceRepository.GetPricesChangedSinceAsync(
 Console.WriteLine($"Prices with >2% change in last 24h: {significantChanges.Count()}");
 ```
 
+## HistoryRepository
+
+The `HistoryRepository` class provides data access methods for storing, retrieving, updating, and deleting historical price data in the Binance P2P Monitor application. It serves as the primary interface for interacting with historical price records, offering methods to fetch price history by ID, asset/fiat combinations, date ranges, and recent history queries. The repository also includes methods for calculating price statistics (highest/lowest prices), counting total history records, and managing data retention through automatic cleanup of old records.
+
+```csharp
+using BinanceP2pMonitor.Repositories;
+using BinanceP2pMonitor.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+.AddLogging()
+.AddSingleton<IHistoryRepository, HistoryRepository>()
+.BuildServiceProvider();
+
+var historyRepository = services.GetRequiredService<IHistoryRepository>() as HistoryRepository;
+
+// Add a new historical price record
+var newHistoryRecord = new PriceHistory
+{
+  Asset = "BTC",
+  Fiat = "USDT",
+  BuyPrice = 50000.50m,
+  SellPrice = 50010.25m,
+  BuyChangePercent = 0.25m,
+  SellChangePercent = 0.30m,
+  Timestamp = DateTime.UtcNow,
+  CreatedAt = DateTime.UtcNow,
+  UpdatedAt = DateTime.UtcNow
+};
+
+var historyId = await historyRepository.AddAsync(newHistoryRecord);
+Console.WriteLine($"History record added with ID: {historyId}");
+
+// Get a history record by ID
+var retrievedHistory = await historyRepository.GetByIdAsync(historyId);
+if (retrievedHistory != null)
+{
+  Console.WriteLine($"Retrieved history: {retrievedHistory.Asset}/{retrievedHistory.Fiat}");
+  Console.WriteLine($"Buy: {retrievedHistory.BuyPrice:C}, Sell: {retrievedHistory.SellPrice:C}");
+  Console.WriteLine($"Timestamp: {retrievedHistory.Timestamp:yyyy-MM-dd HH:mm:ss}");
+}
+
+// Get price history for a specific asset/fiat combination
+var btcHistory = await historyRepository.GetHistoryByAssetAndFiatAsync("BTC", "USDT");
+Console.WriteLine($"BTC/USDT history records: {btcHistory.Count()}");
+
+// Get recent history records (e.g., last 100 records)
+var recentHistory = await historyRepository.GetRecentHistoryAsync(limit: 100);
+Console.WriteLine($"Recent history records: {recentHistory.Count()}");
+
+// Get history records within a specific date range
+var dateRangeHistory = await historyRepository.GetHistoryByDateRangeAsync(
+  DateTime.UtcNow.AddDays(-7),
+  DateTime.UtcNow
+);
+Console.WriteLine($"History records from last 7 days: {dateRangeHistory.Count()}");
+
+// Get the highest price ever recorded for a trading pair
+var highestPrice = await historyRepository.GetHighestPriceAsync("BTC", "USDT");
+Console.WriteLine($"Highest BTC/USDT price: {highestPrice:C}");
+
+// Get the lowest price ever recorded for a trading pair
+var lowestPrice = await historyRepository.GetLowestPriceAsync("BTC", "USDT");
+Console.WriteLine($"Lowest BTC/USDT price: {lowestPrice:C}");
+
+// Get the total count of all history records
+var totalCount = await historyRepository.GetTotalHistoryCountAsync();
+Console.WriteLine($"Total history records: {totalCount}");
+
+// Delete old records (older than 30 days)
+var cleanupResult = await historyRepository.DeleteOldRecordsAsync(30);
+Console.WriteLine($"Old records deleted: {cleanupResult}");
+
+// Update an existing history record
+if (retrievedHistory != null)
+{
+  retrievedHistory.BuyPrice = 50100.75m;
+  retrievedHistory.SellPrice = 50110.50m;
+  retrievedHistory.UpdatedAt = DateTime.UtcNow;
+
+  var updateResult = await historyRepository.UpdateAsync(retrievedHistory);
+  Console.WriteLine($"History record updated successfully: {updateResult}");
+}
+
+// Delete a specific history record
+var deleteResult = await historyRepository.DeleteAsync(historyId);
+Console.WriteLine($"History record deleted successfully: {deleteResult}");
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
