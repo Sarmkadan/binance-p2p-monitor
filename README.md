@@ -771,6 +771,71 @@ Console.WriteLine($"Rows inserted: {insertResult}");
 databaseContext.Dispose();
 ```
 
+## BinanceP2PMonitorOptions
+
+The `BinanceP2PMonitorOptions` class provides strongly-typed configuration for the Binance P2P Monitor application. It contains all application settings including database connection strings, API credentials, monitoring intervals, alert thresholds, and feature toggles. This configuration is typically bound to the `AppSettings` section of `appsettings.json` and validated using DataAnnotations attributes.
+
+```csharp
+using BinanceP2pMonitor.Configuration;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+// Create configuration from appsettings.json
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .Build();
+
+// Setup dependency injection
+var services = new ServiceCollection()
+    .Configure<BinanceP2PMonitorOptions>(configuration.GetSection("AppSettings"))
+    .AddOptions<BinanceP2PMonitorOptions>()
+    .ValidateDataAnnotations()
+    .Bind(configuration.GetSection("AppSettings"))
+    .ValidateOnStart()
+    .Services
+    .BuildServiceProvider();
+
+// Resolve the options
+var options = services.GetRequiredService<IOptions<BinanceP2PMonitorOptions>>().Value;
+
+// Use the configuration
+Console.WriteLine($"Database: {options.DatabaseConnectionString}");
+Console.WriteLine($"Monitoring interval: {options.MonitoringIntervalSeconds} seconds");
+Console.WriteLine($"Spread threshold: {options.DefaultSpreadThreshold}%");
+Console.WriteLine($"WebSocket enabled: {options.EnableWebSocket}");
+Console.WriteLine($"Telegram notifications: {options.EnableTelegramNotifications}");
+Console.WriteLine($"Log level: {options.LogLevel}");
+Console.WriteLine($"Monitored assets: {string.Join(", ", options.MonitoredAssets)}");
+Console.WriteLine($"Monitored fiats: {string.Join(", ", options.MonitoredFiats)}");
+
+// Example configuration values
+var exampleOptions = new BinanceP2PMonitorOptions
+{
+    DatabaseConnectionString = "Data Source=binance-p2p.db",
+    BinanceApiKey = "your-api-key-here",
+    BinanceApiSecret = "your-api-secret-here",
+    TelegramBotToken = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
+    TelegramAdminChatId = "-1001234567890",
+    MonitoringIntervalSeconds = 60,
+    AlertCooldownMinutes = 10,
+    MaxAlertsPerUser = 50,
+    DefaultPriceChangeThreshold = 3.0,
+    DefaultSpreadThreshold = 2.0,
+    HistoryRetentionDays = 90,
+    MaxHistoryRecords = 500000,
+    DatabaseCommandTimeoutSeconds = 60,
+    EnableWebSocket = true,
+    EnableTelegramNotifications = true,
+    EnableAutoCleanup = true,
+    DailySummaryHourUtc = 12,
+    LogLevel = "Debug",
+    LogPath = "/var/log/binance-p2p",
+    MonitoredAssets = new[] { "BTC", "ETH", "BNB", "SOL", "ADA" },
+    MonitoredFiats = new[] { "USD", "EUR", "GBP", "USDT", "BUSD" }
+};
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
