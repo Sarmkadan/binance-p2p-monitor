@@ -899,6 +899,97 @@ var exampleOptions = new BinanceP2PMonitorOptions
 };
 ```
 
+## PriceRepository
+
+The `PriceRepository` class provides data access methods for storing, retrieving, updating, and deleting price records in the Binance P2P Monitor application. It serves as the primary interface for interacting with price data in the database, offering methods to fetch prices by ID, asset/fiat combinations, active status, and time-based queries. The repository also includes methods for calculating average prices and detecting price changes over time periods.
+
+```csharp
+using BinanceP2pMonitor.Repositories;
+using BinanceP2pMonitor.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+    .AddLogging()
+    .AddSingleton<IPriceRepository, PriceRepository>()
+    .BuildServiceProvider();
+
+var priceRepository = services.GetRequiredService<IPriceRepository>() as PriceRepository;
+
+// Add a new price record
+var newPrice = new Price
+{
+    Asset = "BTC",
+    Fiat = "USDT",
+    BuyPrice = 50000.50m,
+    SellPrice = 50010.25m,
+    BuyChangePercent = 0.25m,
+    SellChangePercent = 0.30m,
+    Timestamp = DateTime.UtcNow,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow,
+    Metadata = "{\"source\":\"binance_p2p\",\"version\":\"1.0\"}"
+};
+
+var priceId = await priceRepository.AddAsync(newPrice);
+Console.WriteLine($"Price added with ID: {priceId}");
+
+// Get a price by ID
+var retrievedPrice = await priceRepository.GetByIdAsync(priceId);
+if (retrievedPrice != null)
+{
+    Console.WriteLine($"Retrieved price: {retrievedPrice.Asset}/{retrievedPrice.Fiat}");
+    Console.WriteLine($"Buy: {retrievedPrice.BuyPrice:C}, Sell: {retrievedPrice.SellPrice:C}");
+}
+
+// Get the latest price for a specific asset/fiat combination
+var latestPrice = await priceRepository.GetLatestByAssetAndFiatAsync("BTC", "USDT");
+Console.WriteLine($"Latest BTC/USDT price: {latestPrice?.BuyPrice:C}");
+
+// Get all active prices (prices that haven't been deleted)
+var allActivePrices = await priceRepository.GetAllActiveAsync();
+Console.WriteLine($"Total active prices: {allActivePrices.Count()}");
+
+// Get prices by asset (e.g., all BTC prices)
+var btcPrices = await priceRepository.GetByAssetAsync("BTC");
+Console.WriteLine($"BTC price records: {btcPrices.Count()}");
+
+// Get prices by fiat (e.g., all USDT prices)
+var usdtPrices = await priceRepository.GetByFiatAsync("USDT");
+Console.WriteLine($"USDT price records: {usdtPrices.Count()}");
+
+// Get prices that changed since a specific time
+var pricesChangedSince = await priceRepository.GetPricesChangedSinceAsync(DateTime.UtcNow.AddHours(-1));
+Console.WriteLine($"Prices changed in last hour: {pricesChangedSince.Count()}");
+
+// Update an existing price
+if (retrievedPrice != null)
+{
+    retrievedPrice.BuyPrice = 50100.75m;
+    retrievedPrice.SellPrice = 50110.50m;
+    retrievedPrice.UpdatedAt = DateTime.UtcNow;
+    
+    var updateResult = await priceRepository.UpdateAsync(retrievedPrice);
+    Console.WriteLine($"Price updated successfully: {updateResult}");
+}
+
+// Calculate average price for a trading pair
+var averagePrice = await priceRepository.GetAveragePriceAsync("BTC", "USDT");
+Console.WriteLine($"Average BTC/USDT price: {averagePrice:C}");
+
+// Delete a price record (soft delete)
+var deleteResult = await priceRepository.DeleteAsync(priceId);
+Console.WriteLine($"Price deleted successfully: {deleteResult}");
+
+// Get prices with significant changes (> 2% change in buy or sell price)
+var significantChanges = await priceRepository.GetPricesChangedSinceAsync(
+    DateTime.UtcNow.AddHours(-24),
+    minChangePercent: 2.0m
+);
+Console.WriteLine($"Prices with >2% change in last 24h: {significantChanges.Count()}");
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
