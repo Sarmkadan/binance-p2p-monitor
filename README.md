@@ -1033,6 +1033,70 @@ var exampleOptions = new BinanceP2PMonitorOptions
 };
 ```
 
+## SpreadAnalysisServiceTests
+
+The `SpreadAnalysisServiceTests` class contains unit tests for the `SpreadAnalysisService` class, verifying spread analysis functionality including spread calculations, cross-currency spread analysis, and spread update operations. These tests ensure that the spread analysis service correctly handles various scenarios such as valid prices, zero prices, missing data, and invalid spreads.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Exceptions;
+using BinanceP2pMonitor.Models;
+using FluentAssertions;
+using Xunit;
+
+// Create test instance with mocks
+var priceRepositoryMock = new Mock<IPriceRepository>();
+var historyServiceMock = new Mock<IPriceHistoryService>();
+var settings = new AppSettings { DefaultSpreadThreshold = 1.0m, SpreadAnalysisHistoryHours = 24 };
+var loggerMock = new Mock<ILogger<SpreadAnalysisService>>();
+var service = new SpreadAnalysisService(priceRepositoryMock.Object, historyServiceMock.Object, settings, loggerMock.Object);
+
+// Test 1: AnalyzeSpreadAsync with valid prices
+var spreadPercent = await service.AnalyzeSpreadAsync(100m, 102m);
+spreadPercent.Should().Be(2.0m); // (102-100)/100 * 100 = 2%
+
+// Test 2: AnalyzeSpreadAsync with zero buy price (should throw exception)
+Func<Task> act = () => service.AnalyzeSpreadAsync(0m, 102m).AsTask();
+await act.Should().ThrowAsync<InvalidPriceException>();
+
+// Test 3: UpdateSpreadAsync with valid spread
+var spread = new Spread
+{
+    Asset = "BTC",
+    Fiat = "USD",
+    CurrentSpreadPercent = 0.5m,
+    AverageSpreadPercent = 0.5m,
+    MinSpreadPercent = 0.4m,
+    MaxSpreadPercent = 0.6m,
+    SampleCount = 1,
+    LastUpdatedAt = DateTime.UtcNow,
+    CreatedAt = DateTime.UtcNow
+};
+var updateResult = await service.UpdateSpreadAsync(spread);
+updateResult.Should().BeTrue();
+
+// Test 4: UpdateSpreadAsync with invalid spread (should throw exception)
+var invalidSpread = new Spread { Asset = "", Fiat = "USD" };
+Func<Task> act2 = () => service.UpdateSpreadAsync(invalidSpread).AsTask();
+await act2.Should().ThrowAsync<InvalidPriceException>();
+
+// Test 5: GetCrossCurrencySpreadAsync with valid data
+priceRepositoryMock.Setup(r => r.GetLatestByAssetAndFiatAsync("BTC", "USD"))
+    .ReturnsAsync(new Price { Asset = "BTC", Fiat = "USD", BuyPrice = 100m });
+priceRepositoryMock.Setup(r => r.GetLatestByAssetAndFiatAsync("BTC", "EUR"))
+    .ReturnsAsync(new Price { Asset = "BTC", Fiat = "EUR", SellPrice = 120m });
+
+var crossSpread = await service.GetCrossCurrencySpreadAsync("BTC", "USD", "EUR", 0.9m);
+crossSpread.Should().NotBeNull();
+crossSpread!.SpreadPercent.Should().Be(8.0m); // (120*0.9 - 100)/100 * 100 = 8%
+
+// Test 6: GetCrossCurrencySpreadAsync with missing data (should return null)
+priceRepositoryMock.Setup(r => r.GetLatestByAssetAndFiatAsync("BTC", "USD"))
+    .ReturnsAsync((Price?)null);
+var nullSpread = await service.GetCrossCurrencySpreadAsync("BTC", "USD", "EUR", 0.9m);
+nullSpread.Should().BeNull();
+```
+
 ## AlertRepository
 
 The `AlertRepository` class provides data access methods for storing, retrieving, updating, and deleting price alert records in the Binance P2P Monitor application. It serves as the primary interface for interacting with price alert data in the database, offering methods to fetch alerts by ID, user ID, asset/fiat combinations, and active status. The repository supports comprehensive alert management including enabling/disabling alerts, tracking trigger history, and managing user-specific alert configurations.
