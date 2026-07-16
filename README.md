@@ -2231,6 +2231,86 @@ var act8 = () => configuration.Validate(invalidSpreadSettings);
 act8.Should().Throw<ValidationException>();
 ```
 
+## CommandParserTests
+
+The `CommandParserTests` class contains unit tests for the `CommandParser` class, which is responsible for parsing command-line arguments into structured `CommandContext` objects. These tests verify that the parser correctly handles various argument patterns including commands, positional arguments, short and long options, flags, and mixed argument combinations. The test suite ensures proper parsing of help commands, command-only inputs, and complex argument scenarios with duplicate options and values containing spaces.
+
+```csharp
+using BinanceP2pMonitor.CLI;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
+
+// Create mock logger and service provider
+var mockLogger = Substitute.For<ILogger<CommandParser>>();
+var mockServiceProvider = Substitute.For<IServiceProvider>();
+
+// Create the command parser
+var commandParser = new CommandParser(mockLogger);
+
+// Example 1: Parse help command (no arguments)
+var helpContext = commandParser.Parse(Array.Empty<string>(), mockServiceProvider);
+Console.WriteLine($"Command: {helpContext.CommandName}"); // "help"
+Console.WriteLine($"Arguments: {helpContext.Arguments.Count}"); // 0
+Console.WriteLine($"Options: {helpContext.Options.Count}"); // 0
+Console.WriteLine($"Flags: {helpContext.Flags.Count}"); // 0
+
+// Example 2: Parse command with positional arguments
+var monitorContext = commandParser.Parse(new[] { "monitor", "USDT", "UAH" }, mockServiceProvider);
+Console.WriteLine($"Command: {monitorContext.CommandName}"); // "monitor"
+Console.WriteLine($"Arguments: {string.Join(", ", monitorContext.Arguments)}"); // "USDT, UAH"
+Console.WriteLine($"Options: {monitorContext.Options.Count}"); // 0
+
+// Example 3: Parse command with long options
+var longOptionsContext = commandParser.Parse(
+    new[] { "monitor", "--asset=USDT", "--fiat=UAH" },
+    mockServiceProvider
+);
+Console.WriteLine($"Command: {longOptionsContext.CommandName}"); // "monitor"
+Console.WriteLine($"Asset: {longOptionsContext.GetOption("asset")}"); // "USDT"
+Console.WriteLine($"Fiat: {longOptionsContext.GetOption("fiat")}"); // "UAH"
+
+// Example 4: Parse command with flags
+var flagContext = commandParser.Parse(new[] { "monitor", "-v", "-d" }, mockServiceProvider);
+Console.WriteLine($"Command: {flagContext.CommandName}"); // "monitor"
+Console.WriteLine($"Verbose flag: {flagContext.HasFlag("v")}"); // true
+Console.WriteLine($"Debug flag: {flagContext.HasFlag("d")}"); // true
+
+// Example 5: Parse command with mixed arguments
+var mixedContext = commandParser.Parse(
+    new[] { "monitor", "BTC", "EUR", "--limit=10", "-v", "-o", "json" },
+    mockServiceProvider
+);
+Console.WriteLine($"Command: {mixedContext.CommandName}"); // "monitor"
+Console.WriteLine($"Arguments: {string.Join(", ", mixedContext.Arguments)}"); // "BTC, EUR"
+Console.WriteLine($"Limit option: {mixedContext.GetOption("limit")}"); // "10"
+Console.WriteLine($"Output option: {mixedContext.GetOption("o")}"); // "json"
+Console.WriteLine($"Verbose flag: {mixedContext.HasFlag("v")}"); // true
+
+// Example 6: Parse command with option values containing spaces
+var spaceContext = commandParser.Parse(
+    new[] { "alert", "--message=hello world", "-c", "USDT/UAH > 10" },
+    mockServiceProvider
+);
+Console.WriteLine($"Message: {spaceContext.GetOption("message")}"); // "hello world"
+Console.WriteLine($"Condition: {spaceContext.GetOption("c")}"); // "USDT/UAH > 10"
+
+// Example 7: Parse command with duplicate options (last one wins)
+var duplicateContext = commandParser.Parse(
+    new[] { "command", "--option=first", "--option=second", "-f", "third", "-f", "fourth" },
+    mockServiceProvider
+);
+Console.WriteLine($"Option value: {duplicateContext.GetOption("option")}"); // "second"
+Console.WriteLine($"Flag value: {duplicateContext.GetOption("f")}"); // "fourth"
+
+// Example 8: Parse command distinguishing between flags and positional arguments starting with dash
+var dashContext = commandParser.Parse(
+    new[] { "command", "-p", "value", "-123" },
+    mockServiceProvider
+);
+Console.WriteLine($"Option p: {dashContext.GetOption("p")}"); // "value"
+Console.WriteLine($"Argument: {dashContext.Arguments[0]}"); // "-123"
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
