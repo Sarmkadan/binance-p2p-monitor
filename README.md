@@ -1174,9 +1174,52 @@ var alertCount = await alertRepository.GetUserAlertCountAsync(123);
 Console.WriteLine($"User has {alertCount} active alerts");
 ```
 
-## AlertRepositoryTests
+## PriceAlertTests
 
-The `AlertRepositoryTests` class contains unit tests for the `AlertRepository` class, verifying core alert repository functionality including alert creation, retrieval, updates, and deletion operations. These tests ensure that the alert repository correctly handles CRUD operations, user-specific alert queries, and edge cases like non-existent records.
+The `PriceAlertTests` class contains unit tests for the `PriceAlert` class, verifying price alert functionality including alert triggering logic, state management, and validation. These tests ensure that alerts correctly evaluate conditions, manage trigger counts, handle cooldown periods, and validate required fields.
+
+```csharp
+using BinanceP2pMonitor.Models;
+using BinanceP2pMonitor.Constants;
+
+// Create a price alert for monitoring when BTC price change exceeds 5%
+var alert = new PriceAlert
+{
+    Asset = "BTC",
+    Fiat = "USD",
+    AlertType = AlertType.PriceChange,
+    Condition = AlertCondition.GreaterThan,
+    Threshold = 5.0m,
+    IsEnabled = true,
+    UserId = 123,
+    Notes = "Notify when BTC price change exceeds 5%",
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+// Test if the alert should trigger with a current price change of 6%
+bool shouldTrigger = alert.ShouldTrigger(currentChange: 6.0m);
+Console.WriteLine($"Alert should trigger: {shouldTrigger}"); // True
+
+// Record the alert trigger (increments trigger count and sets timestamp)
+if (shouldTrigger)
+{
+    alert.RecordTrigger();
+    Console.WriteLine($"Trigger count: {alert.TriggerCount}"); // 1
+    Console.WriteLine($"Last triggered: {alert.LastTriggeredAt}");
+}
+
+// Toggle the alert status (enable/disable)
+alert.Toggle();
+Console.WriteLine($"Alert enabled: {alert.IsEnabled}"); // False
+
+// Get alert description for display
+Console.WriteLine($"Alert description: {alert.GetDescription()}");
+// "Alert on BTC/USD: Price change > 5.00%"
+
+// Check if alert is valid
+Console.WriteLine($"Alert is valid: {alert.IsValid()}"); // True
+```
 
 ```csharp
 using BinanceP2pMonitor.Tests;
