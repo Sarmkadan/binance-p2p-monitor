@@ -32,6 +32,40 @@ Console.WriteLine($"Is valid: {spread.IsValid()}");
 Console.WriteLine($"Risk level: {spread.GetRiskLevel()}");
 ```
 
+## SpreadStatisticsReport
+
+`SpreadStatisticsReport` is an immutable data object that summarizes statistical analysis of spread percentages over a configurable time window. It contains raw metrics (mean, median, variance, etc.) as well as helper methods to interpret the current spread in context.
+
+```csharp
+using System;
+using BinanceP2pMonitor.Models;
+
+var report = new SpreadStatisticsReport
+{
+    Asset = "BTC",
+    Fiat = "USDT",
+    TimeWindowHours = 24,
+    SampleCount = 500,
+    Mean = 0.12m,
+    Median = 0.10m,
+    StandardDeviation = 0.03m,
+    Variance = 0.0009m,
+    MinSpread = 0.05m,
+    MaxSpread = 0.20m,
+    Percentile5 = 0.06m,
+    Percentile95 = 0.18m,
+    CurrentSpread = 0.15m,
+    ZScore = 1.0m,
+    TrendSlope = 0.02m,
+    AnalyzedAt = DateTime.UtcNow,
+    IsAnomalous = false
+};
+
+Console.WriteLine($"Trend: {report.GetTrendLabel()}");
+Console.WriteLine($"Critical? {report.IsCritical()}");
+Console.WriteLine($"Above average? {report.IsAboveAverage()}");
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
