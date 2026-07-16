@@ -142,6 +142,44 @@ Console.WriteLine($"Activity level: {market.GetActivityLevel()}");
 market.UpdatePrices(50050.75m, 50060.50m);
 ```
 
+## PriceAlert
+
+
+The `PriceAlert` type represents a price alert configuration that monitors specific trading pairs for price threshold breaches. It tracks alert conditions, threshold values, trigger history, and provides methods to check if conditions are met and record alert events.
+
+```csharp
+using BinanceP2pMonitor.Models;
+
+var alert = new PriceAlert
+{
+  Asset = "USDT-BTC",
+  Fiat = "USDT",
+  AlertType = AlertType.PriceAbove,
+  Threshold = 51000.00m,
+  Condition = AlertCondition.GreaterThan,
+  IsEnabled = true,
+  UserId = 123,
+  Notes = "Notify when BTC price exceeds $51,000",
+  CreatedAt = DateTime.UtcNow,
+  UpdatedAt = DateTime.UtcNow
+};
+
+Console.WriteLine($"Alert: {alert.GetDescription()}");
+Console.WriteLine($"Should trigger? {alert.ShouldTrigger(51500.00m)}");
+Console.WriteLine($"Is valid? {alert.IsValid()}");
+
+// Check if current price meets alert condition
+if (alert.ShouldTrigger(51500.00m))
+{
+  Console.WriteLine("ALERT: Price threshold breached!");
+  alert.RecordTrigger();
+}
+
+// Toggle alert status
+alert.Toggle();
+Console.WriteLine($"Alert enabled: {alert.IsEnabled}");
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
