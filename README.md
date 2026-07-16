@@ -695,6 +695,56 @@ var demo = context.GetRequiredService<string>();
 Console.WriteLine($"Resolved service value: {demo}");
 ```
 
+## StringExtensions
+
+The `StringExtensions` class provides utility extension methods for common string operations including text formatting, parsing, and manipulation. These methods are frequently used throughout the Binance P2P Monitor application for data processing, API response handling, and user input validation.
+
+```csharp
+using BinanceP2pMonitor.Utilities;
+
+// Truncate a long string to fit display constraints
+var longText = "This is a very long error message that needs to be truncated for display purposes";
+var truncated = longText.Truncate(30);
+Console.WriteLine(truncated); // "This is a very long error..."
+
+// Split camelCase identifiers for better readability
+var camelCaseText = "priceAlertConfiguration";
+var splitText = camelCaseText.SplitCamelCase();
+Console.WriteLine(splitText); // "Price Alert Configuration"
+
+// Convert between naming conventions
+var pascalCase = "PriceAlertThreshold";
+var snakeCase = pascalCase.ToSnakeCase();
+Console.WriteLine(snakeCase); // "price_alert_threshold"
+
+var backToPascal = snakeCase.ToPascalCase();
+Console.WriteLine(backToPascal); // "PriceAlertThreshold"
+
+// Check if a string contains any of multiple search terms
+var searchText = "BTC USDT price monitoring alert";
+var containsBtc = searchText.ContainsAny(StringComparison.OrdinalIgnoreCase, "btc", "eth", "bnb");
+Console.WriteLine(containsBtc); // True
+
+// Check if string is numeric (digits only)
+var numericString = "1234567890";
+var isNumeric = numericString.IsNumeric();
+Console.WriteLine(isNumeric); // True
+
+// Safely parse strings to numeric types
+var decimalString = "50000.50";
+var parsedDecimal = decimalString.ToDecimalOrNull();
+Console.WriteLine(parsedDecimal); // 50000.50
+
+var intString = "42";
+var parsedInt = intString.ToIntOrNull();
+Console.WriteLine(parsedInt); // 42
+
+// Mask sensitive information for logging
+var apiKey = "sk_live_1234567890abcdef";
+var maskedKey = apiKey.Mask(showChars: 8);
+Console.WriteLine(maskedKey); // "sk_live_************"
+```
+
 ## NumericExtensions
 
 The `NumericExtensions` class provides extension methods for performing common numeric operations on decimal values. These methods include rounding, percentage calculations, range checks, and formatting utilities that are frequently used throughout the Binance P2P Monitor application for price calculations, spread analysis, and data validation.
