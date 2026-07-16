@@ -1871,6 +1871,89 @@ foreach (var line in wrappedLines)
 }
 ```
 
+## HistoryRepositoryTests
+
+The `HistoryRepositoryTests` class contains unit tests for the `HistoryRepository` class, verifying historical price data storage, retrieval, and management functionality. These tests ensure that history records are correctly added, retrieved by ID, queried by asset/fiat combinations within time windows, and that cleanup operations work as expected. The test suite also validates methods for counting total records and finding highest prices within specific time periods.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Data;
+using BinanceP2pMonitor.Models;
+using BinanceP2pMonitor.Repositories;
+using Microsoft.Data.Sqlite;
+using Xunit;
+
+// Create in-memory database for testing
+var connection = new SqliteConnection("DataSource=:memory:");
+connection.Open();
+
+var context = new DatabaseContext(connection);
+var historyRepository = new HistoryRepository(context);
+
+// Initialize database schema
+context.ExecuteCommand(@"
+CREATE TABLE PriceHistory (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    PriceId INTEGER NOT NULL,
+    Asset TEXT NOT NULL,
+    Fiat TEXT NOT NULL,
+    BuyPrice REAL NOT NULL,
+    SellPrice REAL NOT NULL,
+    RecordedAt TEXT NOT NULL,
+    CreatedAt TEXT NOT NULL,
+    SpreadPercentage REAL NOT NULL,
+    PriceChangePercent REAL NOT NULL,
+    Notes TEXT
+);");
+
+// Test 1: AddAsync should add history record and return ID
+var newHistory = new PriceHistory
+{
+    PriceId = 1,
+    Asset = "USDT",
+    Fiat = "UAH",
+    BuyPrice = 38.0m,
+    SellPrice = 38.5m,
+    RecordedAt = DateTime.UtcNow,
+    CreatedAt = DateTime.UtcNow,
+    SpreadPercentage = 1.0m,
+    PriceChangePercent = 0.5m,
+    Notes = "Test History"
+};
+
+var historyId = await historyRepository.AddAsync(newHistory);
+historyId.Should().BeGreaterThan(0);
+
+// Test 2: GetByIdAsync should return history when exists
+var retrievedHistory = await historyRepository.GetByIdAsync(historyId);
+retrievedHistory.Should().NotBeNull();
+retrievedHistory!.Asset.Should().Be("USDT");
+
+// Test 3: GetByIdAsync should return null when history doesn't exist
+var nullHistory = await historyRepository.GetByIdAsync(999);
+nullHistory.Should().BeNull();
+
+// Test 4: GetHistoryByAssetAndFiatAsync should filter by asset/fiat and time window
+var btcHistory = await historyRepository.GetHistoryByAssetAndFiatAsync("USDT", "UAH", hours: 24);
+btcHistory.Should().HaveCount(1);
+
+// Test 5: DeleteOldRecordsAsync should remove records older than specified days
+var cleanupResult = await historyRepository.DeleteOldRecordsAsync(daysOld: 30);
+cleanupResult.Should().BeTrue();
+
+// Test 6: GetTotalHistoryCountAsync should return correct count
+var totalCount = await historyRepository.GetTotalHistoryCountAsync();
+totalCount.Should().BeGreaterThanOrEqualTo(0);
+
+// Test 7: GetHighestPriceAsync should find highest price within time window
+var highestPrice = await historyRepository.GetHighestPriceAsync("USDT", "UAH", hours: 24);
+highestPrice.Should().BeGreaterThan(0);
+
+// Cleanup
+connection.Close();
+connection.Dispose();
+```
+
 ## ValidationException
 
 The `ValidationException` class is a custom exception type used throughout the Binance P2P Monitor application to handle validation failures. It extends the standard `Exception` class and provides additional functionality to track multiple validation errors through a `List<string> Errors` property. This exception is particularly useful for scenarios where multiple validation checks fail simultaneously, allowing all errors to be collected and reported together rather than throwing multiple exceptions.
