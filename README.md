@@ -180,6 +180,43 @@ alert.Toggle();
 Console.WriteLine($"Alert enabled: {alert.IsEnabled}");
 ```
 
+## CommandFactory
+
+The `CommandFactory` class provides centralized registration and creation of CLI commands within the Binance P2P Monitor application. It maintains a registry of available commands and allows dynamic command creation based on registered types. This enables extensible CLI functionality where new commands can be added without modifying the core application flow.
+
+```csharp
+using BinanceP2pMonitor.CLI;
+using BinanceP2pMonitor.Commands;
+
+// Create the command factory
+var commandFactory = new CommandFactory();
+
+// Register available commands
+commandFactory.RegisterCommand<MonitorCommand>("monitor", "Start monitoring Binance P2P prices");
+commandFactory.RegisterCommand<AlertCommand>("alert", "Manage price alerts");
+commandFactory.RegisterCommand<BacktestCommand>("backtest", "Run price monitoring backtests");
+
+// Check if a command is registered
+bool hasMonitor = commandFactory.IsCommandRegistered("monitor");
+Console.WriteLine($"Monitor command registered: {hasMonitor}");
+
+// Create a command instance by name
+var monitorCommand = commandFactory.CreateCommand("monitor");
+if (monitorCommand != null)
+{
+    Console.WriteLine($"Created command: {monitorCommand.GetType().Name}");
+    Console.WriteLine($"Command description: {commandFactory.GetAvailableCommands().FirstOrDefault(c => c == "monitor")?.Description}");
+}
+
+// Get all available commands
+var availableCommands = commandFactory.GetAvailableCommands();
+Console.WriteLine("Available commands:");
+foreach (var cmd in availableCommands)
+{
+    Console.WriteLine($"- {cmd.Name}: {cmd.Description}");
+}
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
