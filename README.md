@@ -771,9 +771,72 @@ Console.WriteLine($"Rows inserted: {insertResult}");
 databaseContext.Dispose();
 ```
 
-## BinanceP2PMonitorOptions
+## AppSettings
 
-The `BinanceP2PMonitorOptions` class provides strongly-typed configuration for the Binance P2P Monitor application. It contains all application settings including database connection strings, API credentials, monitoring intervals, alert thresholds, and feature toggles. This configuration is typically bound to the `AppSettings` section of `appsettings.json` and validated using DataAnnotations attributes.
+The `AppSettings` class defines the application configuration for the Binance P2P Monitor. It contains all essential settings including database connection strings, API credentials, monitoring intervals, alert thresholds, and feature toggles. This configuration is typically loaded from the `AppSettings` section of `appsettings.json` and used throughout the application for centralized configuration management.
+
+```csharp
+using BinanceP2pMonitor.Configuration;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+// Create configuration from appsettings.json
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .Build();
+
+// Setup dependency injection
+var services = new ServiceCollection()
+    .Configure<AppSettings>(configuration.GetSection("AppSettings"))
+    .AddOptions<AppSettings>()
+    .ValidateDataAnnotations()
+    .Bind(configuration.GetSection("AppSettings"))
+    .ValidateOnStart()
+    .Services
+    .BuildServiceProvider();
+
+// Resolve the settings
+var appSettings = services.GetRequiredService<IOptions<AppSettings>>().Value;
+
+// Use the configuration
+Console.WriteLine($"Database: {appSettings.DatabaseConnectionString}");
+Console.WriteLine($"Binance API enabled: {appSettings.BinanceApiKey != null}");
+Console.WriteLine($"Monitoring interval: {appSettings.MonitoringIntervalSeconds} seconds");
+Console.WriteLine($"Alert cooldown: {appSettings.AlertCooldownMinutes} minutes");
+Console.WriteLine($"Spread threshold: {appSettings.DefaultSpreadThreshold}%");
+Console.WriteLine($"WebSocket enabled: {appSettings.EnableWebSocket}");
+Console.WriteLine($"Telegram notifications: {appSettings.EnableTelegramNotifications}");
+Console.WriteLine($"Auto cleanup enabled: {appSettings.EnableAutoCleanup}");
+Console.WriteLine($"Daily summary hour (UTC): {appSettings.DailySummaryHourUtc}");
+
+// Example AppSettings configuration
+var exampleSettings = new AppSettings
+{
+    DatabaseConnectionString = "Data Source=binance-p2p.db;Version=3;",
+    BinanceApiKey = "your-binance-api-key",
+    BinanceApiSecret = "your-binance-api-secret",
+    TelegramBotToken = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
+    TelegramAdminChatId = "-1001234567890",
+    MonitoringIntervalSeconds = 30,
+    AlertCooldownMinutes = 15,
+    MaxAlertsPerUser = 20,
+    DefaultPriceChangeThreshold = 2.5m,
+    DefaultSpreadThreshold = 1.5m,
+    HistoryRetentionDays = 30,
+    MaxHistoryRecords = 100000,
+    DatabaseCommandTimeoutSeconds = 30,
+    SpreadAnalysisHistoryHours = 24,
+    EnableWebSocket = true,
+    EnableTelegramNotifications = true,
+    EnableAutoCleanup = true,
+    DailySummaryHourUtc = 14,
+    WebhookUrl = "https://your-webhook-endpoint.com/api/alerts",
+    EnableWebhookNotifications = false
+};
+```
+
+## BinanceP2PMonitorOptions
 
 ```csharp
 using BinanceP2pMonitor.Configuration;
