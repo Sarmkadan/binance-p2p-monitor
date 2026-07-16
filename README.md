@@ -66,6 +66,42 @@ Console.WriteLine($"Critical? {report.IsCritical()}");
 Console.WriteLine($"Above average? {report.IsAboveAverage()}");
 ```
 
+## Market
+
+The `Market` type represents a trading pair on Binance P2P with comprehensive market data and monitoring capabilities. It tracks buy/sell prices, trading volume, offer counts, activity status, and provides methods for spread calculation and price validation.
+
+```csharp
+using BinanceP2pMonitor.Models;
+
+var market = new Market
+{
+    Id = 1,
+    Asset = "USDT-BTC",
+    Fiat = "USDT",
+    IsActive = true,
+    IsMonitored = true,
+    Description = "Bitcoin to Tether trading pair",
+    LastBuyPrice = 50000.50m,
+    LastSellPrice = 50010.25m,
+    TotalOffers = 42,
+    DailyVolume = 1500000,
+    CreatedAt = DateTime.UtcNow.AddDays(-30),
+    UpdatedAt = DateTime.UtcNow,
+    LastPriceUpdateAt = DateTime.UtcNow.AddMinutes(-5),
+    MonitoringPriority = 1,
+    MonitoringPriority = 1
+};
+
+Console.WriteLine($"Pair ID: {market.GetPairId()}");
+Console.WriteLine($"Current spread: {market.CalculateSpread():F4}%");
+Console.WriteLine($"Price stale? {market.IsPriceStale(TimeSpan.FromMinutes(10))}");
+Console.WriteLine($"Valid market? {market.IsValid()}");
+Console.WriteLine($"Activity level: {market.GetActivityLevel()}");
+
+// Update prices when new data arrives
+market.UpdatePrices(50050.75m, 50060.50m);
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
