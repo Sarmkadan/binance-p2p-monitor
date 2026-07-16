@@ -289,6 +289,42 @@ await monitoringService.StopMonitoringAsync();
 Console.WriteLine("Price monitoring stopped.");
 ```
 
+## IWebSocketService
+
+The `IWebSocketService` interface defines a contract for WebSocket-based real-time price monitoring. It provides methods to connect/disconnect from WebSocket servers and subscribe/unsubscribe to specific trading pairs (asset/fiat combinations). Implementations receive price updates through the `OnPriceUpdate` event, which delivers `PriceUpdateEventArgs` containing buy/sell prices and timestamps.
+
+```csharp
+using BinanceP2pMonitor.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+    .AddLogging()
+    .AddSingleton<IWebSocketService, WebSocketService>()
+    .BuildServiceProvider();
+
+var webSocketService = services.GetRequiredService<IWebSocketService>();
+
+// Subscribe to price updates for a trading pair
+await webSocketService.SubscribeToPairAsync("BTC", "USDT");
+
+// Handle price update events
+webSocketService.OnPriceUpdate += (sender, args) =>
+{
+    Console.WriteLine($"Price update for {args.Asset}-{args.Fiat}:");
+    Console.WriteLine($"  Buy: {args.BuyPrice:C}, Sell: {args.SellPrice:C}");
+    Console.WriteLine($"  Update time: {args.UpdateTime:yyyy-MM-dd HH:mm:ss}");
+    Console.WriteLine($"  Spread: {(args.SellPrice - args.BuyPrice) / args.BuyPrice * 100:F4}%");
+};
+
+// Connect to WebSocket
+await webSocketService.ConnectAsync();
+
+// Disconnect when done
+await webSocketService.DisconnectAsync();
+```
+
 ## CommandContext
 
 `CommandContext` carries all information required to execute a CLI command: the command name, raw arguments, parsed options and flags, a service provider for dependency resolution, and a cancellation token for graceful shutdown. It also offers helper methods to query options/flags and retrieve services from the injected `IServiceProvider`.
