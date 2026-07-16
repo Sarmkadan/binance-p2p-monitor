@@ -1076,6 +1076,99 @@ The `HistoryRepository` class provides data access methods for storing, retrievi
 
 ```csharp
 using BinanceP2pMonitor.Repositories;
+
+// ... rest of HistoryRepository content ...
+```
+
+## TradeOfferRepository
+
+The `TradeOfferRepository` class provides data access methods for managing trade offer data from Binance P2P. It serves as the primary interface for interacting with trade offers in the database, offering methods to retrieve, add, update, and delete trade offers. The repository includes functionality to fetch offers by ID, Binance offer ID, asset/fiat combinations, trade type, and to retrieve the best available offers based on price and trader rating. It also provides aggregate methods for counting total offers and calculating average prices.
+
+```csharp
+using BinanceP2pMonitor.Repositories;
+using BinanceP2pMonitor.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Setup dependency injection
+var services = new ServiceCollection()
+    .AddLogging()
+    .AddSingleton<ITradeOfferRepository, TradeOfferRepository>()
+    .BuildServiceProvider();
+
+var tradeOfferRepository = services.GetRequiredService<ITradeOfferRepository>() as TradeOfferRepository;
+
+// Add a new trade offer
+var newOffer = new TradeOffer
+{
+    OfferIdFromBinance = "123456789",
+    Asset = "USDT",
+    Fiat = "BTC",
+    TradeType = Constants.TradeType.SELL,
+    Price = 50000.50m,
+    MinAmount = 0.001m,
+    MaxAmount = 1.0m,
+    TraderRating = 4.8m,
+    CompletedTrades = 42,
+    PaymentMethods = "Tether, Bank Transfer",
+    IsActive = true,
+    Timestamp = DateTime.UtcNow,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+var offerId = await tradeOfferRepository.AddAsync(newOffer);
+Console.WriteLine($"Trade offer added with ID: {offerId}");
+
+// Get a trade offer by ID
+var retrievedOffer = await tradeOfferRepository.GetByIdAsync(offerId);
+if (retrievedOffer != null)
+{
+    Console.WriteLine($"Retrieved offer: {retrievedOffer.Asset}/{retrievedOffer.Fiat}");
+    Console.WriteLine($"Price: {retrievedOffer.Price:C}");
+    Console.WriteLine($"Trader rating: {retrievedOffer.TraderRating}");
+}
+
+// Get trade offers by asset and fiat
+var btcOffers = await tradeOfferRepository.GetByAssetAndFiatAsync("USDT", "BTC");
+Console.WriteLine($"USDT/BTC offers: {btcOffers.Count()}");
+
+// Get all active trade offers
+var activeOffers = await tradeOfferRepository.GetAllActiveAsync();
+Console.WriteLine($"Total active offers: {activeOffers.Count()}");
+
+// Get best offers (top 10 by price)
+var bestOffers = await tradeOfferRepository.GetBestOffersAsync("USDT", "BTC", limit: 10);
+Console.WriteLine($"Best offers: {bestOffers.Count()}");
+
+// Get offers by trade type
+var sellOffers = await tradeOfferRepository.GetByTradeTypeAsync((int)Constants.TradeType.SELL);
+Console.WriteLine($"Sell offers: {sellOffers.Count()}");
+
+// Get total offers count for a trading pair
+var totalCount = await tradeOfferRepository.GetTotalOffersCountAsync("USDT", "BTC");
+Console.WriteLine($"Total offers for USDT/BTC: {totalCount}");
+
+// Calculate average price for a trading pair
+var averagePrice = await tradeOfferRepository.GetAveragePriceAsync("USDT", "BTC");
+Console.WriteLine($"Average price: {averagePrice:C}");
+
+// Update an existing offer
+if (retrievedOffer != null)
+{
+    retrievedOffer.Price = 50100.75m;
+    retrievedOffer.UpdatedAt = DateTime.UtcNow;
+    
+    var updateResult = await tradeOfferRepository.UpdateAsync(retrievedOffer);
+    Console.WriteLine($"Offer updated successfully: {updateResult}");
+}
+
+// Delete an offer
+var deleteResult = await tradeOfferRepository.DeleteAsync(offerId);
+Console.WriteLine($"Offer deleted successfully: {deleteResult}");
+```
+
+## HistoryRepository
 using BinanceP2pMonitor.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
