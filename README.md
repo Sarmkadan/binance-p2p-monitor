@@ -1,5 +1,4 @@
 // entire file content ...
-// ... goes in between
 
 ## BacktestOptions
 
@@ -182,6 +181,37 @@ Console.WriteLine($"Historical price is better: {isBetter}");
 // Calculate spread
 decimal spread = priceHistory.CalculateSpread();
 Console.WriteLine($"Spread: {spread:F4}%");
+```
+
+## Currency
+
+The `Currency` model represents a tradable currency in the P2P marketplace. It stores identification, formatting rules, activity status, and popularity metrics, and provides helper methods for value formatting, validation, and popularity comparison.
+
+```csharp
+using BinanceP2pMonitor.Models;
+
+var currency = new Currency
+{
+    Id = 1,
+    Code = "USD",
+    Name = "US Dollar",
+    Symbol = "$",
+    IsActive = true,
+    DecimalPlaces = 2,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow,
+    PopularityScore = 95m,
+    DisplayOrder = 1,
+    Notes = "Primary fiat currency"
+};
+
+Console.WriteLine($"Display format: {currency.GetDisplayFormat()}");
+Console.WriteLine($"Formatted value: {currency.FormatValue(1234.567m)}");
+Console.WriteLine($"Is valid: {currency.IsValid()}");
+Console.WriteLine($"Is popular: {currency.IsPopular()}");
+Console.WriteLine($"Popularity tier: {currency.GetPopularityTier()}");
+Console.WriteLine($"Rounded value: {currency.RoundValue(123.4567m)}");
+Console.WriteLine($"Full name: {currency.GetFullName()}");
 ```
 
 ## ConsoleOutputWriter
