@@ -240,6 +240,112 @@ await policy.ExecuteWithRetryAsync(async () =>
 // Example 3: Execute with an explicit CancellationToken
 CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 string data = await policy.ExecuteWithRetryAsync(
+    async ct => 
+    {
+        await Task.Delay(200, ct);
+        return "completed";
+    },
+    cancellationToken: cts.Token);
+Console.WriteLine(data);
+
+// Example 4: Check if an exception is retryable
+bool shouldRetry = policy.IsRetryableException(new TimeoutException());
+Console.WriteLine($"Should retry on TimeoutException: {shouldRetry}");
+```
+
+## HistoricalSpreadAnalysisExtensions
+
+The `HistoricalSpreadAnalysisExtensions` class provides extension methods for registering historical spread analysis services with the dependency injection container and analyzing spread statistics reports. These extensions help monitor spread anomalies, volatility, trends, and critical conditions across different time windows.
+
+```csharp
+using BinanceP2pMonitor.Extensions;
+using BinanceP2pMonitor.Models;
+using BinanceP2pMonitor.Services;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+
+// Example 1: Register historical spread analysis services
+var services = new ServiceCollection();
+
+// Register required dependencies
+services.AddScoped<IHistoryRepository, HistoryRepository>();
+services.AddScoped<ISpreadAnalysisService, SpreadAnalysisService>();
+services.AddScoped<IEventBus, EventBus>();
+
+// Configure app settings
+var appSettings = new AppSettings { /* your settings */ };
+services.AddSingleton(appSettings);
+
+// Register historical spread analysis
+services.AddHistoricalSpreadAnalysis();
+
+var serviceProvider = services.BuildServiceProvider();
+
+// Example 2: Analyze spread statistics
+var report = new SpreadStatisticsReport
+{
+    Asset = "USDT",
+    Fiat = "USDT",
+    TimeWindowHours = 24,
+    AnalyzedAt = DateTime.UtcNow,
+    SampleCount = 1000,
+    CurrentSpread = 0.45m,
+    Mean = 0.35m,
+    StandardDeviation = 0.12m,
+    Median = 0.34m,
+    MinSpread = 0.10m,
+    MaxSpread = 1.20m,
+    Percentile5 = 0.18m,
+    Percentile95 = 0.60m,
+    ZScore = 2.8m,
+    TrendSlope = -0.000123m
+};
+
+// Format as human-readable summary
+string summary = report.ToSummaryString();
+Console.WriteLine(summary);
+
+// Check if spread is critically anomalous
+bool isCritical = report.IsCritical();
+Console.WriteLine($"Is critical spread: {isCritical}"); // False (Z-score < 3.0)
+
+// Check if current spread is above historical average
+bool isAboveAverage = report.IsAboveAverage();
+Console.WriteLine($"Is above average: {isAboveAverage}"); // True (0.45 > 0.35)
+
+// Get volatility range (IQR width)
+decimal volatilityRange = report.GetVolatilityRange();
+Console.WriteLine($"Volatility range (IQR): {volatilityRange:F4}%"); // 0.42%
+```
+
+```csharp
+using BinanceP2pMonitor.Infrastructure;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+// Create a retry policy (uses default settings)
+var policy = new RetryPolicy();
+
+// Example 1: Execute a function that returns a value
+int result = await policy.ExecuteWithRetryAsync(async () =>
+{
+    // Simulate work that might fail transiently
+    await Task.Delay(100);
+    return 42;
+});
+Console.WriteLine($"Result: {result}");
+
+// Example 2: Execute a function that returns no value
+await policy.ExecuteWithRetryAsync(async () =>
+{
+    // Simulate fire‑and‑forget work
+    await Task.Delay(50);
+});
+
+// Example 3: Execute with an explicit CancellationToken
+CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+string data = await policy.ExecuteWithRetryAsync(
     async ct =>
     {
         await Task.Delay(200, ct);
