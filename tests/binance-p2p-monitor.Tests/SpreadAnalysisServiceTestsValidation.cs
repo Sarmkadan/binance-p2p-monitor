@@ -18,13 +18,7 @@ public static class SpreadAnalysisServiceTestsValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var errors = new List<string>();
-
-        // SpreadAnalysisServiceTests is a test class with private mock dependencies
-        // No public data members to validate beyond null check
-        // This validation method ensures the instance structure is valid
-
-        return errors.AsReadOnly();
+        return Array.Empty<string>();
     }
 
     /// <summary>
@@ -40,18 +34,15 @@ public static class SpreadAnalysisServiceTestsValidation
     /// </summary>
     /// <param name="value">The instance to validate.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is not valid, containing the validation errors.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is not valid.</exception>
     public static void EnsureValid(this SpreadAnalysisServiceTests value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var errors = Validate(value);
-        if (errors.Count > 0)
+        if (!IsValid(value))
         {
             throw new ArgumentException(
-                $"SpreadAnalysisServiceTests is not valid. Problems:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", errors)
-                }");
+                "SpreadAnalysisServiceTests instance is not valid.");
         }
     }
 }
