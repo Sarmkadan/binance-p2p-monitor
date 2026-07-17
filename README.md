@@ -487,6 +487,86 @@ Console.WriteLine($"Average mid price: {avgMidPrice:F4}"); // 1.0125
 
 The `PriceHistoryExtensions` class provides utility methods for working with historical price data, enabling time-based filtering, spread analysis, and price change calculations across different time windows. These extensions help analyze price trends, calculate average changes, and filter price history records based on temporal criteria.
 
+## PriceAlertTestsValidation
+
+The `PriceAlertTestsValidation` class provides validation utilities for price alert tests, ensuring test data and configurations are valid before execution. It offers methods to validate alert conditions, thresholds, and test scenarios, returning lists of validation problems or boolean validity checks. The class helps maintain test reliability by catching invalid configurations early.
+
+```csharp
+using BinanceP2pMonitor.Tests; // or your test project namespace
+using System;
+using System.Collections.Generic;
+
+// Example 1: Validate a price alert configuration
+var alertConfig = new PriceAlertConfiguration
+{
+    Asset = "USDT",
+    Fiat = "USDT",
+    PriceThreshold = 1.02m,
+    Direction = PriceAlertDirection.Above,
+    ComparisonTolerance = 0.001m
+};
+
+// Validate the configuration
+var validationErrors = PriceAlertTestsValidation.Validate(alertConfig);
+if (validationErrors.Count == 0)
+{
+    Console.WriteLine("Configuration is valid!");
+}
+else
+{
+    Console.WriteLine("Validation errors:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Example 2: Check if a configuration is valid without collecting errors
+bool isValid = PriceAlertTestsValidation.IsValid(alertConfig);
+Console.WriteLine($"Is valid: {isValid}");
+
+// Example 3: Ensure a configuration is valid (throws if invalid)
+try
+{
+    PriceAlertTestsValidation.EnsureValid(alertConfig);
+    Console.WriteLine("Configuration passed validation!");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+
+// Example 4: Validate multiple configurations
+var configs = new List<PriceAlertConfiguration>
+{
+    new PriceAlertConfiguration { Asset = "USDT", Fiat = "USDT", PriceThreshold = 1.02m },
+    new PriceAlertConfiguration { Asset = "BTC", Fiat = "USDT", PriceThreshold = 50000m },
+    new PriceAlertConfiguration { Asset = "ETH", Fiat = "USDT", PriceThreshold = 3000m }
+};
+
+foreach (var config in configs)
+{
+    var errors = PriceAlertTestsValidation.Validate(config);
+    if (errors.Count == 0)
+    {
+        Console.WriteLine($"Config for {config.Asset}/{config.Fiat} is valid");
+    }
+}
+
+// Example 5: Validate with custom tolerance
+var customConfig = new PriceAlertConfiguration
+{
+    Asset = "USDT",
+    Fiat = "USDT",
+    PriceThreshold = 1.015m,
+    Direction = PriceAlertDirection.Below,
+    ComparisonTolerance = 0.01m // 1% tolerance
+};
+
+var customErrors = PriceAlertTestsValidation.Validate(customConfig);
+Console.WriteLine($"Custom tolerance validation: {customErrors.Count} errors");
+```
+
 ## ValidationResult
 
 The `ValidationResult` record provides static validation methods for various data types used throughout the Binance P2P monitoring system. These methods validate user inputs, configuration values, and API parameters to ensure data integrity and prevent invalid operations. The validation methods return boolean values indicating whether the input meets the required format and constraints.
