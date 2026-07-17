@@ -10,14 +10,12 @@ public static class UserProfileExtensions
     /// </summary>
     /// <param name="profile">The <see cref="UserProfile"/> instance.</param>
     /// <returns>A formatted full name.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="profile"/> is <c>null</c>.</exception>
     public static string GetFormattedFullName(this UserProfile profile)
     {
         ArgumentNullException.ThrowIfNull(profile);
 
-        var firstName = string.IsNullOrWhiteSpace(profile.FirstName) ? string.Empty : profile.FirstName;
-        var lastName = string.IsNullOrWhiteSpace(profile.LastName) ? string.Empty : profile.LastName;
-
-        return $"{firstName} {lastName}".Trim();
+        return profile.GetFullName();
     }
 
     /// <summary>
@@ -43,7 +41,7 @@ public static class UserProfileExtensions
     {
         ArgumentNullException.ThrowIfNull(profile);
 
-        var totalAlerts = profile.Alerts.Count;
+        var totalAlerts = profile.Alerts?.Count ?? 0;
         var activeAlerts = profile.GetActiveAlertCount();
 
         return (totalAlerts, activeAlerts);
