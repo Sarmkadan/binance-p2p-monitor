@@ -27,11 +27,16 @@ public static class PriceHistoryExtensions
     /// <param name="endDate">The end date of the time range.</param>
     /// <returns>An <see cref="IReadOnlyList{PriceHistory}"/> of price history records within the specified time range.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="priceHistories"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="startDate"/> is after <paramref name="endDate"/>.</exception>
     public static IReadOnlyList<PriceHistory> GetInTimeRange(this IEnumerable<PriceHistory> priceHistories, DateTime startDate, DateTime endDate)
     {
         ArgumentNullException.ThrowIfNull(priceHistories);
+        ArgumentOutOfRangeException.ThrowIfLessThan(endDate, startDate, nameof(endDate));
 
-        return priceHistories.Where(ph => ph.RecordedAt >= startDate && ph.RecordedAt <= endDate).ToList();
+        return priceHistories
+            .Where(ph => ph.RecordedAt >= startDate && ph.RecordedAt <= endDate)
+            .ToList()
+            .AsReadOnly();
     }
 
     /// <summary>
@@ -40,10 +45,55 @@ public static class PriceHistoryExtensions
     /// <param name="priceHistories">The collection of price history records.</param>
     /// <returns>The average price change percentage.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="priceHistories"/> is <c>null</c>.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if the collection is empty.</exception>
     public static decimal CalculateAveragePriceChangePercentage(this IEnumerable<PriceHistory> priceHistories)
     {
         ArgumentNullException.ThrowIfNull(priceHistories);
 
         return priceHistories.Average(ph => ph.PriceChangePercent);
+    }
+
+    /// <summary>
+    /// Filters price history records to only include recent records (within the last hour).
+    /// </summary>
+    /// <param name="priceHistories">The collection of price history records to filter.</param>
+    /// <returns>An <see cref="IReadOnlyList{PriceHistory}"/> containing only recent records.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="priceHistories"/> is <c>null</c>.</exception>
+    public static IReadOnlyList<PriceHistory> WhereRecent(this IEnumerable<PriceHistory> priceHistories)
+    {
+        ArgumentNullException.ThrowIfNull(priceHistories);
+
+        return priceHistories
+            .Where(ph => ph.IsRecent())
+            .ToList()
+            .AsReadOnly();
+    }
+
+    /// <summary>
+    /// Calculates the average spread percentage across all price history records.
+    /// </summary>
+    /// <param name="priceHistories">The collection of price history records.</param>
+    /// <returns>The average spread percentage.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="priceHistories"/> is <c>null</c>.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if the collection is empty.</exception>
+    public static decimal CalculateAverageSpreadPercentage(this IEnumerable<PriceHistory> priceHistories)
+    {
+        ArgumentNullException.ThrowIfNull(priceHistories);
+
+        return priceHistories.Average(ph => ph.SpreadPercentage);
+    }
+
+    /// <summary>
+    /// Calculates the average mid-price across all price history records.
+    /// </summary>
+    /// <param name="priceHistories">The collection of price history records.</param>
+    /// <returns>The average mid-price.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="priceHistories"/> is <c>null</c>.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if the collection is empty.</exception>
+    public static decimal CalculateAverageMidPrice(this IEnumerable<PriceHistory> priceHistories)
+    {
+        ArgumentNullException.ThrowIfNull(priceHistories);
+
+        return priceHistories.Average(ph => ph.GetMidPrice());
     }
 }
