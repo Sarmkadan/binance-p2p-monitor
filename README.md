@@ -96,48 +96,47 @@ string genericJson = genericResponse.ToJson();
 ApiResponse<string[]>? genericDeserialized = ApiResponseJsonExtensions.FromJson<string[]>(genericJson);
 ```
 
+## RetryPolicyExtensions
+
+`RetryPolicyExtensions` adds convenient helpers for executing asynchronous operations with a `RetryPolicy`. The extensions support both value‑returning and void‑returning tasks, optional cancellation tokens, and provide a method to check whether an exception is considered transient and therefore retryable.
+
 ```csharp
 using BinanceP2pMonitor.Infrastructure;
-using Microsoft.Extensions.Logging;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-// Validating an ILoggingBuilder instance
-var loggingBuilder = new LoggerFactory().CreateLogger("test").ToString(); // Example - in practice, use actual ILoggingBuilder
-var builderValidation = loggingBuilder.Validate(); // Returns IReadOnlyList<string> of problems
-bool isBuilderValid = loggingBuilder.IsValid(); // Returns true if valid
-loggingBuilder.EnsureValid(); // Throws ArgumentException if invalid
+// Create a retry policy (uses default settings)
+var policy = new RetryPolicy();
 
-// Validating an ILogger instance
-ILogger logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger("test");
-var loggerValidation = logger.Validate(); // Returns IReadOnlyList<string> of problems
-bool isLoggerValid = logger.IsValid(); // Returns true if valid
-logger.EnsureValid(); // Throws ArgumentException if invalid
+// Example 1: Execute a function that returns a value
+int result = await policy.ExecuteWithRetryAsync(async () =>
+{
+    // Simulate work that might fail transiently
+    await Task.Delay(100);
+    return 42;
+});
+Console.WriteLine($"Result: {result}");
 
-// Validating log path parameters
-var logPathValidation = LoggingExtensionsValidation.Validate("logs/app.log"); // Returns IReadOnlyList<string>
-bool isLogPathValid = LoggingExtensionsValidation.IsValid("logs/app.log"); // Returns true if valid
-LoggingExtensionsValidation.EnsureValid("logs/app.log"); // Throws ArgumentException if invalid
+// Example 2: Execute a function that returns no value
+await policy.ExecuteWithRetryAsync(async () =>
+{
+    // Simulate fire‑and‑forget work
+    await Task.Delay(50);
+});
 
-// Validating LogPerformance parameters
-var perfValidation = LoggingExtensionsValidation.Validate("DatabaseQuery", TimeSpan.FromSeconds(2.5), true, "key=value");
-bool isPerfValid = LoggingExtensionsValidation.IsValid("DatabaseQuery", TimeSpan.FromSeconds(2.5), true, "key=value");
-LoggingExtensionsValidation.EnsureValid("DatabaseQuery", TimeSpan.FromSeconds(2.5), true, "key=value");
+// Example 3: Execute with an explicit CancellationToken
+CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+string data = await policy.ExecuteWithRetryAsync(
+    async ct =>
+    {
+        await Task.Delay(200, ct);
+        return "completed";
+    },
+    cancellationToken: cts.Token);
+Console.WriteLine(data);
 
-// Validating LogPriceChange parameters
-var priceValidation = LoggingExtensionsValidation.Validate("BTC", "USDT", 45000.50m, 45500.75m);
-bool isPriceValid = LoggingExtensionsValidation.IsValid("BTC", "USDT", 45000.50m, 45500.75m);
-LoggingExtensionsValidation.EnsureValid("BTC", "USDT", 45000.50m, 45500.75m);
-
-// Validating LogAlert parameters
-var alertValidation = LoggingExtensionsValidation.Validate("PriceAlert", "BTC", "USDT", "Price exceeded threshold", 
-    new Dictionary<string, string> { { "threshold", "45000" } });
-bool isAlertValid = LoggingExtensionsValidation.IsValid("PriceAlert", "BTC", "USDT", "Price exceeded threshold", 
-    new Dictionary<string, string> { { "threshold", "45000" } });
-LoggingExtensionsValidation.EnsureValid("PriceAlert", "BTC", "USDT", "Price exceeded threshold", 
-    new Dictionary<string, string> { { "threshold", "45000" } });
-
-// Validating LogDatabaseOperation parameters
-var dbValidation = LoggingExtensionsValidation.Validate("INSERT", "trades", 100, TimeSpan.FromMilliseconds(150));
-bool isDbValid = LoggingExtensionsValidation.IsValid("INSERT", "trades", 100, TimeSpan.FromMilliseconds(150));
-LoggingExtensionsValidation.EnsureValid("INSERT", "trades", 100, TimeSpan.FromMilliseconds(150));
+// Example 4: Check if an exception is retryable
+bool shouldRetry = policy.IsRetryableException(new TimeoutException());
+Console.WriteLine($"Should retry on TimeoutException: {shouldRetry}");
 ```
