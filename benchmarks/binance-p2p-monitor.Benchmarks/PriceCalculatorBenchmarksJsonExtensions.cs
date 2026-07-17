@@ -57,11 +57,18 @@ public static class PriceCalculatorBenchmarksJsonExtensions
     /// Attempts to deserialize a JSON string to a <see cref="PriceCalculatorBenchmarks"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">The deserialized benchmark instance, or null if deserialization fails.</param>
-    /// <returns>True if deserialization succeeds; otherwise, false.</returns>
+    /// <param name="value">Receives the deserialized benchmark instance if successful; otherwise, null.</param>
+    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out PriceCalculatorBenchmarks? value)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentNullException.ThrowIfNull(json);
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            value = null;
+            return true;
+        }
 
         try
         {
