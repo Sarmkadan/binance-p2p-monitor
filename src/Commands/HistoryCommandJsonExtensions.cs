@@ -23,7 +23,7 @@ public static class HistoryCommandJsonExtensions
     /// <param name="value">The history command to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation.</param>
     /// <returns>A JSON string representation of the history command.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is <see langword="null"/>.</exception>
     public static string ToJson(this HistoryCommand value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -39,8 +39,11 @@ public static class HistoryCommandJsonExtensions
     /// Deserializes a JSON string to a <see cref="HistoryCommand"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized <see cref="HistoryCommand"/> instance, or null if the JSON is invalid.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <returns>
+/// The deserialized <see cref="HistoryCommand"/> instance if deserialization succeeds;
+/// otherwise, <see langword="null"/>.
+/// </returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is <see langword="null"/> or empty.</exception>
     public static HistoryCommand? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -59,9 +62,12 @@ public static class HistoryCommandJsonExtensions
     /// Attempts to deserialize a JSON string to a <see cref="HistoryCommand"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized <see cref="HistoryCommand"/> instance if successful.</param>
-    /// <returns>True if deserialization succeeded; otherwise, false.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <param name="value">
+/// Receives the deserialized <see cref="HistoryCommand"/> instance if deserialization succeeds;
+/// otherwise, <see langword="null"/>.
+/// </param>
+    /// <returns><see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="json"/> is <see langword="null"/> or empty.</exception>
     public static bool TryFromJson(string json, out HistoryCommand? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
