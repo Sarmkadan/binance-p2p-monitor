@@ -40,9 +40,12 @@ namespace BinanceP2pMonitor.Configuration
         /// <param name="json">The JSON string to deserialize.</param>
         /// <returns>The deserialized options instance, or null if the JSON is invalid.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is empty or whitespace.</exception>
+        /// <exception cref="JsonException">Thrown when the JSON string is invalid or cannot be deserialized.</exception>
         public static BinanceP2PMonitorOptions? FromJson(string json)
         {
             ArgumentNullException.ThrowIfNull(json);
+            ArgumentException.ThrowIfNullOrEmpty(json);
 
             return JsonSerializer.Deserialize<BinanceP2PMonitorOptions>(json, _jsonSerializerOptions);
         }
@@ -57,6 +60,7 @@ namespace BinanceP2pMonitor.Configuration
         public static bool TryFromJson(string json, out BinanceP2PMonitorOptions? value)
         {
             ArgumentNullException.ThrowIfNull(json);
+            ArgumentException.ThrowIfNullOrEmpty(json);
 
             try
             {
