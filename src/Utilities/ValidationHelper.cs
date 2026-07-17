@@ -4,6 +4,13 @@ using System.Text.RegularExpressions;
 namespace BinanceP2pMonitor.Utilities;
 
 /// <summary>
+/// Represents the result of a validation operation
+/// </summary>
+/// <param name="IsValid">Indicates whether the validation passed</param>
+/// <param name="ErrorMessage">Optional error message if validation failed</param>
+public record ValidationResult(bool IsValid, string? ErrorMessage = null);
+
+/// <summary>
 /// Utility class for data validation
 /// </summary>
 public static class ValidationHelper
