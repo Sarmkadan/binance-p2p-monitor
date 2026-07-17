@@ -59,19 +59,20 @@ public static class TradeSignalJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized instance if successful; otherwise, <see langword="null"/>.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/> or empty.</exception>
     /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
     public static bool TryFromJson(string json, out TradeSignal? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
+        value = null;
 
         try
         {
             value = JsonSerializer.Deserialize<TradeSignal>(json, _jsonOptions);
-            return true;
+            return value is not null;
         }
         catch (JsonException)
         {
-            value = null;
             return false;
         }
     }
