@@ -571,3 +571,46 @@ Console.WriteLine($"Matches pattern: {matchesPattern}"); // True
 bool doesNotMatch = ValidationResult.MatchesPattern("btc_usdt", "^[A-Z]{3,6}$");
 Console.WriteLine($"Does not match: {doesNotMatch}"); // False
 ```
+
+## PriceCalculatorEdgeCaseTestsExtensions
+
+`PriceCalculatorEdgeCaseTestsExtensions` supplies a collection of helper methods and test data generators for edge‑case testing of price‑related calculations. The extensions create TheoryData for percentage‑change, spread, moving‑average, and standard‑deviation tests, and provide validation helpers that assert correct exception handling and zero‑result behavior.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Utilities;
+using FluentAssertions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+// Create an instance of the test class (the class itself is defined elsewhere)
+var test = new PriceCalculatorEdgeCaseTests();
+
+// Generate test data for percentage‑change calculations
+var pctChangeData = test.CreatePercentageChangeTestData();
+var spreadData = test.CreateSpreadTestData();
+var movingAvgData = test.CreateMovingAverageTestData();
+var stdDevData = test.CreateStandardDeviationTestData();
+
+// Example: Assert that a null price collection throws
+test.ShouldThrowWhenPricesIsNull(() =>
+    PriceCalculator.CalculateMovingAverage(null!, 5));
+
+// Example: Verify that an empty collection yields zero for moving average
+test.ShouldReturnZeroForEmptyCollection(new List<decimal>(), 0m);
+
+// Enumerate comprehensive edge‑case scenarios
+foreach (var (original, @new, expected) in test.GetPercentageChangeEdgeCases())
+{
+    // Use the values in a test or calculation
+    var result = PriceCalculator.CalculatePercentageChange(original, @new);
+    result.Should().BeApproximately(expected, 0.0001m);
+}
+
+foreach (var (buy, sell, expected) in test.GetSpreadEdgeCases())
+{
+    var result = PriceCalculator.CalculateSpread(buy, sell);
+    result.Should().BeApproximately(expected, 0.0001m);
+}
+```
