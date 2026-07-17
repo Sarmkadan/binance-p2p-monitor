@@ -21,14 +21,15 @@ public static class StringExtensionsBenchmarksValidation
 
         var problems = new List<string>();
 
-        // Validate SplitCamelCase - should be a non-empty string for valid camelCase input
+        // Validate SplitCamelCase - should split camelCase into space-separated words
         if (string.IsNullOrWhiteSpace(value.SplitCamelCase))
         {
-            problems.Add($"SplitCamelCase returned null or whitespace");
+            problems.Add("SplitCamelCase returned null or whitespace");
         }
-        else if (value.SplitCamelCase == PascalInput)
+        else if (value.SplitCamelCase.Contains(PascalInput))
         {
-            // This is expected behavior, so not a problem
+            // If the original PascalCase string appears in the result, validation failed
+            problems.Add("SplitCamelCase did not properly split camelCase input");
         }
 
         // Validate ToSnakeCase - should convert PascalCase to snake_case
@@ -98,17 +99,18 @@ public static class StringExtensionsBenchmarksValidation
         }
 
         // Validate Mask - should mask all but first 4 characters
-        if (value.Mask.Length != "sk-live-abcdefghijklmnopqrstuvwxyz".Length)
+        const string apiKeyPrefix = "sk-live-";
+        if (value.Mask.Length != apiKeyPrefix.Length + 4)
         {
             problems.Add($"Mask returned string with unexpected length: {value.Mask.Length}");
         }
-        else if (value.Mask.StartsWith("sk-l") is false)
+        else if (!value.Mask.StartsWith(apiKeyPrefix))
         {
-            problems.Add($"Mask did not preserve first 4 characters correctly");
+            problems.Add("Mask did not preserve first 4 characters correctly");
         }
-        else if (value.Mask.Contains("a") || value.Mask.Contains("b") || value.Mask.Contains("c"))
+        else if (value.Mask.Skip(apiKeyPrefix.Length).Any(c => char.IsLetter(c) && !char.IsUpper(c)))
         {
-            problems.Add($"Mask did not mask all characters after first 4");
+            problems.Add("Mask did not mask all characters after first 4");
         }
 
         return problems.AsReadOnly();
@@ -119,8 +121,8 @@ public static class StringExtensionsBenchmarksValidation
     /// </summary>
     /// <param name="value">The instance to check.</param>
     /// <returns>True if the instance is valid; otherwise, false.</returns>
-    public static bool IsValid(this StringExtensionsBenchmarks? value)
-        => value?.Validate().Count is 0 or null;
+public static bool IsValid(this StringExtensionsBenchmarks? value)
+    => value?.Validate().Count is 0 or null;
 
     /// <summary>
     /// Ensures that a <see cref="StringExtensionsBenchmarks"/> instance is valid, throwing an <see cref="ArgumentException"/> if not.
