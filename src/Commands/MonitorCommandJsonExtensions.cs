@@ -57,7 +57,7 @@ public static class MonitorCommandJsonExtensions
     /// Attempts to deserialize a JSON string to a <see cref="MonitorCommand"/>.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized command if successful.</param>
+    /// <param name="value">Receives the deserialized command if successful; otherwise, null.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out MonitorCommand? value)
