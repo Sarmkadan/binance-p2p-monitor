@@ -1,6 +1,7 @@
 #nullable enable
 
 using BinanceP2pMonitor.Models;
+using BinanceP2pMonitor.Constants;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,7 +9,7 @@ using System.Globalization;
 namespace BinanceP2pMonitor.Tests;
 
 /// <summary>
-/// Provides validation helpers for PriceAlert model
+/// Provides validation helpers for PriceAlert and Spread models
 /// </summary>
 public static class PriceAlertTestsValidation
 {
@@ -17,7 +18,7 @@ public static class PriceAlertTestsValidation
     /// </summary>
     /// <param name="value">The PriceAlert to validate</param>
     /// <returns>List of validation problems (empty if valid)</returns>
-    /// <exception cref="ArgumentNullException">Thrown if value is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null</exception>
     public static IReadOnlyList<string> Validate(this PriceAlert value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -44,10 +45,10 @@ public static class PriceAlertTestsValidation
             problems.Add("Fiat exceeds maximum length of 10 characters");
         }
 
-        // Validate AlertType
-        if (value.AlertType == default)
+        // Validate AlertType - must not be Unknown (0)
+        if (value.AlertType == AlertType.Unknown)
         {
-            problems.Add("AlertType must be specified");
+            problems.Add("AlertType must be specified and cannot be Unknown");
         }
 
         // Validate Threshold
@@ -56,14 +57,11 @@ public static class PriceAlertTestsValidation
             problems.Add("Threshold must be between 0 and 100");
         }
 
-        // Validate Condition
-        if (value.Condition == default)
+        // Validate Condition - must not be Unknown (0)
+        if (value.Condition == AlertCondition.Unknown)
         {
-            problems.Add("Condition must be specified");
+            problems.Add("Condition must be specified and cannot be Unknown");
         }
-
-        // Validate IsEnabled
-        // No validation needed - can be true or false
 
         // Validate UserId
         if (value.UserId <= 0)
@@ -83,7 +81,7 @@ public static class PriceAlertTestsValidation
             problems.Add("UpdatedAt must be set to a valid DateTime");
         }
 
-        // Validate LastTriggeredAt
+        // Validate LastTriggeredAt - binary value cannot be zero
         if (value.LastTriggeredAt.HasValue && value.LastTriggeredAt.Value == 0)
         {
             problems.Add("LastTriggeredAt binary value cannot be zero");
@@ -118,8 +116,8 @@ public static class PriceAlertTestsValidation
     /// Ensures a PriceAlert instance is valid, throwing an exception if not
     /// </summary>
     /// <param name="value">The PriceAlert to validate</param>
-    /// <exception cref="ArgumentException">Thrown if value is invalid with detailed problems</exception>
-    /// <exception cref="ArgumentNullException">Thrown if value is null</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is invalid with detailed problems</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null</exception>
     public static void EnsureValid(this PriceAlert value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -138,7 +136,7 @@ public static class PriceAlertTestsValidation
     /// </summary>
     /// <param name="value">The Spread to validate</param>
     /// <returns>List of validation problems (empty if valid)</returns>
-    /// <exception cref="ArgumentNullException">Thrown if value is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null</exception>
     public static IReadOnlyList<string> Validate(this Spread value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -242,8 +240,8 @@ public static class PriceAlertTestsValidation
     /// Ensures a Spread instance is valid, throwing an exception if not
     /// </summary>
     /// <param name="value">The Spread to validate</param>
-    /// <exception cref="ArgumentException">Thrown if value is invalid with detailed problems</exception>
-    /// <exception cref="ArgumentNullException">Thrown if value is null</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is invalid with detailed problems</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null</exception>
     public static void EnsureValid(this Spread value)
     {
         ArgumentNullException.ThrowIfNull(value);
