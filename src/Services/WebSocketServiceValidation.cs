@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace BinanceP2pMonitor.Services;
 
@@ -23,9 +22,6 @@ public static class WebSocketServiceValidation
 
         var problems = new List<string>();
 
-        // WebSocketService doesn't have public properties that need validation
-        // The service manages its own state internally
-
         return problems.AsReadOnly();
     }
 
@@ -34,8 +30,14 @@ public static class WebSocketServiceValidation
     /// </summary>
     /// <param name="value">The service instance to check.</param>
     /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this WebSocketService? value)
     {
+        if (value is null)
+        {
+            return false;
+        }
+
         try
         {
             _ = Validate(value);
