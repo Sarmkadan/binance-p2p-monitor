@@ -29,14 +29,9 @@ public static class PriceRepositoryTestsJsonExtensions
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented
-            ? new JsonSerializerOptions(_jsonSerializerOptions)
-            {
-                WriteIndented = true
-            }
-            : _jsonSerializerOptions;
-
-        return JsonSerializer.Serialize(value, options);
+        return JsonSerializer.Serialize(value, indented
+            ? new JsonSerializerOptions(_jsonSerializerOptions) { WriteIndented = true }
+            : _jsonSerializerOptions);
     }
 
     /// <summary>
@@ -44,6 +39,7 @@ public static class PriceRepositoryTestsJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized instance, or null if the JSON is empty or whitespace.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static PriceRepositoryTests? FromJson(string json)
     {
@@ -63,6 +59,7 @@ public static class PriceRepositoryTestsJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized instance if successful, otherwise null.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson(string json, out PriceRepositoryTests? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
