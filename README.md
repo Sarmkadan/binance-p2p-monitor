@@ -253,6 +253,68 @@ bool shouldRetry = policy.IsRetryableException(new TimeoutException());
 Console.WriteLine($"Should retry on TimeoutException: {shouldRetry}");
 ```
 
+```csharp
+using BinanceP2pMonitor.Models;
+using System;
+using System.Collections.Generic;
+
+// Example price history records
+var priceHistory = new List<PriceHistory>
+{
+    new PriceHistory
+    {
+        Asset = "USDT",
+        Fiat = "USDT",
+        Timestamp = DateTime.UtcNow.AddHours(-10),
+        BuyPrice = 1.005m,
+        SellPrice = 1.01m,
+        MidPrice = 1.0075m
+    },
+    new PriceHistory
+    {
+        Asset = "USDT",
+        Fiat = "USDT",
+        Timestamp = DateTime.UtcNow.AddHours(-5),
+        BuyPrice = 1.01m,
+        SellPrice = 1.015m,
+        MidPrice = 1.0125m
+    },
+    new PriceHistory
+    {
+        Asset = "USDT",
+        Fiat = "USDT",
+        Timestamp = DateTime.UtcNow.AddHours(-1),
+        BuyPrice = 1.015m,
+        SellPrice = 1.02m,
+        MidPrice = 1.0175m
+    }
+};
+
+// Example 1: Filter price history to a specific time range
+var recentPrices = priceHistory.GetInTimeRange(DateTime.UtcNow.AddHours(-6), DateTime.UtcNow);
+Console.WriteLine($"Prices in last 6 hours: {recentPrices.Count}"); // 2
+
+// Example 2: Check if a price record is older than a specific time threshold
+bool isOlder = priceHistory[0].IsOlderThan(TimeSpan.FromHours(8));
+Console.WriteLine($"First price is older than 8 hours: {isOlder}"); // True
+
+// Example 3: Get only recent price history records (within last 2 hours)
+var recentOnly = priceHistory.WhereRecent(TimeSpan.FromHours(2));
+Console.WriteLine($"Recent prices (last 2h): {recentOnly.Count}"); // 1
+
+// Example 4: Calculate average price change percentage over a time period
+var averageChange = priceHistory.CalculateAveragePriceChangePercentage(TimeSpan.FromHours(10));
+Console.WriteLine($"Average price change over 10h: {averageChange:F2}%"); // ~1.23%
+
+// Example 5: Calculate average spread percentage across all price records
+var averageSpread = priceHistory.CalculateAverageSpreadPercentage();
+Console.WriteLine($"Average spread: {averageSpread:F2}%"); // ~0.49%
+
+// Example 6: Calculate average mid price across a time range
+var avgMidPrice = priceHistory.CalculateAverageMidPrice(DateTime.UtcNow.AddHours(-10), DateTime.UtcNow);
+Console.WriteLine($"Average mid price: {avgMidPrice:F4}"); // 1.0125
+```
+
 ## HistoricalSpreadAnalysisExtensions
 
 The `HistoricalSpreadAnalysisExtensions` class provides extension methods for registering historical spread analysis services with the dependency injection container and analyzing spread statistics reports. These extensions help monitor spread anomalies, volatility, trends, and critical conditions across different time windows.
@@ -358,3 +420,69 @@ Console.WriteLine(data);
 bool shouldRetry = policy.IsRetryableException(new TimeoutException());
 Console.WriteLine($"Should retry on TimeoutException: {shouldRetry}");
 ```
+
+```csharp
+using BinanceP2pMonitor.Models;
+using System;
+using System.Collections.Generic;
+
+// Example price history records
+var priceHistory = new List<PriceHistory>
+{
+    new PriceHistory
+    {
+        Asset = "USDT",
+        Fiat = "USDT",
+        Timestamp = DateTime.UtcNow.AddHours(-10),
+        BuyPrice = 1.005m,
+        SellPrice = 1.01m,
+        MidPrice = 1.0075m
+    },
+    new PriceHistory
+    {
+        Asset = "USDT",
+        Fiat = "USDT",
+        Timestamp = DateTime.UtcNow.AddHours(-5),
+        BuyPrice = 1.01m,
+        SellPrice = 1.015m,
+        MidPrice = 1.0125m
+    },
+    new PriceHistory
+    {
+        Asset = "USDT",
+        Fiat = "USDT",
+        Timestamp = DateTime.UtcNow.AddHours(-1),
+        BuyPrice = 1.015m,
+        SellPrice = 1.02m,
+        MidPrice = 1.0175m
+    }
+};
+
+// Example 1: Filter price history to a specific time range
+var recentPrices = priceHistory.GetInTimeRange(DateTime.UtcNow.AddHours(-6), DateTime.UtcNow);
+Console.WriteLine($"Prices in last 6 hours: {recentPrices.Count}"); // 2
+
+// Example 2: Check if a price record is older than a specific time threshold
+bool isOlder = priceHistory[0].IsOlderThan(TimeSpan.FromHours(8));
+Console.WriteLine($"First price is older than 8 hours: {isOlder}"); // True
+
+// Example 3: Get only recent price history records (within last 2 hours)
+var recentOnly = priceHistory.WhereRecent(TimeSpan.FromHours(2));
+Console.WriteLine($"Recent prices (last 2h): {recentOnly.Count}"); // 1
+
+// Example 4: Calculate average price change percentage over a time period
+var averageChange = priceHistory.CalculateAveragePriceChangePercentage(TimeSpan.FromHours(10));
+Console.WriteLine($"Average price change over 10h: {averageChange:F2}%"); // ~1.23%
+
+// Example 5: Calculate average spread percentage across all price records
+var averageSpread = priceHistory.CalculateAverageSpreadPercentage();
+Console.WriteLine($"Average spread: {averageSpread:F2}%"); // ~0.49%
+
+// Example 6: Calculate average mid price across a time range
+var avgMidPrice = priceHistory.CalculateAverageMidPrice(DateTime.UtcNow.AddHours(-10), DateTime.UtcNow);
+Console.WriteLine($"Average mid price: {avgMidPrice:F4}"); // 1.0125
+```
+
+## PriceHistoryExtensions
+
+The `PriceHistoryExtensions` class provides utility methods for working with historical price data, enabling time-based filtering, spread analysis, and price change calculations across different time windows. These extensions help analyze price trends, calculate average changes, and filter price history records based on temporal criteria.
