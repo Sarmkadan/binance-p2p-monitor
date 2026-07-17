@@ -1,31 +1,43 @@
 #nullable enable
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using BinanceP2pMonitor.Constants;
 using BinanceP2pMonitor.Models;
 using BinanceP2pMonitor.Repositories;
 using FluentAssertions;
-using System.Linq;
 using Xunit;
 
 namespace BinanceP2pMonitor.Tests;
 
 /// <summary>
-/// Extension methods for <see cref="TradeOfferRepositoryTests"/> to provide additional test utilities.
+/// Extension methods for <see cref="TradeOfferRepositoryTests"/> that provide additional test utilities.
 /// </summary>
-/// <remarks>
-/// This class provides helper methods for creating and verifying test trade offers in the repository.
-/// All methods are designed to work with the test infrastructure and follow C# best practices.
-/// </remarks>
+public static class TradeOfferRepositoryTestsExtensions
 {
-private static TradeOfferRepository GetTradeOfferRepository(this TradeOfferRepositoryTests tests)
+    /// <summary>
+    /// Retrieves the <see cref="TradeOfferRepository"/> instance from a <see cref="TradeOfferRepositoryTests"/>
+    /// test class via reflection.
+    /// </summary>
+    /// <param name="tests">The test instance.</param>
+    /// <returns>The underlying <see cref="TradeOfferRepository"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="tests"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown if the private field <c>_tradeOfferRepository</c> cannot be found.</exception>
+    private static TradeOfferRepository GetTradeOfferRepository(this TradeOfferRepositoryTests tests)
     {
         ArgumentNullException.ThrowIfNull(tests);
 
         var field = typeof(TradeOfferRepositoryTests).GetField(
             "_tradeOfferRepository",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            BindingFlags.NonPublic | BindingFlags.Instance);
 
-        ArgumentNullException.ThrowIfNull(field);
+        if (field is null)
+        {
+            throw new ArgumentException("Unable to locate the private field '_tradeOfferRepository' on the test class.", nameof(tests));
+        }
 
         var value = field.GetValue(tests);
         return (TradeOfferRepository)value!;
@@ -35,14 +47,14 @@ private static TradeOfferRepository GetTradeOfferRepository(this TradeOfferRepos
     /// Creates and adds a test trade offer to the repository, returning the created offer.
     /// </summary>
     /// <param name="tests">The test instance.</param>
-    /// <param name="binanceId">Optional Binance offer ID. Defaults to "TEST_OFFER_{Guid.NewGuid()}".</param>
-    /// <param name="asset">Optional asset symbol. Defaults to "USDT".</param>
-    /// <param name="fiat">Optional fiat currency. Defaults to "USD".</param>
+    /// <param name="binanceId">Optional Binance offer ID. Defaults to <c>"TEST_OFFER_{Guid.NewGuid()}"</c>.</param>
+    /// <param name="asset">Optional asset symbol. Defaults to <c>"USDT"</c>.</param>
+    /// <param name="fiat">Optional fiat currency. Defaults to <c>"USD"</c>.</param>
     /// <param name="tradeType">Optional trade type. Defaults to <see cref="TradeType.Buy"/>.</param>
-    /// <param name="price">Optional price in the specified currency. Defaults to 1.0m.</param>
-    /// <param name="isActive">Optional active status. Defaults to true.</param>
-    /// <returns>The created trade offer with populated ID.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="tests"/> is null.</exception>
+    /// <param name="price">Optional price in the specified currency. Defaults to <c>1.0m</c>.</param>
+    /// <param name="isActive">Optional active status. Defaults to <c>true</c>.</param>
+    /// <returns>The created <see cref="TradeOffer"/> with its generated identifier.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="tests"/> is <c>null</c>.</exception>
     public static async Task<TradeOffer> CreateAndAddTestTradeOfferAsync(
         this TradeOfferRepositoryTests tests,
         string? binanceId = null,
@@ -53,6 +65,8 @@ private static TradeOfferRepository GetTradeOfferRepository(this TradeOfferRepos
         bool isActive = true)
     {
         ArgumentNullException.ThrowIfNull(tests);
+        if (asset is not null) ArgumentException.ThrowIfNullOrEmpty(asset);
+        if (fiat is not null) ArgumentException.ThrowIfNullOrEmpty(fiat);
 
         var offer = new TradeOffer
         {
@@ -82,13 +96,17 @@ private static TradeOfferRepository GetTradeOfferRepository(this TradeOfferRepos
     /// Creates and adds multiple test trade offers to the repository.
     /// </summary>
     /// <param name="tests">The test instance.</param>
-    /// <param name="count">Number of offers to create. Must be positive.</param>
-    /// <param name="asset">Optional asset symbol. Defaults to "USDT".</param>
-    /// <param name="fiat">Optional fiat currency. Defaults to "USD".</param>
-    /// <param name="priceRange">Optional price range in the specified currency. Defaults to a range from 1.0m to 2.0m.</param>
-    /// <returns>Collection of created trade offers with populated IDs.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="tests"/> is null.</exception>
+    /// <param name="count">Number of offers to create. Must be greater than zero.</param>
+    /// <param name="asset">Optional asset symbol. Defaults to <c>"USDT"</c>.</param>
+    /// <param name="fiat">Optional fiat currency. Defaults to <c>"USD"</c>.</param>
+    /// <param name="priceRange">
+    /// Optional price range in the specified currency. If supplied, <c>min</c> must be less than or equal to <c>max</c>.
+    /// Defaults to a range from <c>1.0m</c> to <c>2.0m</c> when omitted.
+    /// </param>
+    /// <returns>A read‑only list of the created trade offers with populated identifiers.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="tests"/> is <c>null</c>.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="count"/> is not positive.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="priceRange"/> has an invalid interval.</exception>
     public static async Task<IReadOnlyList<TradeOffer>> CreateAndAddTestTradeOffersAsync(
         this TradeOfferRepositoryTests tests,
         int count,
@@ -98,6 +116,12 @@ private static TradeOfferRepository GetTradeOfferRepository(this TradeOfferRepos
     {
         ArgumentNullException.ThrowIfNull(tests);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(count, 0);
+        if (asset is not null) ArgumentException.ThrowIfNullOrEmpty(asset);
+        if (fiat is not null) ArgumentException.ThrowIfNullOrEmpty(fiat);
+        if (priceRange.HasValue && priceRange.Value.min > priceRange.Value.max)
+        {
+            throw new ArgumentException("The minimum price must be less than or equal to the maximum price.", nameof(priceRange));
+        }
 
         var offers = new List<TradeOffer>(count);
         var random = new Random();
@@ -136,15 +160,12 @@ private static TradeOfferRepository GetTradeOfferRepository(this TradeOfferRepos
     }
 
     /// <summary>
-    /// Verifies that a trade offer matches expected values.
+    /// Verifies that a trade offer matches the expected values.
     /// </summary>
     /// <param name="actual">The actual trade offer.</param>
     /// <param name="expected">The expected trade offer values.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="actual"/> is null.</exception>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="expected"/> is null.</exception>
-    public static void ShouldMatchExpectedValues(
-        this TradeOffer actual,
-        TradeOffer expected)
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="actual"/> or <paramref name="expected"/> is <c>null</c>.</exception>
+    public static void ShouldMatchExpectedValues(this TradeOffer actual, TradeOffer expected)
     {
         ArgumentNullException.ThrowIfNull(actual);
         ArgumentNullException.ThrowIfNull(expected);
@@ -170,8 +191,8 @@ private static TradeOfferRepository GetTradeOfferRepository(this TradeOfferRepos
     /// Gets the count of active trade offers in the repository.
     /// </summary>
     /// <param name="tests">The test instance.</param>
-    /// <returns>The count of active trade offers in the repository.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="tests"/> is null.</exception>
+    /// <returns>The number of active trade offers.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="tests"/> is <c>null</c>.</exception>
     public static async Task<int> GetActiveOffersCountAsync(this TradeOfferRepositoryTests tests)
     {
         ArgumentNullException.ThrowIfNull(tests);
