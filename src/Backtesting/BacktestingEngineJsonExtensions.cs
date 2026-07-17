@@ -8,8 +8,15 @@ namespace BinanceP2pMonitor.Backtesting;
 /// Provides JSON serialization and deserialization extensions for <see cref="BacktestingEngine"/>.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Uses System.Text.Json with camelCase naming policy for consistent serialization format.
 /// All methods are thread-safe and reuse a cached <see cref="JsonSerializerOptions"/> instance.
+/// </para>
+/// <para>
+/// The cached options instance is immutable except for the <see cref="JsonSerializerOptions.WriteIndented"/> property,
+/// which is only modified when creating indented output. This ensures thread safety for concurrent
+/// serialization and deserialization operations.
+/// </para>
 /// </remarks>
 public static class BacktestingEngineJsonExtensions
 {
@@ -45,6 +52,7 @@ public static class BacktestingEngineJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A deserialized <see cref="BacktestingEngine"/> instance, or <see langword="null"/> if the JSON is invalid.</returns>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is <see langword="null"/> or empty.</exception>
     /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
     public static BacktestingEngine? FromJson(string json)
     {
@@ -59,6 +67,7 @@ public static class BacktestingEngineJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized instance if successful; otherwise, <see langword="null"/>.</param>
     /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is <see langword="null"/> or empty.</exception>
     public static bool TryFromJson(string json, out BacktestingEngine? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
