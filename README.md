@@ -486,3 +486,88 @@ Console.WriteLine($"Average mid price: {avgMidPrice:F4}"); // 1.0125
 ## PriceHistoryExtensions
 
 The `PriceHistoryExtensions` class provides utility methods for working with historical price data, enabling time-based filtering, spread analysis, and price change calculations across different time windows. These extensions help analyze price trends, calculate average changes, and filter price history records based on temporal criteria.
+
+## ValidationResult
+
+The `ValidationResult` record provides static validation methods for various data types used throughout the Binance P2P monitoring system. These methods validate user inputs, configuration values, and API parameters to ensure data integrity and prevent invalid operations. The validation methods return boolean values indicating whether the input meets the required format and constraints.
+
+```csharp
+using BinanceP2pMonitor.Utilities;
+using System;
+
+// Example 1: Validate email addresses
+bool isValidEmail = ValidationResult.IsValidEmail("user@example.com");
+Console.WriteLine($"Valid email: {isValidEmail}"); // True
+
+bool isInvalidEmail = ValidationResult.IsValidEmail("invalid-email");
+Console.WriteLine($"Invalid email: {isInvalidEmail}"); // False
+
+// Example 2: Validate trading pair tickers
+bool isValidTicker = ValidationResult.IsValidTicker("USDT");
+Console.WriteLine($"Valid ticker: {isValidTicker}"); // True
+
+bool isInvalidTicker = ValidationResult.IsValidTicker("XYZ123");
+Console.WriteLine($"Invalid ticker: {isInvalidTicker}"); // False
+
+// Example 3: Validate fiat currency codes
+bool isValidFiat = ValidationResult.IsValidFiatCode("USD");
+Console.WriteLine($"Valid fiat code: {isValidFiat}"); // True
+
+bool isInvalidFiat = ValidationResult.IsValidFiatCode("XYZ");
+Console.WriteLine($"Invalid fiat code: {isInvalidFiat}"); // False
+
+// Example 4: Validate price values
+bool isValidPrice = ValidationResult.IsValidPrice(123.45m);
+Console.WriteLine($"Valid price: {isValidPrice}"); // True
+
+bool isInvalidPrice = ValidationResult.IsValidPrice(-100m);
+Console.WriteLine($"Invalid price: {isInvalidPrice}"); // False
+
+// Example 5: Validate threshold values (must be positive)
+bool isValidThreshold = ValidationResult.IsValidThreshold(0.5m);
+Console.WriteLine($"Valid threshold: {isValidThreshold}"); // True
+
+bool isInvalidThreshold = ValidationResult.IsValidThreshold(-0.1m);
+Console.WriteLine($"Invalid threshold: {isInvalidThreshold}"); // False
+
+// Example 6: Validate Telegram chat IDs
+bool isValidChatId = ValidationResult.IsValidTelegramChatId("-1001234567890");
+Console.WriteLine($"Valid Telegram chat ID: {isValidChatId}"); // True
+
+bool isInvalidChatId = ValidationResult.IsValidTelegramChatId("invalid");
+Console.WriteLine($"Invalid Telegram chat ID: {isInvalidChatId}"); // False
+
+// Example 7: Validate date ranges
+bool isValidDateRange = ValidationResult.IsValidDateRange(
+    DateTime.UtcNow.AddDays(-7),
+    DateTime.UtcNow
+);
+Console.WriteLine($"Valid date range: {isValidDateRange}"); // True
+
+bool isInvalidDateRange = ValidationResult.IsValidDateRange(
+    DateTime.UtcNow,
+    DateTime.UtcNow.AddDays(-1)
+);
+Console.WriteLine($"Invalid date range: {isInvalidDateRange}"); // False
+
+// Example 8: Validate collections (non-null and non-empty)
+bool isValidCollection = ValidationResult.IsValidCollection(new[] { 1, 2, 3 });
+Console.WriteLine($"Valid collection: {isValidCollection}"); // True
+
+bool isInvalidCollection = ValidationResult.IsValidCollection(Array.Empty<int>());
+Console.WriteLine($"Invalid collection: {isInvalidCollection}"); // False
+
+// Example 9: Validate decimal precision (number of decimal places)
+bool isValidPrecision = ValidationResult.IsValidPrecision(2);
+Console.WriteLine($"Valid precision: {isValidPrecision}"); // True
+
+bool isInvalidPrecision = ValidationResult.IsValidPrecision(-1);
+Console.WriteLine($"Invalid precision: {isInvalidPrecision}"); // False
+
+// Example 10: Validate strings against regex patterns
+bool matchesPattern = ValidationResult.MatchesPattern("BTCUSDT", "^[A-Z]{3,6}$");
+Console.WriteLine($"Matches pattern: {matchesPattern}"); // True
+
+bool doesNotMatch = ValidationResult.MatchesPattern("btc_usdt", "^[A-Z]{3,6}$");
+Console.WriteLine($"Does not match: {doesNotMatch}"); // False
+```
