@@ -35,9 +35,12 @@ public static class RateLimiterJsonExtensions
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized rate limiter, or null if the JSON is null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="json"/> is null.</exception>
     /// <exception cref="JsonException">Thrown if the JSON is invalid or cannot be deserialized.</exception>
     public static RateLimiter? FromJson(string json)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         if (string.IsNullOrEmpty(json))
         {
             return null;
@@ -52,8 +55,11 @@ public static class RateLimiterJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized rate limiter if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="json"/> is null.</exception>
     public static bool TryFromJson(string json, out RateLimiter? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = null;
 
         if (string.IsNullOrEmpty(json))
