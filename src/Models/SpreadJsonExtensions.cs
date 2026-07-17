@@ -10,6 +10,7 @@ namespace BinanceP2pMonitor.Models;
 /// </summary>
 public static class SpreadJsonExtensions
 {
+    // Cached options with camelCase naming policy and optimized settings for JSON serialization.
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -19,60 +20,51 @@ public static class SpreadJsonExtensions
     };
 
     /// <summary>
-    /// Converts a <see cref="Spread"/> instance to its JSON representation.
+    /// Serializes the <paramref name="value"/> to a JSON string.
     /// </summary>
-    /// <param name="value">The spread instance to serialize.</param>
-    /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representing the spread data.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <param name="value">The <see cref="Spread"/> instance to serialize.</param>
+    /// <param name="indented">If <c>true</c>, the output JSON will be formatted with indentation.</param>
+    /// <returns>A JSON representation of the <paramref name="value"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> is <c>null</c>.</exception>
     public static string ToJson(this Spread value, bool indented = false)
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented
-            ? new JsonSerializerOptions(_jsonOptions)
-            {
-                WriteIndented = true
-            }
-            : _jsonOptions;
-
-        return JsonSerializer.Serialize(value, options);
+        return JsonSerializer.Serialize(
+            value,
+            indented
+                ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+                : _jsonOptions
+        );
     }
 
     /// <summary>
-    /// Parses a JSON string into a <see cref="Spread"/> instance.
+    /// Deserializes a JSON string into a <see cref="Spread"/> instance.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized <see cref="Spread"/> instance, or null if parsing fails.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <param name="json">The JSON string representing a <see cref="Spread"/>. Must not be <c>null</c> or empty.</param>
+    /// <returns>The deserialized <see cref="Spread"/>, or <c>null</c> if the JSON is invalid.</returns>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is <c>null</c> or empty.</exception>
+    /// <exception cref="JsonException">The JSON is invalid or cannot be deserialized to <see cref="Spread"/>.</exception>
     public static Spread? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
-
-        try
-        {
-            return JsonSerializer.Deserialize<Spread>(json, _jsonOptions);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
+        return JsonSerializer.Deserialize<Spread>(json, _jsonOptions);
     }
 
     /// <summary>
-    /// Attempts to parse a JSON string into a <see cref="Spread"/> instance.
+    /// Attempts to deserialize a JSON string into a <see cref="Spread"/> instance.
     /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized <see cref="Spread"/> instance, or null if parsing fails.</param>
-    /// <returns>True if parsing succeeded; otherwise, false.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <param name="json">The JSON string to deserialize. Must not be <c>null</c>.</param>
+    /// <param name="value">When this method returns, contains the deserialized <see cref="Spread"/> if the operation succeeded; otherwise, <c>null</c>.</param>
+    /// <returns><c>true</c> if deserialization succeeded; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentException"><paramref name="json"/> is <c>null</c> or empty.</exception>
     public static bool TryFromJson(string json, out Spread? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
 
         try
         {
-            value = JsonSerializer.Deserialize<Spread>(json, _jsonOptions);
+            value = FromJson(json);
             return true;
         }
         catch (JsonException)
