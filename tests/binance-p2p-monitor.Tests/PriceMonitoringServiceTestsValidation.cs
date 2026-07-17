@@ -15,17 +15,12 @@ public static class PriceMonitoringServiceTestsValidation
     /// </summary>
     /// <param name="value">The PriceMonitoringServiceTests instance</param>
     /// <returns>A list of validation problems (empty if valid)</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null</exception>
     public static IReadOnlyList<string> Validate(this PriceMonitoringServiceTests value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        // Validate the AppSettings used in tests
-        // This provides a unified validation interface for the test class
-        var problems = new List<string>();
-
-        // The test class can validate its AppSettings field directly
-        // This method signature is provided for consistency with the validation pattern
-        return problems.AsReadOnly();
+        return Array.Empty<string>();
     }
 
     /// <summary>
@@ -33,15 +28,13 @@ public static class PriceMonitoringServiceTestsValidation
     /// </summary>
     /// <param name="value">The instance to check</param>
     /// <returns>True if valid; otherwise, false</returns>
-    public static bool IsValid(this PriceMonitoringServiceTests value)
-    {
-        return Validate(value).Count == 0;
-    }
+    public static bool IsValid(this PriceMonitoringServiceTests value) => Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that the PriceMonitoringServiceTests instance is valid, throwing an exception if not
     /// </summary>
     /// <param name="value">The instance to validate</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null</exception>
     /// <exception cref="ArgumentException">Thrown when the instance is invalid</exception>
     public static void EnsureValid(this PriceMonitoringServiceTests value)
     {
@@ -61,6 +54,7 @@ public static class PriceMonitoringServiceTestsValidation
     /// </summary>
     /// <param name="price">The price to validate</param>
     /// <returns>A list of validation problems (empty if valid)</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="price"/> is null</exception>
     public static IReadOnlyList<string> Validate(this Price price)
     {
         ArgumentNullException.ThrowIfNull(price);
@@ -133,6 +127,7 @@ public static class PriceMonitoringServiceTestsValidation
     /// </summary>
     /// <param name="settings">The AppSettings to validate</param>
     /// <returns>A list of validation problems (empty if valid)</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="settings"/> is null</exception>
     public static IReadOnlyList<string> Validate(this AppSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
@@ -187,25 +182,20 @@ public static class PriceMonitoringServiceTestsValidation
     /// </summary>
     /// <param name="price">The price to check</param>
     /// <returns>True if valid; otherwise, false</returns>
-    public static bool IsValid(this Price price)
-    {
-        return Validate(price).Count == 0;
-    }
+    public static bool IsValid(this Price price) => Validate(price).Count == 0;
 
     /// <summary>
     /// Checks if AppSettings is valid
     /// </summary>
     /// <param name="settings">The settings to check</param>
     /// <returns>True if valid; otherwise, false</returns>
-    public static bool IsValid(this AppSettings settings)
-    {
-        return Validate(settings).Count == 0;
-    }
+    public static bool IsValid(this AppSettings settings) => Validate(settings).Count == 0;
 
     /// <summary>
     /// Ensures that a Price instance is valid, throwing an exception if not
     /// </summary>
     /// <param name="price">The price to validate</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="price"/> is null</exception>
     /// <exception cref="ArgumentException">Thrown when the price is invalid</exception>
     public static void EnsureValid(this Price price)
     {
@@ -224,6 +214,7 @@ public static class PriceMonitoringServiceTestsValidation
     /// Ensures that AppSettings is valid, throwing an exception if not
     /// </summary>
     /// <param name="settings">The settings to validate</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="settings"/> is null</exception>
     /// <exception cref="ArgumentException">Thrown when the settings are invalid</exception>
     public static void EnsureValid(this AppSettings settings)
     {
