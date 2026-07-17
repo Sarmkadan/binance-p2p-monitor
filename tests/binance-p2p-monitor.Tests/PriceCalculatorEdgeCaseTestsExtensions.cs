@@ -17,33 +17,30 @@ public static class PriceCalculatorEdgeCaseTestsExtensions
     /// <param name="_">The test instance (unused parameter for extension method).</param>
     /// <returns>A TheoryData entry for xUnit test parameterization.</returns>
     public static TheoryData<decimal, decimal, decimal> CreatePercentageChangeTestData(
-        this PriceCalculatorEdgeCaseTests _)
-    {
-        var data = new TheoryData<decimal, decimal, decimal>();
+        this PriceCalculatorEdgeCaseTests _) =>
+        new()
+        {
+            // Zero original price scenarios
+            { 0m, 0m, 0m },
+            { 0m, 100m, 0m },
+            { 0m, -100m, 0m },
 
-        // Zero original price scenarios
-        data.Add(0m, 0m, 0m);
-        data.Add(0m, 100m, 0m);
-        data.Add(0m, -100m, 0m);
+            // Zero new price scenarios
+            { 100m, 0m, -100m },
+            { 50m, 0m, -100m },
 
-        // Zero new price scenarios
-        data.Add(100m, 0m, -100m);
-        data.Add(50m, 0m, -100m);
+            // Large values
+            { decimal.MaxValue, decimal.MaxValue, 0m },
+            { 1000000m, 2000000m, 100m },
 
-        // Large values
-        data.Add(decimal.MaxValue, decimal.MaxValue, 0m);
-        data.Add(1000000m, 2000000m, 100m);
+            // Very small values
+            { 0.0001m, 0.0002m, 100m },
+            { 0.0001m, 0.0001m, 0m },
 
-        // Very small values
-        data.Add(0.0001m, 0.0002m, 100m);
-        data.Add(0.0001m, 0.0001m, 0m);
-
-        // Negative values
-        data.Add(-100m, -50m, 50m);
-        data.Add(-50m, -100m, -100m);
-
-        return data;
-    }
+            // Negative values
+            { -100m, -50m, 50m },
+            { -50m, -100m, -100m }
+        };
 
     /// <summary>
     /// Creates a test case for spread calculations with edge cases.
@@ -51,32 +48,29 @@ public static class PriceCalculatorEdgeCaseTestsExtensions
     /// <param name="_">The test instance (unused parameter for extension method).</param>
     /// <returns>A TheoryData entry for xUnit test parameterization.</returns>
     public static TheoryData<decimal, decimal, decimal> CreateSpreadTestData(
-        this PriceCalculatorEdgeCaseTests _)
-    {
-        var data = new TheoryData<decimal, decimal, decimal>();
+        this PriceCalculatorEdgeCaseTests _) =>
+        new()
+        {
+            // Zero buy price
+            { 0m, 0m, 0m },
+            { 0m, 100m, 0m },
+            { 0m, -100m, 0m },
 
-        // Zero buy price
-        data.Add(0m, 0m, 0m);
-        data.Add(0m, 100m, 0m);
-        data.Add(0m, -100m, 0m);
+            // Zero sell price
+            { 100m, 0m, -100m },
+            { -100m, 0m, 100m },
 
-        // Zero sell price
-        data.Add(100m, 0m, -100m);
-        data.Add(-100m, 0m, 100m);
+            // Equal prices
+            { 100m, 100m, 0m },
+            { -50m, -50m, 0m },
 
-        // Equal prices
-        data.Add(100m, 100m, 0m);
-        data.Add(-50m, -50m, 0m);
+            // Large spreads
+            { 100m, 200m, 100m },
+            { 1000m, 500m, -50m },
 
-        // Large spreads
-        data.Add(100m, 200m, 100m);
-        data.Add(1000m, 500m, -50m);
-
-        // Very small spreads
-        data.Add(100.0001m, 100.0002m, 0.0001m);
-
-        return data;
-    }
+            // Very small spreads
+            { 100.0001m, 100.0002m, 0.0001m }
+        };
 
     /// <summary>
     /// Creates a test case for moving average calculations with edge cases.
@@ -84,59 +78,58 @@ public static class PriceCalculatorEdgeCaseTestsExtensions
     /// <param name="_">The test instance (unused parameter for extension method).</param>
     /// <returns>A TheoryData entry for xUnit test parameterization.</returns>
     public static TheoryData<int, decimal> CreateMovingAverageTestData(
-        this PriceCalculatorEdgeCaseTests _)
-    {
-        var data = new TheoryData<int, decimal>();
+        this PriceCalculatorEdgeCaseTests _) =>
+        new()
+        {
+            // Zero period
+            { 0, 0m },
 
-        // Zero period
-        data.Add(0, 0m);
+            // Negative periods
+            { -1, 0m },
+            { -100, 0m },
 
-        // Negative periods
-        data.Add(-1, 0m);
-        data.Add(-100, 0m);
+            // Period larger than count
+            { 10, 2m }, // (1+2+3)/3 = 2
+            { 100, 2m }, // Same as above
 
-        // Period larger than count
-        data.Add(10, 2m); // (1+2+3)/3 = 2
-        data.Add(100, 2m); // Same as above
-
-        // Single item
-        data.Add(1, 1m);
-        data.Add(5, 1m);
-
-        return data;
-    }
+            // Single item
+            { 1, 1m },
+            { 5, 1m }
+        };
 
     /// <summary>
     /// Creates a test case for standard deviation calculations with edge cases.
     /// </summary>
     /// <param name="_">The test instance (unused parameter for extension method).</param>
     /// <returns>A TheoryData entry for xUnit test parameterization.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if the input is null.</exception>
     public static TheoryData<string, decimal> CreateStandardDeviationTestData(
         this PriceCalculatorEdgeCaseTests _)
     {
-        var data = new TheoryData<string, decimal>();
+        ArgumentNullException.ThrowIfNull(_);
 
-        // Empty collection
-        data.Add(string.Empty, 0m);
+        return new()
+        {
+            // Empty collection
+            { string.Empty, 0m },
 
-        // Single item
-        data.Add("100", 0m);
-        data.Add("50", 0m);
+            // Single item
+            { "100", 0m },
+            { "50", 0m },
 
-        // All same values
-        data.Add("100,100,100", 0m);
-        data.Add("0,0,0,0", 0m);
+            // All same values
+            { "100,100,100", 0m },
+            { "0,0,0,0", 0m },
 
-        // Two items
-        data.Add("1,3", 1m);
+            // Two items
+            { "1,3", 1m },
 
-        // Negative values
-        data.Add("-1,-3,-5", 2m);
+            // Negative values
+            { "-1,-3,-5", 2m },
 
-        // Large values
-        data.Add("1000,2000,3000", 816.496580927726m);
-
-        return data;
+            // Large values
+            { "1000,2000,3000", 816.496580927726m }
+        };
     }
 
     /// <summary>
@@ -144,6 +137,7 @@ public static class PriceCalculatorEdgeCaseTestsExtensions
     /// </summary>
     /// <param name="test">The test instance.</param>
     /// <param name="action">The action that should throw.</param>
+    /// <exception cref="ArgumentNullException">Thrown if test is null.</exception>
     public static void ShouldThrowWhenPricesIsNull(
         this PriceCalculatorEdgeCaseTests test,
         Action action) =>
@@ -156,6 +150,7 @@ public static class PriceCalculatorEdgeCaseTestsExtensions
     /// <param name="test">The test instance.</param>
     /// <param name="prices">The prices collection.</param>
     /// <param name="expectedResult">The expected result.</param>
+    /// <exception cref="ArgumentNullException">Thrown if prices is null.</exception>
     public static void ShouldReturnZeroForEmptyCollection(
         this PriceCalculatorEdgeCaseTests test,
         IEnumerable<decimal> prices,
