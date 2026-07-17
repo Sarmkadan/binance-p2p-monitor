@@ -20,12 +20,9 @@ public static class PriceUpdatedEventExtensions
     {
         ArgumentNullException.ThrowIfNull(@event);
 
-        if (@event.PreviousBuyPrice == 0)
-        {
-            return 0;
-        }
-
-        return ((@event.BuyPrice - @event.PreviousBuyPrice) / @event.PreviousBuyPrice) * 100;
+        return @event.PreviousBuyPrice == 0
+            ? 0
+            : ((@event.BuyPrice - @event.PreviousBuyPrice) / @event.PreviousBuyPrice) * 100;
     }
 
     /// <summary>
@@ -38,12 +35,9 @@ public static class PriceUpdatedEventExtensions
     {
         ArgumentNullException.ThrowIfNull(@event);
 
-        if (@event.PreviousSellPrice == 0)
-        {
-            return 0;
-        }
-
-        return ((@event.SellPrice - @event.PreviousSellPrice) / @event.PreviousSellPrice) * 100;
+        return @event.PreviousSellPrice == 0
+            ? 0
+            : ((@event.SellPrice - @event.PreviousSellPrice) / @event.PreviousSellPrice) * 100;
     }
 
     /// <summary>
@@ -76,7 +70,7 @@ public static class PriceUpdatedEventExtensions
     /// <param name="event">The price updated event.</param>
     /// <returns>A string in format "{Asset}/{Fiat}".</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="event"/> is null.</exception>
-    public static string GetCurrencyPair(this PriceUpdatedEvent @event)
+    public static string GetPair(this PriceUpdatedEvent @event)
     {
         ArgumentNullException.ThrowIfNull(@event);
         return $"{@event.Asset}/{@event.Fiat}";
