@@ -39,6 +39,7 @@ public static class ApiResponseJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized API response, or null if the JSON is invalid.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is invalid and cannot be deserialized.</exception>
     public static ApiResponse? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -95,6 +96,7 @@ public static class ApiResponseJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>The deserialized API response, or null if the JSON is invalid.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+    /// <exception cref="JsonException">Thrown when the JSON is invalid and cannot be deserialized.</exception>
     public static ApiResponse<T>? FromJson<T>(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -112,7 +114,7 @@ public static class ApiResponseJsonExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static bool TryFromJson<T>(string json, out ApiResponse<T>? value)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        ArgumentNullException.ThrowIfNull(json);
 
         try
         {
