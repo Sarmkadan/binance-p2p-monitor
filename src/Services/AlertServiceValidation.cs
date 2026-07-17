@@ -12,29 +12,35 @@ namespace BinanceP2pMonitor.Services;
 public static class AlertServiceValidation
 {
     private static readonly FieldInfo _alertRepositoryField = typeof(AlertService).GetField(
-        "_alertRepository", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot find _alertRepository field");
+        "_alertRepository", BindingFlags.NonPublic | BindingFlags.Instance)
+        ?? throw new InvalidOperationException("Cannot find _alertRepository field in AlertService");
 
     private static readonly FieldInfo _settingsField = typeof(AlertService).GetField(
-        "_settings", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot find _settings field");
+        "_settings", BindingFlags.NonPublic | BindingFlags.Instance)
+        ?? throw new InvalidOperationException("Cannot find _settings field in AlertService");
 
     private static readonly FieldInfo _loggerField = typeof(AlertService).GetField(
-        "_logger", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot find _logger field");
+        "_logger", BindingFlags.NonPublic | BindingFlags.Instance)
+        ?? throw new InvalidOperationException("Cannot find _logger field in AlertService");
 
     private static readonly FieldInfo _telegramNotificationClientField = typeof(AlertService).GetField(
-        "_telegramNotificationClient", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot find _telegramNotificationClient field");
+        "_telegramNotificationClient", BindingFlags.NonPublic | BindingFlags.Instance)
+        ?? throw new InvalidOperationException("Cannot find _telegramNotificationClient field in AlertService");
 
     private static readonly FieldInfo _webhookNotificationClientField = typeof(AlertService).GetField(
-        "_webhookNotificationClient", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot find _webhookNotificationClient field");
+        "_webhookNotificationClient", BindingFlags.NonPublic | BindingFlags.Instance)
+        ?? throw new InvalidOperationException("Cannot find _webhookNotificationClient field in AlertService");
 
     private static readonly FieldInfo _isDisposedField = typeof(AlertService).GetField(
-        "_isDisposed", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot find _isDisposed field");
+        "_isDisposed", BindingFlags.NonPublic | BindingFlags.Instance)
+        ?? throw new InvalidOperationException("Cannot find _isDisposed field in AlertService");
 
     /// <summary>
-    /// Validates an AlertService instance for common issues
+    /// Validates an AlertService instance for common issues including null dependencies and invalid configuration.
     /// </summary>
-    /// <param name="value">The AlertService instance to validate</param>
-    /// <returns>A list of validation error messages; empty if valid</returns>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+    /// <param name="value">The AlertService instance to validate.</param>
+    /// <returns>A list of validation error messages; empty if the service is valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static IReadOnlyList<string> Validate(this AlertService value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -53,16 +59,23 @@ public static class AlertServiceValidation
         }
         else
         {
-            // Validate settings values
-            var settings = (AppSettings)_settingsField.GetValue(value)!;
-            if (settings.MaxAlertsPerUser <= 0)
+            // Validate settings values with pattern matching for safety
+            var settings = _settingsField.GetValue(value);
+            if (settings is AppSettings appSettings)
             {
-                problems.Add($"Settings.MaxAlertsPerUser must be positive, got {settings.MaxAlertsPerUser}");
-            }
+                if (appSettings.MaxAlertsPerUser <= 0)
+                {
+                    problems.Add($"Settings.MaxAlertsPerUser must be positive, got {appSettings.MaxAlertsPerUser}");
+                }
 
-            if (settings.AlertCooldownMinutes < 0)
+                if (appSettings.AlertCooldownMinutes < 0)
+                {
+                    problems.Add($"Settings.AlertCooldownMinutes cannot be negative, got {appSettings.AlertCooldownMinutes}");
+                }
+            }
+            else
             {
-                problems.Add($"Settings.AlertCooldownMinutes cannot be negative, got {settings.AlertCooldownMinutes}");
+                problems.Add("Settings field does not contain a valid AppSettings instance");
             }
         }
 
@@ -81,7 +94,7 @@ public static class AlertServiceValidation
             problems.Add("Webhook notification client (_webhookNotificationClient) cannot be null");
         }
 
-        // Validate disposal state
+        // Validate disposal state with explicit cast for clarity
         var isDisposed = (bool)_isDisposedField.GetValue(value)!;
         if (isDisposed)
         {
@@ -92,22 +105,20 @@ public static class AlertServiceValidation
     }
 
     /// <summary>
-    /// Determines whether an AlertService instance is valid
+    /// Determines whether an AlertService instance is valid.
     /// </summary>
-    /// <param name="value">The AlertService instance to check</param>
-    /// <returns>True if the service is valid; otherwise, false</returns>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+    /// <param name="value">The AlertService instance to check.</param>
+    /// <returns>True if the service is valid; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this AlertService value)
-    {
-        return Validate(value).Count == 0;
-    }
+        => Validate(value).Count == 0;
 
     /// <summary>
-    /// Ensures that an AlertService instance is valid, throwing an exception if not
+    /// Ensures that an AlertService instance is valid, throwing an <see cref="ArgumentException"/> if validation fails.
     /// </summary>
-    /// <param name="value">The AlertService instance to validate</param>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
-    /// <exception cref="ArgumentException">Thrown if the service instance has validation problems</exception>
+    /// <param name="value">The AlertService instance to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if the service instance has validation problems.</exception>
     public static void EnsureValid(this AlertService value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -117,7 +128,8 @@ public static class AlertServiceValidation
         if (problems.Count > 0)
         {
             throw new ArgumentException(
-                $"AlertService validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
+                $"AlertService validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}",
+                nameof(value));
         }
     }
 }
