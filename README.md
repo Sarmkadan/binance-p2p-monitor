@@ -96,6 +96,76 @@ string genericJson = genericResponse.ToJson();
 ApiResponse<string[]>? genericDeserialized = ApiResponseJsonExtensions.FromJson<string[]>(genericJson);
 ```
 
+## PriceUpdatedEventExtensions
+
+The `PriceUpdatedEventExtensions` class provides extension methods for working with `PriceUpdatedEvent` objects, offering convenient ways to analyze price updates, calculate changes, and check market conditions. These extensions help monitor price movements, spread analysis, and offer availability tracking.
+
+```csharp
+using BinanceP2pMonitor.Events;
+using System;
+
+// Create a price update event
+var priceEvent = new PriceUpdatedEvent
+{
+    Asset = "USDT",
+    Fiat = "USDT",
+    BuyPrice = 1.005m,
+    SellPrice = 1.01m,
+    PreviousBuyPrice = 1.00m,
+    PreviousSellPrice = 1.005m,
+    BuyOfferCount = 5,
+    SellOfferCount = 3
+};
+
+// Example 1: Get buy price change percentage
+decimal buyChange = priceEvent.GetBuyPriceChangePercentage();
+Console.WriteLine($"Buy price change: {buyChange:F2}%"); // 0.50%
+
+// Example 2: Get sell price change percentage
+decimal sellChange = priceEvent.GetSellPriceChangePercentage();
+Console.WriteLine($"Sell price change: {sellChange:F2}%"); // 0.50%
+
+// Example 3: Check if buy price increased
+bool buyIncreased = priceEvent.HasBuyPriceIncreased();
+Console.WriteLine($"Buy price increased: {buyIncreased}"); // True
+
+// Example 4: Check if sell price increased
+bool sellIncreased = priceEvent.HasSellPriceIncreased();
+Console.WriteLine($"Sell price increased: {sellIncreased}"); // True
+
+// Example 5: Get the trading pair
+string pair = priceEvent.GetPair();
+Console.WriteLine($"Trading pair: {pair}"); // "USDT/USDT"
+
+// Example 6: Calculate price spread
+decimal spread = priceEvent.GetPriceSpread();
+Console.WriteLine($"Price spread: {spread:F4}"); // 0.0050
+
+// Example 7: Check if spread exceeds threshold
+bool spreadTooHigh = priceEvent.HasSpreadExceededThreshold(0.01m);
+Console.WriteLine($"Spread too high: {spreadTooHigh}"); // False
+
+// Example 8: Check for active buy offers
+bool hasBuyOffers = priceEvent.HasActiveBuyOffers();
+Console.WriteLine($"Has buy offers: {hasBuyOffers}"); // True
+
+// Example 9: Check for active sell offers
+bool hasSellOffers = priceEvent.HasActiveSellOffers();
+Console.WriteLine($"Has sell offers: {hasSellOffers}"); // True
+
+// Example 10: Get formatted offer counts
+string offerCounts = priceEvent.GetOfferCountsSummary();
+Console.WriteLine($"Offer counts: {offerCounts}"); // "Buy: 5 | Sell: 3"
+
+// Example 11: Create a deep copy
+var priceEventCopy = priceEvent.DeepCopy();
+Console.WriteLine($"Original and copy are equal: {priceEvent.Asset == priceEventCopy.Asset}"); // True
+
+// Example 12: Check for significant price movement
+bool significantMovement = priceEvent.HasSignificantPriceMovement(1.0m);
+Console.WriteLine($"Significant movement (>1%): {significantMovement}"); // False
+```
+
 ## RetryPolicyExtensions
 
 `RetryPolicyExtensions` adds convenient helpers for executing asynchronous operations with a `RetryPolicy`. The extensions support both value‑returning and void‑returning tasks, optional cancellation tokens, and provide a method to check whether an exception is considered transient and therefore retryable.
