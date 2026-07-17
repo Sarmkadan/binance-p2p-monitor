@@ -11,6 +11,11 @@ namespace BinanceP2pMonitor.Tests
         /// <summary>
         /// Validates a <see cref="PriceRepositoryTests"/> instance and returns a list of human-readable problems.
         /// </summary>
+        /// <remarks>
+        /// PriceRepositoryTests is a test fixture class that only contains private fields and test methods.
+        /// It implements <see cref="IDisposable"/> for proper resource cleanup, but has no public state to validate.
+        /// Therefore, this validation always returns an empty list indicating the instance is valid.
+        /// </remarks>
         /// <param name="value">The instance to validate.</param>
         /// <returns>An empty list if valid; otherwise, a list of validation error messages.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
@@ -18,13 +23,7 @@ namespace BinanceP2pMonitor.Tests
         {
             ArgumentNullException.ThrowIfNull(value);
 
-            var errors = new List<string>();
-
-            // PriceRepositoryTests is a test fixture class with only private fields and test methods
-            // There are no public members to validate beyond the object itself
-            // The class implements IDisposable which is properly implemented
-
-            return errors.AsReadOnly();
+                return Array.Empty<string>();
         }
 
         /// <summary>
@@ -33,17 +32,14 @@ namespace BinanceP2pMonitor.Tests
         /// <param name="value">The instance to check.</param>
         /// <returns>True if valid; otherwise, false.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
-        public static bool IsValid(this PriceRepositoryTests value)
-        {
-            return Validate(value).Count == 0;
-        }
+        public static bool IsValid(this PriceRepositoryTests value) => Validate(value).Count == 0;
 
         /// <summary>
         /// Ensures that a <see cref="PriceRepositoryTests"/> instance is valid, throwing an <see cref="ArgumentException"/> if not.
         /// </summary>
         /// <param name="value">The instance to validate.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
-        /// <exception cref="ArgumentException">Thrown if the instance is not valid, containing a list of validation errors.</exception>
+        /// <exception cref="ArgumentException">Thrown if the instance is not valid.</exception>
         public static void EnsureValid(this PriceRepositoryTests value)
         {
             ArgumentNullException.ThrowIfNull(value);
@@ -52,7 +48,7 @@ namespace BinanceP2pMonitor.Tests
             if (errors.Count > 0)
             {
                 throw new ArgumentException(
-                    $"PriceRepositoryTests instance is not valid. Errors: {string.Join("; ", errors)}");
+                    "PriceRepositoryTests instance is not valid.");
             }
         }
     }
