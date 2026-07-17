@@ -40,7 +40,7 @@ public static class CommandContextJsonExtensions
     /// Deserializes a JSON string into a <see cref="CommandContext"/> instance.
     /// </summary>
     /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized command context, or null if the JSON is invalid.</returns>
+    /// <returns>The deserialized command context if successful; otherwise, null.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
     public static CommandContext? FromJson(string json)
     {
