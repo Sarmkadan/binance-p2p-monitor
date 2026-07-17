@@ -2002,6 +2002,43 @@ public void CalculateSpread_BuyAndSellPrices_ReturnsCorrectSpreadPercent()
     result.Should().BeApproximately(0.0195m, 0.0001m); // (50010.25 - 50000.50) / 50000.50 * 100
 }
 
+## HistoricalSpreadAnalysisServiceTests
+
+The `HistoricalSpreadAnalysisServiceTests` class contains unit tests for the `HistoricalSpreadAnalysisService` class, verifying its statistical spread analysis functionality. These tests ensure the service accurately detects statistical anomalies, calculates spread percentiles, and handles rolling window averages, covering various scenarios such as valid historical data, missing records, and invalid input parameters.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using Xunit;
+using System.Threading.Tasks;
+
+// Example showcasing the invocation of test methods from HistoricalSpreadAnalysisServiceTests
+public class SpreadAnalysisTests : HistoricalSpreadAnalysisServiceTests
+{
+    [Fact]
+    public async Task RunHistoricalSpreadAnalysisTests()
+    {
+        // These tests validate the core statistical analysis logic of the HistoricalSpreadAnalysisService
+        await AnalyzeHistoricalSpreadAsync_ShouldReturnNull_WhenNoHistory();
+        await AnalyzeHistoricalSpreadAsync_ShouldReturnReport_WhenHistoryExists();
+        
+        // These tests ensure proper anomaly detection and statistical calculations
+        await DetectStatisticalAlertsAsync_ShouldReturnAnomalies_WhenZScoreExceedsThreshold();
+        await DetectStatisticalAlertsAsync_ShouldNotReturnAnomalies_WhenZScoreIsBelowThreshold();
+        
+        // These tests verify percentile calculations and edge cases
+        await GetSpreadPercentileAsync_ShouldReturnCorrectPercentile();
+        await GetSpreadPercentileAsync_ShouldThrowArgumentOutOfRangeException_ForInvalidPercentile();
+        
+        // This test validates rolling window averages with empty data
+        await GetRollingWindowAveragesAsync_ShouldReturnEmpty_WhenNoHistory();
+    }
+}
+```
+
+    var result = PriceCalculator.CalculateSpread(50000.50m, 50010.25m);
+    result.Should().BeApproximately(0.0195m, 0.0001m); // (50010.25 - 50000.50) / 50000.50 * 100
+}
+
 [Fact]
 public void CalculateSpread_ZeroBuyPrice_ReturnsZero()
 {
