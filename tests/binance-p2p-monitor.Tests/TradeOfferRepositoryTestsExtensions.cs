@@ -12,16 +12,23 @@ namespace BinanceP2pMonitor.Tests;
 /// <summary>
 /// Extension methods for <see cref="TradeOfferRepositoryTests"/> to provide additional test utilities.
 /// </summary>
-public static class TradeOfferRepositoryTestsExtensions
+/// <remarks>
+/// This class provides helper methods for creating and verifying test trade offers in the repository.
+/// All methods are designed to work with the test infrastructure and follow C# best practices.
+/// </remarks>
 {
-    private static TradeOfferRepository GetTradeOfferRepository(this TradeOfferRepositoryTests tests)
+private static TradeOfferRepository GetTradeOfferRepository(this TradeOfferRepositoryTests tests)
     {
         ArgumentNullException.ThrowIfNull(tests);
 
         var field = typeof(TradeOfferRepositoryTests).GetField(
             "_tradeOfferRepository",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        return (TradeOfferRepository)field!.GetValue(tests)!;
+
+        ArgumentNullException.ThrowIfNull(field);
+
+        var value = field.GetValue(tests);
+        return (TradeOfferRepository)value!;
     }
 
     /// <summary>
@@ -32,7 +39,7 @@ public static class TradeOfferRepositoryTestsExtensions
     /// <param name="asset">Optional asset symbol. Defaults to "USDT".</param>
     /// <param name="fiat">Optional fiat currency. Defaults to "USD".</param>
     /// <param name="tradeType">Optional trade type. Defaults to <see cref="TradeType.Buy"/>.</param>
-    /// <param name="price">Optional price. Defaults to 1.0m.</param>
+    /// <param name="price">Optional price in the specified currency. Defaults to 1.0m.</param>
     /// <param name="isActive">Optional active status. Defaults to true.</param>
     /// <returns>The created trade offer with populated ID.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="tests"/> is null.</exception>
@@ -78,7 +85,7 @@ public static class TradeOfferRepositoryTestsExtensions
     /// <param name="count">Number of offers to create. Must be positive.</param>
     /// <param name="asset">Optional asset symbol. Defaults to "USDT".</param>
     /// <param name="fiat">Optional fiat currency. Defaults to "USD".</param>
-    /// <param name="priceRange">Optional price range. Defaults to 1.0m to 2.0m.</param>
+    /// <param name="priceRange">Optional price range in the specified currency. Defaults to a range from 1.0m to 2.0m.</param>
     /// <returns>Collection of created trade offers with populated IDs.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="tests"/> is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="count"/> is not positive.</exception>
@@ -133,7 +140,8 @@ public static class TradeOfferRepositoryTestsExtensions
     /// </summary>
     /// <param name="actual">The actual trade offer.</param>
     /// <param name="expected">The expected trade offer values.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="actual"/> or <paramref name="expected"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="actual"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="expected"/> is null.</exception>
     public static void ShouldMatchExpectedValues(
         this TradeOffer actual,
         TradeOffer expected)
@@ -162,7 +170,7 @@ public static class TradeOfferRepositoryTestsExtensions
     /// Gets the count of active trade offers in the repository.
     /// </summary>
     /// <param name="tests">The test instance.</param>
-    /// <returns>The count of active trade offers.</returns>
+    /// <returns>The count of active trade offers in the repository.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="tests"/> is null.</exception>
     public static async Task<int> GetActiveOffersCountAsync(this TradeOfferRepositoryTests tests)
     {
