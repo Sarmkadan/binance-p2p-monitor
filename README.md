@@ -694,3 +694,100 @@ foreach (var (buy, sell, expected) in test.GetSpreadEdgeCases())
     result.Should().BeApproximately(expected, 0.0001m);
 }
 ```
+
+## PriceMonitoringServiceTestsValidation
+
+The `PriceMonitoringServiceTestsValidation` class provides validation helpers for PriceMonitoringServiceTests to ensure test data integrity. It contains extension methods for validating PriceMonitoringServiceTests instances, Price objects, and AppSettings objects, returning lists of validation problems or boolean validity checks.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Configuration;
+using BinanceP2pMonitor.Models;
+
+// Example 1: Validate a PriceMonitoringServiceTests instance
+var tests = new PriceMonitoringServiceTests();
+// Initialize tests properties as needed for your test scenario
+var validationErrors = tests.Validate();
+if (validationErrors.Count == 0)
+{
+    Console.WriteLine("Tests configuration is valid!");
+}
+else
+{
+    Console.WriteLine("Validation errors:");
+    foreach (var error in validationErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Example 2: Check if tests configuration is valid without collecting errors
+bool isValid = tests.IsValid();
+Console.WriteLine($"Tests configuration is valid: {isValid}");
+
+// Example 3: Ensure tests configuration is valid (throws exception if invalid)
+try
+{
+    tests.EnsureValid();
+    Console.WriteLine("Tests configuration passed validation!");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Validation failed: {ex.Message}");
+}
+
+// Example 4: Validate a Price object
+var price = new Price
+{
+    Asset = "USDT",
+    Fiat = "USD",
+    BuyPrice = 1.0m,
+    SellPrice = 1.01m,
+    BuyChangePercent = 0.5m,
+    SellChangePercent = 0.5m,
+    Timestamp = DateTime.UtcNow,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+var priceErrors = price.Validate();
+if (priceErrors.Count == 0)
+{
+    Console.WriteLine("Price object is valid!");
+}
+else
+{
+    Console.WriteLine("Price validation errors:");
+    foreach (var error in priceErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+
+// Example 5: Validate AppSettings
+var settings = new AppSettings
+{
+    DatabaseConnectionString = "Server=localhost;Database=test;",
+    MonitoringIntervalSeconds = 30,
+    AlertCooldownMinutes = 5,
+    MaxAlertsPerUser = 10,
+    HistoryRetentionDays = 30,
+    SpreadAnalysisHistoryHours = 24,
+    DefaultPriceChangeThreshold = 0.5m,
+    DefaultSpreadThreshold = 0.3m
+};
+
+var settingsErrors = settings.Validate();
+if (settingsErrors.Count == 0)
+{
+    Console.WriteLine("AppSettings is valid!");
+}
+else
+{
+    Console.WriteLine("AppSettings validation errors:");
+    foreach (var error in settingsErrors)
+    {
+        Console.WriteLine($"- {error}");
+    }
+}
+```
