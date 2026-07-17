@@ -166,6 +166,48 @@ bool significantMovement = priceEvent.HasSignificantPriceMovement(1.0m);
 Console.WriteLine($"Significant movement (>1%): {significantMovement}"); // False
 ```
 
+## BacktestOptionsExtensions
+
+The `BacktestOptionsExtensions` class provides extension methods for the `BacktestOptions` class, offering convenient calculations and decision logic for backtesting scenarios. These extensions help determine position sizing, stop loss/take profit triggers, and transaction costs based on configured thresholds and percentages.
+
+```csharp
+using BinanceP2pMonitor.Backtesting;
+using System;
+
+// Example backtest options configuration
+var options = new BacktestOptions
+{
+    InitialEquity = 10000m,
+    PositionSizeFraction = 0.1m, // 10% of equity
+    EntrySpreadThreshold = 0.5m, // 0.5% entry threshold
+    ExitSpreadThreshold = 0.2m,  // 0.2% exit threshold
+    StopLossPercent = 0.1m,      // 0.1% stop loss
+    TakeProfitPercent = 0.3m,     // 0.3% take profit
+    TransactionCostPercent = 0.1m // 0.1% transaction cost
+};
+
+// Calculate maximum position size based on initial equity and position size fraction
+decimal maxPositionSize = options.CalculateMaxPositionSize();
+Console.WriteLine($"Maximum position size: {maxPositionSize:C}"); // $1000.00
+
+// Determine if stop loss should trigger based on current spread
+bool shouldStopLoss = options.ShouldTriggerStopLoss(0.3m); // current spread = 0.3%
+Console.WriteLine($"Should trigger stop loss: {shouldStopLoss}"); // False (0.3 > 0.5 - 0.1)
+
+// Determine if take profit should trigger based on current spread
+bool shouldTakeProfit = options.ShouldTriggerTakeProfit(0.6m); // current spread = 0.6%
+Console.WriteLine($"Should trigger take profit: {shouldTakeProfit}"); // True (0.6 >= 0.2 + 0.3)
+
+// Check if either stop loss or take profit should trigger
+bool shouldExit = options.ShouldTriggerStopLossOrTakeProfit(0.6m);
+Console.WriteLine($"Should exit position: {shouldExit}"); // True
+
+// Calculate transaction cost for a position
+decimal positionSize = 500m;
+decimal transactionCost = options.CalculateTransactionCost(positionSize);
+Console.WriteLine($"Transaction cost for {positionSize:C}: {transactionCost:C}"); // $0.50
+```
+
 ## RetryPolicyExtensions
 
 `RetryPolicyExtensions` adds convenient helpers for executing asynchronous operations with a `RetryPolicy`. The extensions support both value‑returning and void‑returning tasks, optional cancellation tokens, and provide a method to check whether an exception is considered transient and therefore retryable.
