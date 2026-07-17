@@ -50,6 +50,52 @@ Console.WriteLine($"Valid ticker: {isValidTicker}");
 
 The `LoggingExtensionsValidation` class provides validation helpers for logging configuration and parameters to ensure correct usage before actual logging occurs. It contains extension methods for validating `ILoggingBuilder`, `ILogger`, and various logging parameters, returning lists of validation problems or boolean validity checks.
 
+## ApiResponseJsonExtensions
+
+The `ApiResponseJsonExtensions` class provides JSON serialization and deserialization extensions for `ApiResponse` and `ApiResponse<T>` types. It simplifies converting API response objects to/from JSON strings with camelCase property naming and configurable formatting. The extensions handle both generic and non-generic response types.
+
+```csharp
+using BinanceP2pMonitor.Infrastructure;
+using System;
+
+// Example API response data
+var response = new ApiResponse
+{
+    Code = "000000",
+    Message = "Success",
+    Timestamp = DateTime.UtcNow,
+    Data = null
+};
+
+// Serialize to JSON string
+string json = response.ToJson(); // Compact JSON
+string prettyJson = response.ToJson(indented: true); // Pretty-printed JSON
+
+// Deserialize from JSON string
+ApiResponse? deserialized = ApiResponseJsonExtensions.FromJson(json);
+
+// Try to deserialize with error handling
+if (ApiResponseJsonExtensions.TryFromJson(json, out var tryDeserialized))
+{
+    Console.WriteLine($"Successfully deserialized: {tryDeserialized?.Code}");
+}
+
+// Example with generic ApiResponse<T>
+var genericResponse = new ApiResponse<string[]>
+{
+    Code = "000000",
+    Message = "Success",
+    Timestamp = DateTime.UtcNow,
+    Data = new[] { "BTC", "USDT", "ETH" }
+};
+
+// Serialize generic response
+string genericJson = genericResponse.ToJson();
+
+// Deserialize generic response
+ApiResponse<string[]>? genericDeserialized = ApiResponseJsonExtensions.FromJson<string[]>(genericJson);
+```
+
 ```csharp
 using BinanceP2pMonitor.Infrastructure;
 using Microsoft.Extensions.Logging;
