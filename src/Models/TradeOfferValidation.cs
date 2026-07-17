@@ -76,7 +76,7 @@ public static class TradeOfferValidation
             errors.Add("MaxAmount must be greater than or equal to MinAmount.");
         }
 
-        if (value.TraderRating < 0m || value.TraderRating > 100m)
+        if (value.TraderRating is < 0m or > 100m)
         {
             errors.Add("TraderRating must be between 0 and 100 inclusive.");
         }
@@ -87,27 +87,20 @@ public static class TradeOfferValidation
         }
 
         // Validate date properties
-        var defaultDate = default(DateTime);
-        if (value.Timestamp == defaultDate)
+        if (value.Timestamp == default)
         {
             errors.Add("Timestamp must be set to a valid DateTime.");
         }
 
-        if (value.CreatedAt == defaultDate)
+        if (value.CreatedAt == default)
         {
             errors.Add("CreatedAt must be set to a valid DateTime.");
         }
 
-        if (value.UpdatedAt == defaultDate)
+        if (value.UpdatedAt == default)
         {
             errors.Add("UpdatedAt must be set to a valid DateTime.");
         }
-
-        // Validate enum properties
-        // TradeType is a value type, no validation needed beyond being set
-
-        // Validate boolean properties
-        // IsActive is a value type, no validation needed
 
         return errors.AsReadOnly();
     }
@@ -118,10 +111,7 @@ public static class TradeOfferValidation
     /// <param name="value">The trade offer to check.</param>
     /// <returns>True if the offer is valid; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static bool IsValid(this TradeOffer value)
-    {
-        return Validate(value).Count == 0;
-    }
+    public static bool IsValid(this TradeOffer value) => Validate(value).Count == 0;
 
     /// <summary>
     /// Ensures that a <see cref="TradeOffer"/> instance is valid, throwing an <see cref="ArgumentException"/> if it is not.
