@@ -2716,6 +2716,118 @@ Console.WriteLine($"Option p: {dashContext.GetOption("p")}"); // "value"
 Console.WriteLine($"Argument: {dashContext.Arguments[0]}"); // "-123"
 ```
 
+## RateLimiterTests
+
+The `RateLimiterTests` class contains unit tests for the rate limiter functionality, verifying that requests are properly throttled according to configured limits. These tests ensure that the rate limiter correctly handles token bucket algorithm operations including request allowance, token refill, multiple independent keys, thread safety, and bucket management operations like reset and clearing.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Utilities;
+using FluentAssertions;
+using Xunit;
+
+// Create a rate limiter with 100 requests per minute limit
+var rateLimiter = new RateLimiter(maxRequests: 100, timeWindowSeconds: 60);
+
+// Test 1: IsAllowed_ShouldAllowRequestsUpToMaxRequests - verify basic rate limiting
+var key1 = "user123";
+for (int i = 0; i < 100; i++)
+{
+    var isAllowed = rateLimiter.IsAllowed(key1);
+    isAllowed.Should().BeTrue($"Request {i + 1} should be allowed");
+}
+
+// Test 2: IsAllowed_ShouldRefillTokensAfterTimeWindow - verify tokens are refilled after time window
+var isAllowedAfterWindow = rateLimiter.IsAllowed(key1);
+// After 100 requests, the next should be denied
+isAllowedAfterWindow.Should().BeFalse("Request 101 should be denied");
+
+// Wait for tokens to refill (simulate time passing)
+await Task.Delay(61000); // Wait 61 seconds
+
+var isAllowedAfterRefill = rateLimiter.IsAllowed(key1);
+isAllowedAfterRefill.Should().BeTrue("Request after time window should be allowed");
+
+// Test 3: IsAllowed_ShouldHandleMultipleKeysIndependently - verify different keys have independent rate limits
+var key2 = "user456";
+for (int i = 0; i < 100; i++)
+{
+    var isAllowed = rateLimiter.IsAllowed(key2);
+    isAllowed.Should().BeTrue($"Request {i + 1} for key2 should be allowed");
+}
+
+// Test 4: IsAllowed_ShouldBeThreadSafe - verify thread safety with concurrent requests
+var tasks = new List<Task<bool>>();
+for (int i = 0; i < 50; i++)
+{
+    tasks.Add(Task.Run(() => rateLimiter.IsAllowed(key1)));
+}
+
+var results = await Task.WhenAll(tasks);
+results.Should().AllSatisfy(result => result.Should().BeTrue("All concurrent requests should be allowed"));
+
+// Test 5: GetRemainingTokens_ShouldReturnCorrectCount - verify remaining token count
+var remainingTokens = rateLimiter.GetRemainingTokens(key1);
+remainingTokens.Should().Be(100, "Should have 100 tokens initially");
+
+// Use some tokens
+for (int i = 0; i < 25; i++)
+{
+    rateLimiter.IsAllowed(key1);
+}
+
+var remainingAfterUsage = rateLimiter.GetRemainingTokens(key1);
+remainingAfterUsage.Should().Be(75, "Should have 75 tokens after 25 requests");
+
+// Test 6: GetRemainingTokens_ShouldReturnMaxRequestsForNonExistentKey - verify default for new keys
+var newKeyRemaining = rateLimiter.GetRemainingTokens("newUser");
+newKeyRemaining.Should().Be(100, "New key should have max requests available");
+
+// Test 7: Reset_ShouldRestoreTokensForGivenKey - verify reset functionality
+rateLimiter.IsAllowed(key1); // Use 1 token
+rateLimiter.Reset(key1);
+var tokensAfterReset = rateLimiter.GetRemainingTokens(key1);
+tokensAfterReset.Should().Be(100, "Reset should restore all tokens");
+
+// Test 8: Reset_ShouldNotAffectOtherKeys - verify reset only affects specified key
+rateLimiter.IsAllowed(key2); // Use 1 token for key2
+rateLimiter.Reset(key1); // Reset key1
+var key2Tokens = rateLimiter.GetRemainingTokens(key2);
+key2Tokens.Should().Be(99, "Reset of key1 should not affect key2");
+
+// Test 9: Reset_ShouldDoNothingForNonExistentKey - verify reset on non-existent key
+var beforeReset = rateLimiter.GetRemainingTokens("nonexistent");
+rateLimiter.Reset("nonexistent");
+var afterReset = rateLimiter.GetRemainingTokens("nonexistent");
+afterReset.Should().Be(beforeReset, "Reset on non-existent key should not change anything");
+
+// Test 10: ClearAll_ShouldClearAllBuckets - verify clear functionality
+rateLimiter.IsAllowed(key1);
+rateLimiter.IsAllowed(key2);
+rateLimiter.ClearAll();
+var key1AfterClear = rateLimiter.GetRemainingTokens(key1);
+var key2AfterClear = rateLimiter.GetRemainingTokens(key2);
+key1AfterClear.Should().Be(100, "ClearAll should reset key1 tokens");
+key2AfterClear.Should().Be(100, "ClearAll should reset key2 tokens");
+
+// Test 11: GetTimeUntilNextToken_ShouldReturnZero_WhenTokensAvailable - verify immediate availability
+var timeUntilNext = rateLimiter.GetTimeUntilNextToken(key1);
+timeUntilNext.Should().Be(TimeSpan.Zero, "Should return zero when tokens available");
+
+// Test 12: GetTimeUntilNextToken_ShouldReturnPositiveTime_WhenNoTokensAvailable - verify wait time calculation
+for (int i = 0; i < 100; i++)
+{
+    rateLimiter.IsAllowed(key1);
+}
+
+var waitTime = rateLimiter.GetTimeUntilNextToken(key1);
+waitTime.Should().BeGreaterThan(TimeSpan.Zero, "Should return positive wait time when no tokens available");
+
+// Test 13: GetTimeUntilNextToken_ShouldReturnNull_ForNonExistentKey - verify null for new keys
+var newKeyWaitTime = rateLimiter.GetTimeUntilNextToken("newUser");
+newKeyWaitTime.Should().BeNull("New key should return null (immediate availability)");
+```
+
 ## BacktestOptions
 
 // ... rest of content ...
