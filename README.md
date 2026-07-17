@@ -1097,6 +1097,135 @@ var nullSpread = await service.GetCrossCurrencySpreadAsync("BTC", "USD", "EUR", 
 nullSpread.Should().BeNull();
 ```
 
+## AlertServiceTests
+
+The `AlertServiceTests` class contains unit tests for the `AlertService` class, verifying alert management functionality including alert creation, updates, deletion, and retrieval. These tests ensure that the alert service correctly handles valid and invalid alert configurations, respects maximum alert limits per user, and properly integrates with the alert repository for data operations.
+
+```csharp
+using BinanceP2pMonitor.Configuration;
+using BinanceP2pMonitor.Constants;
+using BinanceP2pMonitor.Exceptions;
+using BinanceP2pMonitor.Models;
+using BinanceP2pMonitor.Repositories;
+using BinanceP2pMonitor.Services;
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
+using Xunit;
+
+// Create test dependencies
+var mockAlertRepository = Substitute.For<IAlertRepository>();
+var appSettings = new AppSettings { MaxAlertsPerUser = 5 };
+var mockLogger = Substitute.For<ILogger<AlertService>>();
+var mockTelegram = Substitute.For<ITelegramNotificationClient>();
+var mockWebhook = Substitute.For<IWebhookNotificationClient>();
+
+var alertService = new AlertService(mockAlertRepository, appSettings, mockLogger, mockTelegram, mockWebhook);
+
+// Test 1: CreateAlertAsync with valid alert and max alerts not reached
+var validAlert = new PriceAlert
+{
+    UserId = 1,
+    Asset = "USDT",
+    Fiat = "UAH",
+    AlertType = AlertType.PriceChange,
+    Condition = AlertCondition.GreaterThan,
+    Threshold = 1.0m,
+    IsEnabled = true,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+mockAlertRepository.GetUserAlertCountAsync(1).Returns(2);
+mockAlertRepository.AddAsync(Arg.Any<PriceAlert>()).Returns(1);
+
+var alertId = await alertService.CreateAlertAsync(validAlert);
+alertId.Should().Be(1);
+
+// Test 2: CreateAlertAsync with invalid alert (should throw exception)
+var invalidAlert = new PriceAlert { UserId = 1 };
+
+Func<Task> invalidAction = async () => await alertService.CreateAlertAsync(invalidAlert);
+await invalidAction.Should().ThrowAsync<InvalidAlertException>();
+
+// Test 3: CreateAlertAsync when max alerts reached (should throw exception)
+var maxAlertsAlert = new PriceAlert
+{
+    UserId = 2,
+    Asset = "BTC",
+    Fiat = "USDT",
+    AlertType = AlertType.PriceAbove,
+    Condition = AlertCondition.GreaterThan,
+    Threshold = 50000.00m,
+    IsEnabled = true,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+mockAlertRepository.GetUserAlertCountAsync(2).Returns(5); // MaxAlertsPerUser = 5
+
+Func<Task> maxAlertsAction = async () => await alertService.CreateAlertAsync(maxAlertsAlert);
+await maxAlertsAction.Should().ThrowAsync<InvalidAlertException>()
+    .WithMessage("Maximum number of alerts (5) reached");
+
+// Test 4: UpdateAlertAsync with valid alert that exists
+var existingAlert = new PriceAlert
+{
+    Id = 1,
+    UserId = 1,
+    Asset = "USDT",
+    Fiat = "UAH",
+    AlertType = AlertType.PriceChange,
+    Condition = AlertCondition.GreaterThan,
+    Threshold = 2.0m,
+    IsEnabled = true,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+mockAlertRepository.UpdateAsync(Arg.Any<PriceAlert>()).Returns(true);
+
+var updateResult = await alertService.UpdateAlertAsync(existingAlert);
+updateResult.Should().BeTrue();
+
+// Test 5: UpdateAlertAsync with alert that doesn't exist
+var nonExistentAlert = new PriceAlert
+{
+    Id = 99,
+    UserId = 1,
+    Asset = "BTC",
+    Fiat = "USDT",
+    AlertType = AlertType.PriceAbove,
+    Threshold = 50000.00m,
+    IsEnabled = true,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+mockAlertRepository.UpdateAsync(Arg.Any<PriceAlert>()).Returns(false);
+
+var falseResult = await alertService.UpdateAlertAsync(nonExistentAlert);
+falseResult.Should().BeFalse();
+
+// Test 6: DeleteAlertAsync with existing alert
+mockAlertRepository.DeleteAsync(1).Returns(true);
+
+var deleteResult = await alertService.DeleteAlertAsync(1);
+deleteResult.Should().BeTrue();
+
+// Test 7: GetUserAlertsAsync when user has alerts
+var userAlerts = new List<PriceAlert>
+{
+    new PriceAlert { Id = 1, UserId = 1, Asset = "USDT", Fiat = "UAH", AlertType = AlertType.PriceChange },
+    new PriceAlert { Id = 2, UserId = 1, Asset = "BTC", Fiat = "USDT", AlertType = AlertType.PriceAbove }
+};
+
+mockAlertRepository.GetUserAlertsAsync(1).Returns(userAlerts);
+
+var retrievedAlerts = await alertService.GetUserAlertsAsync(1);
+retrievedAlerts.Should().HaveCount(2);
+```
+
 ## AlertRepository
 
 The `AlertRepository` class provides data access methods for storing, retrieving, updating, and deleting price alert records in the Binance P2P Monitor application. It serves as the primary interface for interacting with price alert data in the database, offering methods to fetch alerts by ID, user ID, asset/fiat combinations, and active status. The repository supports comprehensive alert management including enabling/disabling alerts, tracking trigger history, and managing user-specific alert configurations.
