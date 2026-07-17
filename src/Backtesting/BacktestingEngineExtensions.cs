@@ -104,7 +104,8 @@ public static class BacktestingEngineExtensions
     /// <param name="lookbackHours">Number of hours of historical data to load.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A tuple containing the most important performance metrics: total return %, max drawdown %, and win rate.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="engine"/> or <paramref name="options"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="engine"/>, <paramref name="options"/>, or the backtest result is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the backtest result contains invalid or NaN values.</exception>
     public static async Task<(decimal TotalReturnPercent, decimal MaxDrawdownPercent, decimal WinRate)> GetQuickMetricsAsync(
         this BacktestingEngine engine,
         string asset,
@@ -117,11 +118,8 @@ public static class BacktestingEngineExtensions
         ArgumentNullException.ThrowIfNull(options);
 
         var result = await engine.RunBacktestAsync(asset, fiat, options, lookbackHours, ct).ConfigureAwait(false);
+        ArgumentNullException.ThrowIfNull(result);
 
-        return (
-            result.TotalReturnPercent,
-            result.MaxDrawdownPercent,
-            result.WinRate
-        );
+        return (result.TotalReturnPercent, result.MaxDrawdownPercent, result.WinRate);
     }
 }
