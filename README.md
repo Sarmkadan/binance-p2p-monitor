@@ -2067,6 +2067,49 @@ public void FormatPrice_NoCurrencySymbol_ReturnsPlainDecimal()
 }
 ```
 
+## PriceCalculatorEdgeCaseTests
+
+The `PriceCalculatorEdgeCaseTests` class contains edge case unit tests for the `PriceCalculator` utility methods. These tests verify that price calculation methods handle edge cases correctly, such as zero prices, null collections, empty collections, and invalid parameters. The test suite ensures robust error handling and correct behavior in boundary conditions.
+
+```csharp
+using BinanceP2pMonitor.Utilities;
+using Xunit;
+
+// Test edge case: zero original price
+var zeroChange = PriceCalculator.CalculatePercentageChange(0m, 100m);
+Assert.Equal(0m, zeroChange); // Returns 0 when original price is zero
+
+// Test edge case: null prices collection
+try
+{
+    PriceCalculator.CalculateMovingAverage(null!, 5);
+    Assert.Fail("Should throw ArgumentNullException");
+}
+catch (ArgumentNullException ex)
+{
+    Assert.Contains("Prices collection cannot be null", ex.Message);
+}
+
+// Test edge case: empty prices collection
+var emptyResult = PriceCalculator.CalculateMovingAverage(new List<decimal>(), 5);
+Assert.Equal(0m, emptyResult); // Returns 0 when prices collection is empty
+
+// Test edge case: zero buy price
+var zeroSpread = PriceCalculator.CalculateSpread(0m, 100m);
+Assert.Equal(0m, zeroSpread); // Returns 0 when buy price is zero
+
+// Test edge case: period greater than count
+var shortList = new List<decimal> { 1m, 2m, 3m };
+var avgResult = PriceCalculator.CalculateMovingAverage(shortList, 5);
+Assert.Equal(2m, avgResult); // Returns average of all available prices
+
+// Test edge case: standard deviation calculations
+var emptyStdDev = PriceCalculator.CalculateStandardDeviation(new List<decimal>());
+var singleStdDev = PriceCalculator.CalculateStandardDeviation(new List<decimal> { 100m });
+Assert.Equal(0m, emptyStdDev);
+Assert.Equal(0m, singleStdDev); // Returns 0 for empty or single-item collections
+```
+
 ## TradeOfferRepositoryTests
 
 The `TradeOfferRepositoryTests` class contains unit tests for the `TradeOfferRepository` class, verifying trade offer data access functionality including adding, retrieving, updating, and deleting trade offers. These tests ensure that the repository correctly handles trade offer operations with proper database integration using SQLite in-memory databases.
