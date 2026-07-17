@@ -55,6 +55,7 @@ public static class CachedPriceMonitoringServiceJsonExtensions
     /// <param name="json">The JSON string to deserialize</param>
     /// <param name="value">The deserialized CachedPriceMonitoringService instance, or null if deserialization fails</param>
     /// <returns>True if deserialization succeeds; otherwise, false</returns>
+    /// <exception cref="ArgumentException">Thrown when json is null or empty</exception>
     public static bool TryFromJson(string json, out CachedPriceMonitoringService? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -74,9 +75,15 @@ public static class CachedPriceMonitoringServiceJsonExtensions
     /// <summary>
     /// Gets JSON serialization options with indentation enabled
     /// </summary>
-    private static JsonSerializerOptions JsonSerializerOptionsIncremental => new(JsonSerializerDefaults.Web)
+    private static JsonSerializerOptions JsonSerializerOptionsIncremental
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true
-    };
+        get
+        {
+            return new(JsonSerializerDefaults.Web)
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
+        }
+    }
 }
