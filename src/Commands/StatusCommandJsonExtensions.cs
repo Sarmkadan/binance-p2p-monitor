@@ -42,6 +42,7 @@ public static class StatusCommandJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <returns>A deserialized <see cref="StatusCommand"/> instance, or null if the JSON is invalid.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+        /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
     public static StatusCommand? FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
@@ -63,6 +64,7 @@ public static class StatusCommandJsonExtensions
     /// <param name="value">Receives the deserialized instance if successful.</param>
     /// <returns>True if deserialization succeeded; otherwise, false.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+        /// <exception cref="JsonException">Thrown when the JSON is malformed or cannot be deserialized.</exception>
     public static bool TryFromJson(string json, out StatusCommand? value)
     {
         ArgumentException.ThrowIfNullOrEmpty(json);
