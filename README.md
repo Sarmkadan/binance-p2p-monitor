@@ -2067,6 +2067,113 @@ public void FormatPrice_NoCurrencySymbol_ReturnsPlainDecimal()
 }
 ```
 
+## TradeOfferRepositoryTests
+
+The `TradeOfferRepositoryTests` class contains unit tests for the `TradeOfferRepository` class, verifying trade offer data access functionality including adding, retrieving, updating, and deleting trade offers. These tests ensure that the repository correctly handles trade offer operations with proper database integration using SQLite in-memory databases.
+
+```csharp
+using BinanceP2pMonitor.Tests;
+using BinanceP2pMonitor.Data;
+using BinanceP2pMonitor.Models;
+using BinanceP2pMonitor.Repositories;
+using FluentAssertions;
+using Microsoft.Data.Sqlite;
+using Xunit;
+
+// Create in-memory database for testing
+var connection = new SqliteConnection("DataSource=:memory:");
+connection.Open();
+
+var context = new DatabaseContext(connection);
+var tradeOfferRepository = new TradeOfferRepository(context);
+
+// Initialize database schema
+context.ExecuteCommand(@"
+CREATE TABLE TradeOffers (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    OfferIdFromBinance TEXT NOT NULL,
+    Asset TEXT NOT NULL,
+    Fiat TEXT NOT NULL,
+    TradeType INTEGER NOT NULL,
+    Price REAL NOT NULL,
+    MinAmount REAL NOT NULL,
+    MaxAmount REAL NOT NULL,
+    TraderRating REAL NOT NULL,
+    CompletedTrades INTEGER NOT NULL,
+    PaymentMethods TEXT,
+    IsActive INTEGER NOT NULL,
+    Timestamp TEXT NOT NULL,
+    CreatedAt TEXT NOT NULL,
+    UpdatedAt TEXT NOT NULL
+);");
+
+// Test 1: AddAsync should add trade offer and return ID
+var newOffer = new TradeOffer
+{
+    OfferIdFromBinance = "BINANCE_123",
+    Asset = "USDT",
+    Fiat = "UAH",
+    TradeType = TradeType.Buy,
+    Price = 38.50m,
+    MinAmount = 100,
+    MaxAmount = 1000,
+    TraderRating = 99.5m,
+    CompletedTrades = 1000,
+    PaymentMethods = "Bank Transfer, Privat24",
+    IsActive = true,
+    Timestamp = DateTime.UtcNow,
+    CreatedAt = DateTime.UtcNow,
+    UpdatedAt = DateTime.UtcNow
+};
+
+var offerId = await tradeOfferRepository.AddAsync(newOffer);
+offerId.Should().BeGreaterThan(0);
+
+// Test 2: GetByIdAsync should return trade offer when exists
+var retrievedOffer = await tradeOfferRepository.GetByIdAsync(offerId);
+retrievedOffer.Should().NotBeNull();
+retrievedOffer!.OfferIdFromBinance.Should().Be("BINANCE_123");
+
+// Test 3: GetByIdAsync should return null when offer doesn't exist
+var nullOffer = await tradeOfferRepository.GetByIdAsync(999);
+nullOffer.Should().BeNull();
+
+// Test 4: GetByBinanceIdAsync should return trade offer when exists
+var binanceOffer = await tradeOfferRepository.GetByBinanceIdAsync("BINANCE_123");
+binanceOffer.Should().NotBeNull();
+
+// Test 5: GetAllActiveAsync should return all active offers
+var activeOffers = await tradeOfferRepository.GetAllActiveAsync();
+activeOffers.Should().HaveCount(1);
+activeOffers.Should().AllSatisfy(o => o.IsActive.Should().BeTrue());
+
+// Test 6: UpdateAsync should update trade offer and return true
+if (retrievedOffer != null)
+{
+    retrievedOffer.Price = 39.00m;
+    retrievedOffer.IsActive = false;
+    retrievedOffer.UpdatedAt = DateTime.UtcNow;
+    
+    var updateResult = await tradeOfferRepository.UpdateAsync(retrievedOffer);
+    updateResult.Should().BeTrue();
+    
+    var updatedOffer = await tradeOfferRepository.GetByIdAsync(offerId);
+    updatedOffer!.Price.Should().Be(39.00m);
+    updatedOffer.IsActive.Should().BeFalse();
+}
+
+// Test 7: DeleteAsync should delete trade offer and return true
+var deleteResult = await tradeOfferRepository.DeleteAsync(offerId);
+deleteResult.Should().BeTrue();
+
+var deletedOffer = await tradeOfferRepository.GetByIdAsync(offerId);
+deletedOffer.Should().BeNull();
+
+// Cleanup
+connection.Close();
+connection.Dispose();
+```
+
 ## TradeOfferRepository
 
 The `TradeOfferRepository` class provides data access methods for managing trade offer data from Binance P2P. It serves as the primary interface for interacting with trade offers in the database, offering methods to retrieve, add, update, and delete trade offers. The repository includes functionality to fetch offers by ID, Binance offer ID, asset/fiat combinations, trade type, and to retrieve the best available offers based on price and trader rating. It also provides aggregate methods for counting total offers and calculating average prices.
