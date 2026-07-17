@@ -12,11 +12,11 @@ namespace BinanceP2pMonitor.Models;
 public static class SpreadStatisticsReportValidation
 {
     /// <summary>
-    /// Validates a <see cref="SpreadStatisticsReport"/> instance and returns a list of human-readable validation problems
+    /// Validates a <see cref="SpreadStatisticsReport"/> instance and returns a list of human-readable validation problems.
     /// </summary>
-    /// <param name="value">The report to validate</param>
-    /// <returns>A read-only list of validation error messages (empty if valid)</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null</exception>
+    /// <param name="value">The report to validate.</param>
+    /// <returns>A read-only list of validation error messages (empty if valid).</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     public static IReadOnlyList<string> Validate(this SpreadStatisticsReport? value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -64,14 +64,8 @@ public static class SpreadStatisticsReportValidation
         ValidateNonNegativeDecimal(errors, nameof(value.Percentile5), value.Percentile5);
         ValidateNonNegativeDecimal(errors, nameof(value.Percentile95), value.Percentile95);
 
-        // Validate CurrentSpread (can be any decimal, but should be reasonable)
-        // No specific validation needed beyond non-null
-
-        // Validate ZScore
-        // ZScore can be any value (positive or negative)
-
-        // Validate TrendSlope
-        // TrendSlope can be any value (positive or negative)
+        // CurrentSpread, ZScore, and TrendSlope can be any decimal value (positive or negative)
+        // No specific validation needed beyond range consistency with MinSpread/MaxSpread
 
         // Validate AnalyzedAt
         if (value.AnalyzedAt == default)
@@ -83,7 +77,7 @@ public static class SpreadStatisticsReportValidation
             errors.Add("AnalyzedAt must be in UTC timezone.");
         }
 
-        // Validate derived properties consistency
+        // Validate CurrentSpread should be within MinSpread and MaxSpread range
         if (value.CurrentSpread < value.MinSpread)
         {
             errors.Add("CurrentSpread cannot be less than MinSpread.");
@@ -94,14 +88,10 @@ public static class SpreadStatisticsReportValidation
             errors.Add("CurrentSpread cannot be greater than MaxSpread.");
         }
 
-        if (value.Median < value.Percentile5)
+        // Validate derived properties consistency using pattern matching
+        if (value.Median is < 0 or > 100)
         {
-            errors.Add("Median cannot be less than Percentile5.");
-        }
-
-        if (value.Median > value.Percentile95)
-        {
-            errors.Add("Median cannot be greater than Percentile95.");
+            errors.Add("Median should be within reasonable bounds (0-100).");
         }
 
         if (value.Percentile5 > value.Percentile95)
@@ -114,19 +104,15 @@ public static class SpreadStatisticsReportValidation
             errors.Add("MinSpread cannot be greater than MaxSpread.");
         }
 
-        if (value.Mean < 0)
+        // Validate statistical consistency: Percentile5 <= Median <= Percentile95
+        if (value.Percentile5 > value.Median)
         {
-            errors.Add("Mean cannot be negative.");
+            errors.Add("Percentile5 cannot be greater than Median.");
         }
 
-        if (value.StandardDeviation < 0)
+        if (value.Median > value.Percentile95)
         {
-            errors.Add("StandardDeviation cannot be negative.");
-        }
-
-        if (value.Variance < 0)
-        {
-            errors.Add("Variance cannot be negative.");
+            errors.Add("Median cannot be greater than Percentile95.");
         }
 
         // Validate that Percentile5 <= Mean <= Percentile95 (approximately)
@@ -144,22 +130,22 @@ public static class SpreadStatisticsReportValidation
     }
 
     /// <summary>
-    /// Determines whether a <see cref="SpreadStatisticsReport"/> instance is valid
+    /// Determines whether a <see cref="SpreadStatisticsReport"/> instance is valid.
     /// </summary>
-    /// <param name="value">The report to check</param>
-    /// <returns>True if the report is valid; otherwise, false</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null</exception>
+    /// <param name="value">The report to check.</param>
+    /// <returns><see langword="true"/> if the report is valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
     public static bool IsValid(this SpreadStatisticsReport? value)
     {
         return value is not null && Validate(value).Count == 0;
     }
 
     /// <summary>
-    /// Ensures that a <see cref="SpreadStatisticsReport"/> instance is valid, throwing an exception if not
+    /// Ensures that a <see cref="SpreadStatisticsReport"/> instance is valid, throwing an exception if not.
     /// </summary>
-    /// <param name="value">The report to validate</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null</exception>
-    /// <exception cref="ArgumentException">Thrown when the report contains validation errors</exception>
+    /// <param name="value">The report to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown when the report contains validation errors.</exception>
     public static void EnsureValid(this SpreadStatisticsReport? value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -168,7 +154,8 @@ public static class SpreadStatisticsReportValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"SpreadStatisticsReport validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", errors)}");
+                $"SpreadStatisticsReport validation failed:{Environment.NewLine}- {
+                    string.Join($"{Environment.NewLine}- ", errors)}");
         }
     }
 
