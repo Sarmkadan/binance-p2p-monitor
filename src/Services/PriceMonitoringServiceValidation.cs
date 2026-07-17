@@ -30,7 +30,7 @@ public static class PriceMonitoringServiceValidation
         "_webSocketService", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot find _webSocketService field");
 
     private static readonly FieldInfo _settingsField = typeof(PriceMonitoringService).GetField(
-        "_settings", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot find _settings field");
+        "_settings", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot file _settings field");
 
     private static readonly FieldInfo _loggerField = typeof(PriceMonitoringService).GetField(
         "_logger", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot find _logger field");
@@ -39,11 +39,11 @@ public static class PriceMonitoringServiceValidation
         "_isMonitoring", BindingFlags.NonPublic | BindingFlags.Instance) ?? throw new InvalidOperationException("Cannot find _isMonitoring field");
 
     /// <summary>
-    /// Validates a PriceMonitoringService instance and returns a list of human-readable validation problems
+    /// Validates a <see cref="PriceMonitoringService"/> instance and returns a list of human-readable validation problems
     /// </summary>
-    /// <param name="value">The PriceMonitoringService instance to validate</param>
+    /// <param name="value">The <see cref="PriceMonitoringService"/> instance to validate</param>
     /// <returns>An empty list if valid; otherwise, a list of validation error messages</returns>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null</exception>
     public static IReadOnlyList<string> Validate(this PriceMonitoringService value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -99,34 +99,32 @@ public static class PriceMonitoringServiceValidation
     }
 
     /// <summary>
-    /// Determines whether the specified PriceMonitoringService instance is valid
+    /// Determines whether the specified <see cref="PriceMonitoringService"/> instance is valid
+    /// (i.e., all required dependencies are initialized and not null)
     /// </summary>
-    /// <param name="value">The PriceMonitoringService instance to check</param>
-    /// <returns>True if the PriceMonitoringService is valid; otherwise, false</returns>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+    /// <param name="value">The <see cref="PriceMonitoringService"/> instance to check</param>
+    /// <returns><see langword="true"/> if the service is valid; otherwise, <see langword="false"/></returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null</exception>
     public static bool IsValid(this PriceMonitoringService value)
     {
-        return Validate(value).Count == 0;
+        return value.Validate() is [];
     }
 
     /// <summary>
-    /// Ensures that the specified PriceMonitoringService instance is valid, throwing an exception if it is not
+    /// Ensures that the specified <see cref="PriceMonitoringService"/> instance is valid, throwing an exception if it is not
     /// </summary>
-    /// <param name="value">The PriceMonitoringService instance to validate</param>
-    /// <exception cref="ArgumentNullException">Thrown when value is null</exception>
+    /// <param name="value">The <see cref="PriceMonitoringService"/> instance to validate</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null</exception>
     /// <exception cref="ArgumentException">Thrown if the service instance has validation problems</exception>
     public static void EnsureValid(this PriceMonitoringService value)
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var problems = Validate(value);
+        var problems = value.Validate();
 
         if (problems.Count > 0)
         {
-            throw new ArgumentException(
-                $"PriceMonitoringService validation failed:{Environment.NewLine}- {
-                    string.Join($"{Environment.NewLine}- ", problems)
-                }");
+            throw new ArgumentException($"PriceMonitoringService validation failed:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}");
         }
     }
 }
