@@ -36,6 +36,8 @@ Manage price alerts and notification settings.
 Subcommands:
   list                List all active alerts
   create              Create a new price alert
+mute <id> Mute an alert (alert stays active but won't send notifications)
+unmute <id> Unmute an alert
   delete <id>         Delete an alert by ID
   test                Send test notification
 

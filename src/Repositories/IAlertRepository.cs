@@ -16,5 +16,6 @@ public interface IAlertRepository
     Task<bool> UpdateAsync(PriceAlert alert);
     Task<bool> DeleteAsync(int id);
     Task<bool> DeleteUserAlertsAsync(int userId);
+    Task<bool> SetMutedAsync(int alertId, bool isMuted);
     Task<int> GetUserAlertCountAsync(int userId);
 }

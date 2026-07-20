@@ -34,6 +34,9 @@ public class PriceAlert
     public bool IsEnabled { get; set; }
 
     [Required]
+    public bool IsMuted { get; set; } = false;
+
+    [Required]
     public int UserId { get; set; }
 
     [Required]
@@ -130,6 +133,15 @@ public class PriceAlert
     public void Toggle()
     {
         IsEnabled = !IsEnabled;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Toggles the muted state of the alert
+    /// </summary>
+    public void ToggleMute()
+    {
+        IsMuted = !IsMuted;
         UpdatedAt = DateTime.UtcNow;
     }
 }
