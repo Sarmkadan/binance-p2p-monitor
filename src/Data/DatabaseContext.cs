@@ -257,6 +257,7 @@ public class DatabaseContext : IDisposable
             Threshold REAL NOT NULL,
             Condition INTEGER NOT NULL,
             IsEnabled BOOLEAN NOT NULL,
+        IsMuted BOOLEAN NOT NULL DEFAULT 0,
             UserId INTEGER NOT NULL,
             CreatedAt DATETIME NOT NULL,
             UpdatedAt DATETIME NOT NULL,

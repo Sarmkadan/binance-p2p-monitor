@@ -72,4 +72,12 @@ public interface IAlertService
     /// <param name="userId">The ID of the user.</param>
     /// <returns>The number of active alerts.</returns>
     Task<int> GetActiveAlertCountAsync(int userId);
+
+    /// <summary>
+    /// Sets the muted status of an alert.
+    /// </summary>
+    /// <param name="alertId">The ID of the alert.</param>
+    /// <param name="isMuted">True to mute the alert; false to unmute it.</param>
+    /// <returns>True if the operation was successful; otherwise, false.</returns>
+    Task<bool> SetMutedAsync(int alertId, bool isMuted);
 }

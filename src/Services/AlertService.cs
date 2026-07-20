@@ -131,6 +131,9 @@ public class AlertService : IAlertService
                 if (alert.IsInCooldownPeriod(_settings.AlertCooldownMinutes))
                     continue;
 
+        if (alert.IsMuted)
+            continue;
+
                 var changePercent = alert.AlertType switch
                 {
                     AlertType.PriceChange => currentPrice.BuyChangePercent,
@@ -245,6 +248,25 @@ public class AlertService : IAlertService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting alert count for user {UserId}", userId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Sets the muted status of an alert.
+    /// </summary>
+    /// <param name="alertId">The ID of the alert.</param>
+    /// <param name="isMuted">True to mute the alert; false to unmute it.</param>
+    /// <returns>True if the operation was successful; otherwise, false.</returns>
+    public async Task<bool> SetMutedAsync(int alertId, bool isMuted)
+    {
+        try
+        {
+            return await _alertRepository.SetMutedAsync(alertId, isMuted).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting muted status for alert {AlertId}", alertId);
             throw;
         }
     }
