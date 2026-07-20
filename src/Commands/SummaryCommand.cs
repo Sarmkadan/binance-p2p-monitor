@@ -42,19 +42,20 @@ public sealed class SummaryCommand : ICommand
   Display daily price summary with min, max, average, and current prices.
 
   Options:
-  --format=FORMAT Output format: table, json (default: table)
+  --format=FORMAT Output format: table, json, markdown (default: table)
   -h, --help     Show this help message
 
   Examples:
   binance-p2p-monitor summary
   binance-p2p-monitor summary --format=json
+binance-p2p-monitor summary --format=markdown
 ";
     }
 
     public List<string> ValidateArguments(CommandContext context)
     {
         var errors = new List<string>();
-        var validFormats = new[] { "table", "json" };
+        var validFormats = new[] { "table", "json", "markdown" };
 
         if (context.HasOption("format") && !validFormats.Contains(context.GetOption("format"), StringComparer.OrdinalIgnoreCase))
         {

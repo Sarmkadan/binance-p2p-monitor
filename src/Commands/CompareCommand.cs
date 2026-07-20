@@ -44,7 +44,7 @@ Options:
 --asset=ASSET Asset to compare (e.g., BTC, ETH, USDT)
 --from=FIAT First fiat currency (required)
 --to=FIAT Second fiat currency (required)
---format=FORMAT Output format: table, json (default: table)
+--format=FORMAT Output format: table, json, markdown (default: table)
 -h, --help Show this help message
 
 Examples:
@@ -58,7 +58,7 @@ binance-p2p-monitor compare --asset=USDT --from=USD --to=CNY --format=json
     {
         var errors = new List<string>();
 
-        var validFormats = new[] { "table", "json" };
+        var validFormats = new[] { "table", "json", "markdown" };
         if (context.HasOption("format") && !validFormats.Contains(context.GetOption("format"), StringComparer.OrdinalIgnoreCase))
         {
             errors.Add($"--format must be one of: {string.Join(", ", validFormats)}");

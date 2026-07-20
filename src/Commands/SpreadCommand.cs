@@ -43,7 +43,7 @@ Display current buy/sell spread for trading pairs.
 Options:
 --asset=ASSET Show spread for specific asset only
 --fiat=FIAT Show spread for specific fiat currency only
---format=FORMAT Output format: table, json (default: table)
+--format=FORMAT Output format: table, json, markdown (default: table)
 --pair=PAIR Show spread for specific pair (format: ASSET/FIAT)
 -h, --help Show this help message
 
@@ -59,7 +59,7 @@ binance-p2p-monitor spread --format=json
     public List<string> ValidateArguments(CommandContext context)
     {
         var errors = new List<string>();
-        var validFormats = new[] { "table", "json" };
+        var validFormats = new[] { "table", "json", "markdown" };
 
         if (context.HasOption("format") && !validFormats.Contains(context.GetOption("format"), StringComparer.OrdinalIgnoreCase))
         {

@@ -72,7 +72,7 @@ Monte Carlo options:
   --seed=N                   Fixed RNG seed for reproducible runs
 
 Output options:
-  --format=FORMAT            Output format: summary, json, table (default: summary)
+  --format=FORMAT            Output format: summary, json, table, markdown (default: summary)
   --signals                  Print the generated trade signal log
   -h, --help                 Show this help message
 
@@ -113,7 +113,7 @@ Examples:
             (!decimal.TryParse(context.GetOption("confidence"), out var cl) || cl <= 0 || cl >= 1))
             errors.Add("--confidence must be in (0, 1)");
 
-        var validFormats = new[] { "summary", "json", "table" };
+        var validFormats = new[] { "summary", "json", "table", "markdown" };
         if (context.HasOption("format") && !validFormats.Contains(context.GetOption("format")))
             errors.Add($"--format must be one of: {string.Join(", ", validFormats)}");
 
