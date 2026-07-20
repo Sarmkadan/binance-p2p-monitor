@@ -1,4 +1,6 @@
 #nullable enable
+using System.IO.Compression;
+
 namespace BinanceP2pMonitor.Infrastructure;
 
 /// <summary>
@@ -65,6 +67,81 @@ public class DataExporter
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to export CSV");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Exports to CSV format with gzip compression
+    /// </summary>
+    public async Task ExportCsvGzAsync(string filePath, IEnumerable<Dictionary<string, string>> rows, CancellationToken ct = default)
+    {
+        try
+        {
+            _logger.LogInformation("Exporting compressed CSV to: {FilePath}", filePath);
+
+            var rowList = rows.ToList();
+            if (!rowList.Any())
+            {
+                using (var compressedFileStream = File.Create(filePath))
+                using (var gzipStream = new GZipStream(compressedFileStream, CompressionLevel.Optimal))
+                using (var writer = new StreamWriter(gzipStream))
+                {
+                    await writer.WriteAsync(string.Empty);
+                }
+                return;
+            }
+
+            var headers = rowList.First().Keys.ToList();
+            var csv = new System.Text.StringBuilder();
+
+            csv.AppendLine(string.Join(",", headers.Select(EscapeCsv)));
+
+            foreach (var row in rowList)
+            {
+                var values = headers.Select(h => row.TryGetValue(h, out var value) ? EscapeCsv(value) : string.Empty);
+                csv.AppendLine(string.Join(",", values));
+            }
+
+            using (var compressedFileStream = File.Create(filePath))
+            using (var gzipStream = new GZipStream(compressedFileStream, CompressionLevel.Optimal))
+            using (var writer = new StreamWriter(gzipStream))
+            {
+                await writer.WriteAsync(csv.ToString());
+            }
+
+            _logger.LogInformation("Exported {Count} rows to compressed CSV: {FilePath}", rowList.Count, filePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to export compressed CSV");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Exports data to JSON file with gzip compression
+    /// </summary>
+    public async Task ExportJsonGzAsync<T>(string filePath, T data, CancellationToken ct = default)
+    {
+        try
+        {
+            _logger.LogInformation("Exporting compressed JSON to: {FilePath}", filePath);
+
+            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+
+            using (var compressedFileStream = File.Create(filePath))
+            using (var gzipStream = new GZipStream(compressedFileStream, CompressionLevel.Optimal))
+            using (var writer = new StreamWriter(gzipStream))
+            {
+                await writer.WriteAsync(json);
+            }
+
+            _logger.LogInformation("Exported to compressed JSON: {FilePath}", filePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to export compressed JSON");
             throw;
         }
     }
