@@ -58,6 +58,13 @@ namespace BinanceP2pMonitor.Configuration
         [Range(0, 23, ErrorMessage = "DailySummaryHourUtc must be between 0 and 23.")]
         public int DailySummaryHourUtc { get; set; } = 9;
 
+        // Merchant quality filters
+        [Range(0, 100, ErrorMessage = "MinCompletionRate must be between 0 and 100.")]
+        public decimal MinCompletionRate { get; set; } = 0;
+
+        [Range(0, int.MaxValue, ErrorMessage = "MinOrderCount must be non-negative.")]
+        public int MinOrderCount { get; set; } = 0;
+
         // Logging
         [Required(ErrorMessage = "LogLevel is required.")]
         public string LogLevel { get; set; } = "Information";
