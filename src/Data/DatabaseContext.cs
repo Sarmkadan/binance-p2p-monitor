@@ -263,6 +263,8 @@ public class DatabaseContext : IDisposable
             UpdatedAt DATETIME NOT NULL,
             LastTriggeredAt INTEGER,
             TriggerCount INTEGER NOT NULL DEFAULT 0,
+    HysteresisThreshold REAL NOT NULL DEFAULT 0,
+    LastTriggerDirection INTEGER NOT NULL DEFAULT 0,
             Notes TEXT,
             FOREIGN KEY(UserId) REFERENCES UserProfiles(Id)
         )";

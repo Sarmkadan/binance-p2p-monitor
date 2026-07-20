@@ -131,8 +131,8 @@ public class AlertService : IAlertService
                 if (alert.IsInCooldownPeriod(_settings.AlertCooldownMinutes))
                     continue;
 
-        if (alert.IsMuted)
-            continue;
+                if (alert.IsMuted)
+                    continue;
 
                 var changePercent = alert.AlertType switch
                 {
@@ -141,9 +141,9 @@ public class AlertService : IAlertService
                     _ => 0
                 };
 
-                if (alert.ShouldTrigger(changePercent))
+                if (ShouldTriggerWithHysteresis(alert, changePercent))
                 {
-                    alert.RecordTrigger();
+                    alert.RecordTrigger(changePercent);
                     await UpdateAlertAsync(alert).ConfigureAwait(false);
                     triggeredAlerts.Add(alert);
 
@@ -169,6 +169,105 @@ public class AlertService : IAlertService
             _logger.LogError(ex, "Error checking alert triggers");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Determines if an alert should trigger considering hysteresis
+    /// </summary>
+    /// <param name="alert">The alert to check</param>
+    /// <param name="currentChange">Current price change percentage</param>
+    /// <returns>True if the alert should trigger</returns>
+    private bool ShouldTriggerWithHysteresis(PriceAlert alert, decimal currentChange)
+    {
+        // If alert has never triggered before, use normal triggering logic
+        if (alert.LastTriggeredAt is null)
+        {
+            return alert.ShouldTrigger(currentChange);
+        }
+
+        // If alert is in cooldown period, don't trigger
+        if (alert.IsInCooldownPeriod(_settings.AlertCooldownMinutes))
+        {
+            return false;
+        }
+
+        // Check if alert should trigger based on its condition
+        if (!alert.ShouldTrigger(currentChange))
+        {
+            return false;
+        }
+
+        // For price change alerts, apply hysteresis
+        if (alert.AlertType == AlertType.PriceChange)
+        {
+            // Calculate hysteresis threshold based on alert type
+            decimal hysteresisMargin = _settings.PriceChangeHysteresisPercent;
+
+            // For alerts that trigger when price goes above threshold
+            if (alert.Condition == AlertCondition.GreaterThan || alert.Condition == AlertCondition.GreaterThanOrEqual)
+            {
+                // Price must drop below: threshold - hysteresis to re-trigger
+                // Example: threshold=5%, hysteresis=0.5%, alert triggers when price > 5%
+                // After triggering, price must drop below 4.5% to re-trigger
+                decimal hysteresisThreshold = alert.Threshold - hysteresisMargin;
+
+                // If we haven't triggered yet, or price moved back past hysteresis threshold
+                if (alert.LastTriggerDirection == AlertDirection.Up)
+                {
+                    // Price went up to trigger, now must drop back below hysteresis threshold
+                    return currentChange < hysteresisThreshold;
+                }
+            }
+
+            // For alerts that trigger when price goes below threshold
+            if (alert.Condition == AlertCondition.LessThan || alert.Condition == AlertCondition.LessThanOrEqual)
+            {
+                // Price must rise above: threshold + hysteresis to re-trigger
+                // Example: threshold=2%, hysteresis=0.5%, alert triggers when price < 2%
+                // After triggering, price must rise above 2.5% to re-trigger
+                decimal hysteresisThreshold = alert.Threshold + hysteresisMargin;
+
+                // If we haven't triggered yet, or price moved back past hysteresis threshold
+                if (alert.LastTriggerDirection == AlertDirection.Down)
+                {
+                    // Price went down to trigger, now must rise above hysteresis threshold
+                    return currentChange > hysteresisThreshold;
+                }
+            }
+        }
+
+        // For spread alerts, apply hysteresis
+        if (alert.AlertType == AlertType.HighSpreadAlert || alert.AlertType == AlertType.LowSpreadAlert)
+        {
+            decimal hysteresisMargin = _settings.SpreadHysteresisPercent;
+
+            // For high spread alerts (trigger when spread > threshold)
+            if (alert.AlertType == AlertType.HighSpreadAlert)
+            {
+                // Spread must drop below: threshold - hysteresis to re-trigger
+                decimal hysteresisThreshold = alert.Threshold - hysteresisMargin;
+
+                if (alert.LastTriggerDirection == AlertDirection.Up)
+                {
+                    return currentChange < hysteresisThreshold;
+                }
+            }
+
+            // For low spread alerts (trigger when spread < threshold)
+            if (alert.AlertType == AlertType.LowSpreadAlert)
+            {
+                // Spread must rise above: threshold + hysteresis to re-trigger
+                decimal hysteresisThreshold = alert.Threshold + hysteresisMargin;
+
+                if (alert.LastTriggerDirection == AlertDirection.Down)
+                {
+                    return currentChange > hysteresisThreshold;
+                }
+            }
+        }
+
+        // For other alert types or first-time triggers, use normal logic
+        return true;
     }
 
     /// <summary>
