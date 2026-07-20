@@ -44,6 +44,7 @@ sealed class Program
             commandFactory.RegisterCommand("export", typeof(ExportCommand));
             commandFactory.RegisterCommand("version", typeof(VersionCommand));
             commandFactory.RegisterCommand("backtest", typeof(BacktestCommand));
+            commandFactory.RegisterCommand("spread", typeof(SpreadCommand));
 
             await host.RunAsync();
         }
