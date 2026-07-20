@@ -20,6 +20,11 @@ public sealed class HeartbeatEvent : IEvent
     public string EventType => nameof(HeartbeatEvent);
 
     /// <summary>
+    /// When the event was created/occurred.
+    /// </summary>
+    public DateTime OccurredAt { get; }
+
+    /// <summary>
     /// How long the hosting process has been running.
     /// </summary>
     public TimeSpan Uptime { get; }
@@ -33,5 +38,6 @@ public sealed class HeartbeatEvent : IEvent
     {
         Uptime = uptime;
         LastSuccessfulFetch = lastSuccessfulFetch;
+        OccurredAt = DateTime.UtcNow;
     }
 }
