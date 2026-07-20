@@ -39,11 +39,11 @@ Export price data to file.
 
 Options:
 --output=FILE Output file path (required)
---format=FORMAT Format: csv, json (default: csv)
+--format=FORMAT Format: csv, json, markdown (default: csv)
 --asset=ASSET Export specific asset
 --fiat=FIAT Export specific fiat
 --days=DAYS Number of days to export (default: 7)
---compress Compress output using gzip (creates .csv.gz or .json.gz)
+--compress Compress output using gzip (creates .csv.gz, .json.gz, or .md.gz)
 -h, --help Show this help message
 
 Examples:
@@ -62,8 +62,8 @@ if (!context.HasOption("output"))
 errors.Add("--output is required");
 
 var format = context.GetOption("format", "csv");
-if (!new[] { "csv", "json" }.Contains(format, StringComparer.OrdinalIgnoreCase))
-errors.Add("Format must be csv or json");
+if (!new[] { "csv", "json", "markdown" }.Contains(format, StringComparer.OrdinalIgnoreCase))
+errors.Add("Format must be csv, json, or markdown");
 
 if (context.HasOption("days") && (!int.TryParse(context.GetOption("days"), out int days) || days <= 0))
 errors.Add("--days must be a positive integer");

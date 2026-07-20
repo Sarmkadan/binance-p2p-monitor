@@ -116,6 +116,7 @@ sealed class Program
         services.AddSingleton<IOutputFormatter, JsonOutputFormatter>();
         services.AddSingleton<IOutputFormatter, TableOutputFormatter>();
         services.AddSingleton<IOutputFormatter, CsvOutputFormatter>();
+        services.AddSingleton<IOutputFormatter, MarkdownOutputFormatter>();
 
         // Register infrastructure utilities
         services.AddSingleton<ConfigurationValidator>();

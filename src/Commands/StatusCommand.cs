@@ -44,7 +44,7 @@ Display current market prices and system status.
 
 Options:
   --asset=ASSET    Show specific asset only
-  --format=FORMAT  Output format: table, json (default: table)
+  --format=FORMAT  Output format: table, json, markdown (default: table)
   -h, --help       Show this help message
 
 Examples:
@@ -56,7 +56,7 @@ Examples:
     public List<string> ValidateArguments(CommandContext context)
     {
         var errors = new List<string>();
-        var validFormats = new[] { "table", "json" };
+        var validFormats = new[] { "table", "json", "markdown" };
 
         if (context.HasOption("format") && !validFormats.Contains(context.GetOption("format"), StringComparer.OrdinalIgnoreCase))
         {

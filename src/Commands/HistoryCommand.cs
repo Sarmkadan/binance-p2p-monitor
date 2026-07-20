@@ -37,7 +37,7 @@ Options:
   --asset=ASSET      Asset name (BTC, ETH, etc.)
   --fiat=FIAT        Fiat currency (USDT, CNY, etc.)
   --days=DAYS        Number of days to look back (default: 7)
-  --format=FORMAT    Output format: table, json, csv (default: table)
+  --format=FORMAT    Output format: table, json, csv, markdown (default: table)
   --stats            Show statistical analysis
   -h, --help         Show this help message
 
@@ -58,7 +58,7 @@ Examples:
                 errors.Add("Days must be a positive number");
         }
 
-        var validFormats = new[] { "table", "json", "csv" };
+        var validFormats = new[] { "table", "json", "csv", "markdown" };
         if (context.HasOption("format"))
         {
             var format = context.GetOption("format", "table");

@@ -46,13 +46,14 @@ Options:
   --asset=ASSET        Monitor specific asset (e.g., BTC, ETH)
   --fiat=FIAT          Monitor specific fiat currency (e.g., USDT, CNY)
   --interval=SECONDS   Check interval in seconds (default: 30)
-  --format=FORMAT      Output format: table, json, csv (default: table)
+  --format=FORMAT      Output format: table, json, csv, markdown (default: table)
   -v, --verbose        Enable verbose logging
   -h, --help           Show this help message
 
 Examples:
   binance-p2p-monitor monitor
   binance-p2p-monitor monitor --asset=BTC --fiat=USDT
+binance-p2p-monitor monitor --interval=60 --format=markdown
   binance-p2p-monitor monitor --interval=60 --format=json
 ";
     }
@@ -67,7 +68,7 @@ Examples:
                 errors.Add("Interval must be a number >= 5");
         }
 
-        var validFormats = new[] { "table", "json", "csv" };
+        var validFormats = new[] { "table", "json", "csv", "markdown" };
         if (context.HasOption("format"))
         {
             var format = context.GetOption("format", "table");
