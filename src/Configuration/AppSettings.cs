@@ -17,6 +17,8 @@ public class AppSettings
     public int MaxAlertsPerUser { get; set; } = 20;
     public decimal DefaultPriceChangeThreshold { get; set; } = 2.0m;
     public decimal DefaultSpreadThreshold { get; set; } = 1.5m;
+    public decimal PriceChangeHysteresisPercent { get; set; } = 0.5m;
+    public decimal SpreadHysteresisPercent { get; set; } = 0.3m;
 
     public int HistoryRetentionDays { get; set; } = 30;
     public int MaxHistoryRecords { get; set; } = 100000;
@@ -56,10 +58,10 @@ public class AppSettings
     public bool IsValid()
     {
         return !string.IsNullOrWhiteSpace(DatabaseConnectionString) &&
-               MonitoringIntervalSeconds > 0 &&
-               AlertCooldownMinutes > 0 &&
-               MaxAlertsPerUser > 0 &&
-               HistoryRetentionDays > 0;
+            MonitoringIntervalSeconds > 0 &&
+            AlertCooldownMinutes > 0 &&
+            MaxAlertsPerUser > 0 &&
+            HistoryRetentionDays > 0;
     }
 
     /// <summary>
@@ -83,7 +85,7 @@ public class AppSettings
 
         if (HistoryRetentionDays < 1)
             errors.Add("HistoryRetentionDays must be at least 1");
-            
+
         if (SpreadAnalysisHistoryHours < 1)
             errors.Add("SpreadAnalysisHistoryHours must be at least 1");
 
@@ -92,6 +94,12 @@ public class AppSettings
 
         if (DefaultSpreadThreshold < 0)
             errors.Add("DefaultSpreadThreshold cannot be negative");
+
+        if (PriceChangeHysteresisPercent < 0)
+            errors.Add("PriceChangeHysteresisPercent cannot be negative");
+
+        if (SpreadHysteresisPercent < 0)
+            errors.Add("SpreadHysteresisPercent cannot be negative");
 
         if (EnableWebSocket)
         {

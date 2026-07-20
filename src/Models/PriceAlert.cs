@@ -51,6 +51,11 @@ public class PriceAlert
     [Range(1, int.MaxValue)]
     public int TriggerCount { get; set; } = 0;
 
+    [Range(0, 100)]
+    public decimal HysteresisThreshold { get; set; }
+
+    public AlertDirection LastTriggerDirection { get; set; }
+
     [StringLength(500)]
     public string? Notes { get; set; }
 
@@ -100,13 +105,29 @@ public class PriceAlert
     }
 
     /// <summary>
+    /// Updates the last triggered timestamp, increments counter, and sets hysteresis state
+    /// </summary>
+    /// <param name="currentChange">The current price change percentage that triggered the alert</param>
+    public void RecordTrigger(decimal currentChange)
+    {
+        LastTriggeredAt = DateTime.UtcNow.ToBinary();
+        TriggerCount++;
+
+        // Set hysteresis threshold and direction based on which way the price moved
+        HysteresisThreshold = currentChange;
+        LastTriggerDirection = currentChange > 0 ? AlertDirection.Up : AlertDirection.Down;
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
     /// Validates alert configuration
     /// </summary>
     public bool IsValid()
     {
         return Threshold >= 0 && Threshold <= 100 &&
-               !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat) &&
-               UserId > 0;
+            !string.IsNullOrWhiteSpace(Asset) && !string.IsNullOrWhiteSpace(Fiat) &&
+            UserId > 0;
     }
 
     /// <summary>
