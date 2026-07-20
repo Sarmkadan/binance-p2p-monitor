@@ -5,6 +5,7 @@ using BinanceP2pMonitor.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace BinanceP2pMonitor.Services;
 
@@ -145,6 +146,33 @@ public class DailySummaryService : BackgroundService
 
         await telegram.SendMessageAsync(chatId, message, ct).ConfigureAwait(false);
         _logger.LogInformation("Daily price summary sent");
+
+        // Produce daily summary as JSON string
+        var json = ProduceDailySummaryJson();
+        Console.WriteLine(json);
+    }
+
+    private string ProduceDailySummaryJson()
+    {
+        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var dailySummary = new DailySummary
+        {
+            Date = DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            Window = "24h",
+            Timezone = "UTC",
+            Assets = _settings.MonitoredAssets.Select(a => new Asset
+            {
+                Symbol = a,
+                Fiat = _settings.MonitoredFiats.Select(f => new Fiat
+                {
+                    Symbol = f,
+                    BuyPrice = 0,
+                    SellPrice = 0
+                }).ToList()
+            }).ToList()
+        };
+
+        return JsonSerializer.Serialize(dailySummary, jsonOptions);
     }
 
     /// <summary>
@@ -160,4 +188,25 @@ public class DailySummaryService : BackgroundService
 
         return next - now;
     }
+}
+
+public class DailySummary
+{
+    public string Date { get; set; }
+    public string Window { get; set; }
+    public string Timezone { get; set; }
+    public List<Asset> Assets { get; set; }
+}
+
+public class Asset
+{
+    public string Symbol { get; set; }
+    public List<Fiat> Fiat { get; set; }
+}
+
+public class Fiat
+{
+    public string Symbol { get; set; }
+    public decimal BuyPrice { get; set; }
+    public decimal SellPrice { get; set; }
 }
