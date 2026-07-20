@@ -48,6 +48,7 @@ sealed class Program
             commandFactory.RegisterCommand("spread", typeof(SpreadCommand));
             commandFactory.RegisterCommand("compare", typeof(CompareCommand));
             commandFactory.RegisterCommand("doctor", typeof(DoctorCommand));
+            commandFactory.RegisterCommand("prune", typeof(PruneCommand));
 
             await host.RunAsync();
         }
@@ -79,6 +80,9 @@ sealed class Program
         services.AddScoped<ITradeOfferRepository, TradeOfferRepository>();
         services.AddScoped<IAlertRepository, AlertRepository>();
         services.AddScoped<IHistoryRepository, HistoryRepository>();
+
+        // Register services
+        services.AddScoped<IDatabaseCleanupService, DatabaseCleanupService>();
 
         // Register services
         services.AddScoped<IPriceMonitoringService, PriceMonitoringService>();
