@@ -40,6 +40,7 @@ sealed class Program
             commandFactory.RegisterCommand("status", typeof(StatusCommand));
             commandFactory.RegisterCommand("help", typeof(HelpCommand));
             commandFactory.RegisterCommand("alert", typeof(AlertCommand));
+            commandFactory.RegisterCommand("summary", typeof(SummaryCommand));
             commandFactory.RegisterCommand("history", typeof(HistoryCommand));
             commandFactory.RegisterCommand("export", typeof(ExportCommand));
             commandFactory.RegisterCommand("version", typeof(VersionCommand));
