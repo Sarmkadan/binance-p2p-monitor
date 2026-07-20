@@ -46,6 +46,7 @@ sealed class Program
             commandFactory.RegisterCommand("backtest", typeof(BacktestCommand));
             commandFactory.RegisterCommand("spread", typeof(SpreadCommand));
             commandFactory.RegisterCommand("compare", typeof(CompareCommand));
+            commandFactory.RegisterCommand("doctor", typeof(DoctorCommand));
 
             await host.RunAsync();
         }
