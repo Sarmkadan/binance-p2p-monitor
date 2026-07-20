@@ -116,4 +116,25 @@ public class TradeOffer
     {
         return IsActive && amount >= MinAmount && amount <= MaxAmount;
     }
+
+    /// <summary>
+    /// Checks if the merchant meets minimum quality requirements
+    /// </summary>
+    /// <param name="minCompletionRate">Minimum completion rate percentage (0-100).</param>
+    /// <param name="minOrderCount">Minimum number of completed trades.</param>
+    /// <returns>True if merchant meets quality requirements; otherwise, false.</returns>
+    public bool MeetsQualityRequirements(decimal minCompletionRate, int minOrderCount)
+    {
+        // Check minimum order count first
+        if (CompletedTrades < minOrderCount)
+            return false;
+
+        // Calculate completion rate as percentage (0-100)
+        // Completion rate = (completed trades / total possible trades) * 100
+        // For P2P trading, we consider the merchant's completed trades as their completion rate percentage
+        // Since we don't have total possible trades, we use TraderRating field which represents completion rate
+        decimal completionRate = TraderRating;
+
+        return completionRate >= minCompletionRate;
+    }
 }

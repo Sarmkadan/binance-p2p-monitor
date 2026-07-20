@@ -19,4 +19,8 @@ public interface ITradeOfferRepository
     Task<bool> DeleteAsync(int id);
     Task<long> GetTotalOffersCountAsync(string asset, string fiat);
     Task<decimal> GetAveragePriceAsync(string asset, string fiat);
+
+    Task<IEnumerable<TradeOffer>> GetFilteredActiveOffersAsync(string asset, string fiat, decimal minCompletionRate, int minOrderCount);
+
+    Task<IEnumerable<TradeOffer>> GetFilteredBestOffersAsync(string asset, string fiat, int limit, decimal minCompletionRate, int minOrderCount);
 }

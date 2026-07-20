@@ -1,5 +1,4 @@
 #nullable enable
-
 using BinanceP2pMonitor.Data;
 using BinanceP2pMonitor.Exceptions;
 using BinanceP2pMonitor.Models;
@@ -23,9 +22,9 @@ public class TradeOfferRepository : ITradeOfferRepository
         try
         {
             const string sql = @"
-                SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
-                       TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
-                FROM TradeOffers WHERE Id = @Id";
+            SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
+            TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
+            FROM TradeOffers WHERE Id = @Id";
 
             return await Task.Run(() =>
             {
@@ -44,9 +43,9 @@ public class TradeOfferRepository : ITradeOfferRepository
         try
         {
             const string sql = @"
-                SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
-                       TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
-                FROM TradeOffers WHERE OfferIdFromBinance = @BinanceId";
+            SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
+            TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
+            FROM TradeOffers WHERE OfferIdFromBinance = @BinanceId";
 
             return await Task.Run(() =>
             {
@@ -65,10 +64,10 @@ public class TradeOfferRepository : ITradeOfferRepository
         try
         {
             const string sql = @"
-                SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
-                       TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
-                FROM TradeOffers WHERE IsActive = 1
-                ORDER BY Price ASC, TraderRating DESC";
+            SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
+            TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
+            FROM TradeOffers WHERE IsActive = 1
+            ORDER BY Price ASC, TraderRating DESC";
 
             var offers = new List<TradeOffer>();
 
@@ -95,11 +94,11 @@ public class TradeOfferRepository : ITradeOfferRepository
         try
         {
             const string sql = @"
-                SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
-                       TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
-                FROM TradeOffers
-                WHERE Asset = @Asset AND Fiat = @Fiat AND IsActive = 1
-                ORDER BY Price ASC, TraderRating DESC";
+            SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
+            TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
+            FROM TradeOffers
+            WHERE Asset = @Asset AND Fiat = @Fiat AND IsActive = 1
+            ORDER BY Price ASC, TraderRating DESC";
 
             var offers = new List<TradeOffer>();
             var parameters = new Dictionary<string, object> { { "Asset", asset }, { "Fiat", fiat } };
@@ -127,10 +126,10 @@ public class TradeOfferRepository : ITradeOfferRepository
         try
         {
             const string sql = @"
-                SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
-                       TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
-                FROM TradeOffers WHERE TradeType = @TradeType AND IsActive = 1
-                ORDER BY Price ASC";
+            SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
+            TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
+            FROM TradeOffers WHERE TradeType = @TradeType AND IsActive = 1
+            ORDER BY Price ASC";
 
             var offers = new List<TradeOffer>();
 
@@ -157,12 +156,12 @@ public class TradeOfferRepository : ITradeOfferRepository
         try
         {
             const string sql = @"
-                SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
-                       TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
-                FROM TradeOffers
-                WHERE Asset = @Asset AND Fiat = @Fiat AND IsActive = 1
-                ORDER BY Price ASC, TraderRating DESC, CompletedTrades DESC
-                LIMIT @Limit";
+            SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
+            TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
+            FROM TradeOffers
+            WHERE Asset = @Asset AND Fiat = @Fiat AND IsActive = 1
+            ORDER BY Price ASC, TraderRating DESC, CompletedTrades DESC
+            LIMIT @Limit";
 
             var offers = new List<TradeOffer>();
             var parameters = new Dictionary<string, object> { { "Asset", asset }, { "Fiat", fiat }, { "Limit", limit } };
@@ -193,12 +192,12 @@ public class TradeOfferRepository : ITradeOfferRepository
                 throw new InvalidPriceException("Trade offer data is invalid");
 
             const string sql = @"
-                INSERT INTO TradeOffers
-                (OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
-                 TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt)
-                VALUES (@BinanceId, @Asset, @Fiat, @TradeType, @Price, @MinAmount, @MaxAmount,
-                        @Rating, @Completed, @Methods, @IsActive, @Timestamp, @CreatedAt, @UpdatedAt);
-                SELECT last_insert_rowid();";
+            INSERT INTO TradeOffers
+            (OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
+            TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt)
+            VALUES (@BinanceId, @Asset, @Fiat, @TradeType, @Price, @MinAmount, @MaxAmount,
+            @Rating, @Completed, @Methods, @IsActive, @Timestamp, @CreatedAt, @UpdatedAt);
+            SELECT last_insert_rowid();";
 
             var parameters = new Dictionary<string, object>
             {
@@ -238,11 +237,11 @@ public class TradeOfferRepository : ITradeOfferRepository
                 throw new InvalidPriceException("Trade offer data is invalid");
 
             const string sql = @"
-                UPDATE TradeOffers
-                SET Price = @Price, MinAmount = @MinAmount, MaxAmount = @MaxAmount,
-                    TraderRating = @Rating, CompletedTrades = @Completed, IsActive = @IsActive,
-                    Timestamp = @Timestamp, UpdatedAt = @UpdatedAt
-                WHERE Id = @Id";
+            UPDATE TradeOffers
+            SET Price = @Price, MinAmount = @MinAmount, MaxAmount = @MaxAmount,
+            TraderRating = @Rating, CompletedTrades = @Completed, IsActive = @IsActive,
+            Timestamp = @Timestamp, UpdatedAt = @UpdatedAt
+            WHERE Id = @Id";
 
             var parameters = new Dictionary<string, object>
             {
@@ -283,8 +282,8 @@ public class TradeOfferRepository : ITradeOfferRepository
         try
         {
             const string sql = @"
-                SELECT COUNT(*) FROM TradeOffers
-                WHERE Asset = @Asset AND Fiat = @Fiat AND IsActive = 1";
+            SELECT COUNT(*) FROM TradeOffers
+            WHERE Asset = @Asset AND Fiat = @Fiat AND IsActive = 1";
 
             var parameters = new Dictionary<string, object> { { "Asset", asset }, { "Fiat", fiat } };
 
@@ -305,8 +304,8 @@ public class TradeOfferRepository : ITradeOfferRepository
         try
         {
             const string sql = @"
-                SELECT AVG(Price) FROM TradeOffers
-                WHERE Asset = @Asset AND Fiat = @Fiat AND IsActive = 1";
+            SELECT AVG(Price) FROM TradeOffers
+            WHERE Asset = @Asset AND Fiat = @Fiat AND IsActive = 1";
 
             var parameters = new Dictionary<string, object> { { "Asset", asset }, { "Fiat", fiat } };
 
@@ -319,6 +318,88 @@ public class TradeOfferRepository : ITradeOfferRepository
         catch (Exception ex)
         {
             throw new DataAccessException("Failed to get average offer price", ex);
+        }
+    }
+
+    public async Task<IEnumerable<TradeOffer>> GetFilteredActiveOffersAsync(string asset, string fiat, decimal minCompletionRate, int minOrderCount)
+    {
+        try
+        {
+            const string sql = @"
+            SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
+            TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
+            FROM TradeOffers
+            WHERE Asset = @Asset AND Fiat = @Fiat AND IsActive = 1
+            AND CompletedTrades >= @MinOrderCount
+            AND TraderRating >= @MinCompletionRate
+            ORDER BY Price ASC, TraderRating DESC";
+
+            var offers = new List<TradeOffer>();
+            var parameters = new Dictionary<string, object>
+            {
+                { "Asset", asset },
+                { "Fiat", fiat },
+                { "MinOrderCount", minOrderCount },
+                { "MinCompletionRate", minCompletionRate }
+            };
+
+            return await Task.Run(() =>
+            {
+                using var reader = _context.ExecuteReader(sql, parameters);
+                while (reader.Read())
+                {
+                    var offer = MapToTradeOffer(reader);
+                    if (offer is not null)
+                        offers.Add(offer);
+                }
+                return offers;
+            });
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException("Failed to retrieve filtered active trade offers", ex);
+        }
+    }
+
+    public async Task<IEnumerable<TradeOffer>> GetFilteredBestOffersAsync(string asset, string fiat, int limit, decimal minCompletionRate, int minOrderCount)
+    {
+        try
+        {
+            const string sql = @"
+            SELECT Id, OfferIdFromBinance, Asset, Fiat, TradeType, Price, MinAmount, MaxAmount,
+            TraderRating, CompletedTrades, PaymentMethods, IsActive, Timestamp, CreatedAt, UpdatedAt
+            FROM TradeOffers
+            WHERE Asset = @Asset AND Fiat = @Fiat AND IsActive = 1
+            AND CompletedTrades >= @MinOrderCount
+            AND TraderRating >= @MinCompletionRate
+            ORDER BY Price ASC, TraderRating DESC, CompletedTrades DESC
+            LIMIT @Limit";
+
+            var offers = new List<TradeOffer>();
+            var parameters = new Dictionary<string, object>
+            {
+                { "Asset", asset },
+                { "Fiat", fiat },
+                { "MinOrderCount", minOrderCount },
+                { "MinCompletionRate", minCompletionRate },
+                { "Limit", limit }
+            };
+
+            return await Task.Run(() =>
+            {
+                using var reader = _context.ExecuteReader(sql, parameters);
+                while (reader.Read())
+                {
+                    var offer = MapToTradeOffer(reader);
+                    if (offer is not null)
+                        offers.Add(offer);
+                }
+                return offers;
+            });
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException("Failed to retrieve filtered best trade offers", ex);
         }
     }
 
