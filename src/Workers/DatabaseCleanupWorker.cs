@@ -1,4 +1,6 @@
 #nullable enable
+using BinanceP2pMonitor.Services;
+
 namespace BinanceP2pMonitor.Workers;
 
 /// <summary>
@@ -9,15 +11,18 @@ public class DatabaseCleanupWorker : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<DatabaseCleanupWorker> _logger;
     private readonly AppSettings _appSettings;
+    private readonly IDatabaseCleanupService _databaseCleanupService;
 
     public DatabaseCleanupWorker(
         IServiceProvider serviceProvider,
         ILogger<DatabaseCleanupWorker> logger,
-        AppSettings appSettings)
+        AppSettings appSettings,
+        IDatabaseCleanupService databaseCleanupService)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
         _appSettings = appSettings;
+        _databaseCleanupService = databaseCleanupService ?? throw new ArgumentNullException(nameof(databaseCleanupService));
     }
 
     /// <summary>
@@ -52,16 +57,11 @@ public class DatabaseCleanupWorker : BackgroundService
 
     private async Task CleanupOldRecordsAsync(CancellationToken ct)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var historyRepository = scope.ServiceProvider.GetRequiredService<IHistoryRepository>();
-
         _logger.LogInformation("Starting database cleanup. Retention period: {Days} days", _appSettings.HistoryRetentionDays);
 
-        var cutoffDate = DateTime.UtcNow.AddDays(-_appSettings.HistoryRetentionDays);
+        var deletedCount = await _databaseCleanupService.DeleteOldRecordsAsync(_appSettings.HistoryRetentionDays).ConfigureAwait(false);
 
-        await historyRepository.DeleteOldRecordsAsync(_appSettings.HistoryRetentionDays).ConfigureAwait(false);
-
-        var remainingCount = await historyRepository.GetTotalHistoryCountAsync().ConfigureAwait(false);
+        var remainingCount = await _databaseCleanupService.GetTotalHistoryCountAsync().ConfigureAwait(false);
 
         // Enforce maximum record cap as a secondary safeguard
         if (remainingCount > _appSettings.MaxHistoryRecords)
@@ -71,7 +71,7 @@ public class DatabaseCleanupWorker : BackgroundService
                 remainingCount, _appSettings.MaxHistoryRecords);
         }
 
-        _logger.LogInformation("Database cleanup completed. Records older than {CutoffDate} deleted. Current count: {Count}",
-            cutoffDate, remainingCount);
+        _logger.LogInformation("Database cleanup completed. Deleted {DeletedCount} records. Current count: {Count}",
+            deletedCount, remainingCount);
     }
 }
