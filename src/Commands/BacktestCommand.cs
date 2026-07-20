@@ -1,6 +1,7 @@
 #nullable enable
 using BinanceP2pMonitor.Backtesting;
 using BinanceP2pMonitor.Extensions;
+using BinanceP2pMonitor.Formatters;
 
 namespace BinanceP2pMonitor.Commands;
 
@@ -14,6 +15,7 @@ public sealed class BacktestCommand : ICommand
     private readonly ConsoleOutputWriter _output;
     private readonly AppSettings _settings;
     private readonly ILogger<BacktestCommand> _logger;
+    private readonly TableOutputFormatter _tableFormatter;
 
     /// <inheritdoc />
     public string Name => "backtest";
@@ -29,12 +31,14 @@ public sealed class BacktestCommand : ICommand
         IBacktestingService backtestingService,
         ConsoleOutputWriter output,
         AppSettings settings,
-        ILogger<BacktestCommand> logger)
+        ILogger<BacktestCommand> logger,
+        TableOutputFormatter tableFormatter)
     {
         _backtestingService = backtestingService ?? throw new ArgumentNullException(nameof(backtestingService));
         _output = output ?? throw new ArgumentNullException(nameof(output));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _tableFormatter = tableFormatter ?? throw new ArgumentNullException(nameof(tableFormatter));
     }
 
     /// <inheritdoc />
@@ -68,7 +72,7 @@ Monte Carlo options:
   --seed=N                   Fixed RNG seed for reproducible runs
 
 Output options:
-  --format=FORMAT            Output format: summary, json (default: summary)
+  --format=FORMAT            Output format: summary, json, table (default: summary)
   --signals                  Print the generated trade signal log
   -h, --help                 Show this help message
 
@@ -109,7 +113,7 @@ Examples:
             (!decimal.TryParse(context.GetOption("confidence"), out var cl) || cl <= 0 || cl >= 1))
             errors.Add("--confidence must be in (0, 1)");
 
-        var validFormats = new[] { "summary", "json" };
+        var validFormats = new[] { "summary", "json", "table" };
         if (context.HasOption("format") && !validFormats.Contains(context.GetOption("format")))
             errors.Add($"--format must be one of: {string.Join(", ", validFormats)}");
 
@@ -165,6 +169,11 @@ Examples:
                     WriteIndented = true,
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 }));
+            }
+            else if (format == "table")
+            {
+                var summary = BacktestingEngine.CreateSummaryReport(result);
+                _output.WriteRaw(_tableFormatter.Format(summary));
             }
             else
             {
