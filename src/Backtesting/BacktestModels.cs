@@ -157,6 +157,19 @@ public sealed record MonteCarloSimulationResult
     public required IReadOnlyList<MonteCarloPathSummary> Paths { get; init; }
 }
 
+    /// <summary>
+    /// Summary statistics extracted from a backtest result for tabular display.
+    /// </summary>
+    /// <param name="TotalTrades">Total number of completed round-trip trades.</param>
+    /// <param name="WinRate">Fraction of trades that generated a positive net PnL.</param>
+    /// <param name="AverageProfit">Mean net PnL of all trades in fiat units.</param>
+    /// <param name="MaxDrawdown">Maximum peak-to-trough equity drawdown as a percentage.</param>
+    public sealed record BacktestSummary(
+        int TotalTrades,
+        decimal WinRate,
+        decimal AverageProfit,
+        decimal MaxDrawdown);
+
 /// <summary>
 /// Complete result produced by a single backtest run over historical P2P price data.
 /// </summary>

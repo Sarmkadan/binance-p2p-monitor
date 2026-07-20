@@ -446,6 +446,34 @@ public sealed class BacktestingEngine : IBacktestingService
         };
     }
 
+    /// <summary>
+    /// Creates a summary report from a backtest result containing key performance metrics.
+    /// </summary>
+    /// <param name="result">The backtest result to summarize</param>
+    /// <returns>A BacktestSummary object with total trades, win rate, average profit, and max drawdown</returns>
+    public static BacktestSummary CreateSummaryReport(BacktestResult result)
+    {
+        if (result.Trades.Count == 0)
+        {
+            return new BacktestSummary(
+                TotalTrades: 0,
+                WinRate: 0m,
+                AverageProfit: 0m,
+                MaxDrawdown: 0m
+            );
+        }
+
+        decimal totalNetPnL = result.Trades.Sum(t => t.NetPnL);
+        decimal averageProfit = totalNetPnL / result.Trades.Count;
+
+        return new BacktestSummary(
+            TotalTrades: result.TotalTrades,
+            WinRate: result.WinRate,
+            AverageProfit: Math.Round(averageProfit, 4),
+            MaxDrawdown: result.MaxDrawdownPercent
+        );
+    }
+
     // ── Private — statistics helpers ─────────────────────────────────────────
 
     /// <summary>
