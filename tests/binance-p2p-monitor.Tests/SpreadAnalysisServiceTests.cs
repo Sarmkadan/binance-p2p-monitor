@@ -53,6 +53,78 @@ public class SpreadAnalysisServiceTests
     }
 
     /// <summary>
+    /// Verifies that AnalyzeSpreadAsync correctly calculates a normal spread.
+    /// </summary>
+    [Fact]
+    public async Task AnalyzeSpreadAsync_NormalSpread_ReturnsCorrectSpread()
+    {
+        // Arrange: buy=100, sell=105, spread should be 5%
+        var result = await _service.AnalyzeSpreadAsync(100m, 105m);
+
+        result.Should().Be(5.0m);
+    }
+
+    /// <summary>
+    /// Verifies that AnalyzeSpreadAsync returns zero spread when buy equals sell.
+    /// </summary>
+    [Fact]
+    public async Task AnalyzeSpreadAsync_ZeroSpread_ReturnsZero()
+    {
+        // Arrange: buy=100, sell=100, spread should be 0%
+        var result = await _service.AnalyzeSpreadAsync(100m, 100m);
+
+        result.Should().Be(0.0m);
+    }
+
+    /// <summary>
+    /// Verifies that AnalyzeSpreadAsync handles negative spread (sell < buy) correctly.
+    /// </summary>
+    [Fact]
+    public async Task AnalyzeSpreadAsync_NegativeSpread_ReturnsNegativeValue()
+    {
+        // Arrange: buy=105, sell=100, spread should be -4.7619%
+        var result = await _service.AnalyzeSpreadAsync(105m, 100m);
+
+        result.Should().BeApproximately(-4.7619m, 0.0001m);
+    }
+
+    /// <summary>
+    /// Verifies that AnalyzeSpreadAsync handles very small spreads correctly.
+    /// </summary>
+    [Fact]
+    public async Task AnalyzeSpreadAsync_VerySmallSpread_ReturnsCorrectValue()
+    {
+        // Arrange: buy=10000, sell=10001, spread should be 0.01%
+        var result = await _service.AnalyzeSpreadAsync(10000m, 10001m);
+
+        result.Should().Be(0.01m);
+    }
+
+    /// <summary>
+    /// Verifies that AnalyzeSpreadAsync handles large spreads correctly.
+    /// </summary>
+    [Fact]
+    public async Task AnalyzeSpreadAsync_LargeSpread_ReturnsCorrectValue()
+    {
+        // Arrange: buy=100, sell=150, spread should be 50%
+        var result = await _service.AnalyzeSpreadAsync(100m, 150m);
+
+        result.Should().Be(50.0m);
+    }
+
+    /// <summary>
+    /// Verifies that AnalyzeSpreadAsync rounds to 4 decimal places.
+    /// </summary>
+    [Fact]
+    public async Task AnalyzeSpreadAsync_RoundsToFourDecimalPlaces()
+    {
+        // Arrange: buy=3m, sell=3.0001m, spread should be 0.003333...% which rounds to 0.0033%
+        var result = await _service.AnalyzeSpreadAsync(3m, 3.0001m);
+
+        result.Should().Be(0.0033m);
+    }
+
+    /// <summary>
     /// Verifies that the UpdateSpreadAsync method returns true when given a valid spread.
     /// </summary>
     [Fact]
@@ -86,7 +158,136 @@ public class SpreadAnalysisServiceTests
     }
 
     /// <summary>
-    /// Verifies that the GetCrossCurrencySpreadAsync method returns the spread when given valid data.
+    /// Verifies that GetSpreadAnalysisAsync handles single data point correctly.
+    /// </summary>
+    [Fact]
+    public async Task GetSpreadAnalysisAsync_SingleDataPoint_CalculatesCorrectly()
+    {
+        // Arrange
+        var asset = "ETH";
+        var fiat = "USD";
+        var price = new Price { Asset = asset, Fiat = fiat, BuyPrice = 100m, SellPrice = 102m, Timestamp = DateTime.UtcNow };
+        var history = new List<PriceHistory>
+        {
+            new() { Asset = asset, Fiat = fiat, BuyPrice = 100m, SellPrice = 102m, RecordedAt = DateTime.UtcNow.AddHours(-1), SpreadPercentage = 2.0m }
+        };
+
+        _priceRepositoryMock.Setup(r => r.GetLatestByAssetAndFiatAsync(asset, fiat))
+            .ReturnsAsync(price);
+        _historyServiceMock.Setup(h => h.GetHistoryAsync(asset, fiat, _settings.SpreadAnalysisHistoryHours))
+            .ReturnsAsync(history);
+
+        // Act
+        var result = await _service.GetSpreadAnalysisAsync(asset, fiat);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.SampleCount.Should().BeGreaterThan(0);
+        result.CurrentSpreadPercent.Should().Be(2.0m);
+        result.MinSpreadPercent.Should().Be(2.0m);
+        result.MaxSpreadPercent.Should().Be(2.0m);
+        result.AverageSpreadPercent.Should().Be(2.0m);
+    }
+
+    /// <summary>
+    /// Verifies that GetSpreadAnalysisAsync handles empty historical data correctly.
+    /// </summary>
+    [Fact]
+    public async Task GetSpreadAnalysisAsync_EmptyHistoricalData_CreatesEmptySpread()
+    {
+        // Arrange
+        var asset = "BTC";
+        var fiat = "USD";
+        var price = new Price { Asset = asset, Fiat = fiat, BuyPrice = 100m, SellPrice = 102m, Timestamp = DateTime.UtcNow };
+
+        _priceRepositoryMock.Setup(r => r.GetLatestByAssetAndFiatAsync(asset, fiat))
+            .ReturnsAsync(price);
+        _historyServiceMock.Setup(h => h.GetHistoryAsync(asset, fiat, _settings.SpreadAnalysisHistoryHours))
+            .ReturnsAsync(new List<PriceHistory>());
+
+        // Act
+        var result = await _service.GetSpreadAnalysisAsync(asset, fiat);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.SampleCount.Should().Be(1); // Cache adds one entry
+        result.CurrentSpreadPercent.Should().Be(2.0m);
+    }
+
+    /// <summary>
+    /// Verifies that GetSpreadAnalysisAsync returns null when no price data is available.
+    /// </summary>
+    [Fact]
+    public async Task GetSpreadAnalysisAsync_NoPriceData_ReturnsNull()
+    {
+        // Arrange
+        var asset = "BTC";
+        var fiat = "USD";
+
+        _priceRepositoryMock.Setup(r => r.GetLatestByAssetAndFiatAsync(asset, fiat))
+            .ReturnsAsync((Price?)null);
+
+        // Act
+        var result = await _service.GetSpreadAnalysisAsync(asset, fiat);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    /// <summary>
+    /// Verifies that GetSpreadAnalysisAsync handles multiple historical data points correctly.
+    /// </summary>
+    [Fact]
+    public async Task GetSpreadAnalysisAsync_MultipleDataPoints_CalculatesStatisticsCorrectly()
+    {
+        // Arrange
+        var asset = "BTC";
+        var fiat = "USD";
+        var price = new Price { Asset = asset, Fiat = fiat, BuyPrice = 100m, SellPrice = 102m, Timestamp = DateTime.UtcNow };
+        var history = new List<PriceHistory>
+        {
+            new() { Asset = asset, Fiat = fiat, BuyPrice = 100m, SellPrice = 102m, RecordedAt = DateTime.UtcNow.AddHours(-3), SpreadPercentage = 2.0m },
+            new() { Asset = asset, Fiat = fiat, BuyPrice = 100m, SellPrice = 103m, RecordedAt = DateTime.UtcNow.AddHours(-2), SpreadPercentage = 3.0m },
+            new() { Asset = asset, Fiat = fiat, BuyPrice = 100m, SellPrice = 101m, RecordedAt = DateTime.UtcNow.AddHours(-1), SpreadPercentage = 1.0m }
+        };
+
+        _priceRepositoryMock.Setup(r => r.GetLatestByAssetAndFiatAsync(asset, fiat))
+            .ReturnsAsync(price);
+        _historyServiceMock.Setup(h => h.GetHistoryAsync(asset, fiat, _settings.SpreadAnalysisHistoryHours))
+            .ReturnsAsync(history);
+
+        // Act
+        var result = await _service.GetSpreadAnalysisAsync(asset, fiat);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.SampleCount.Should().BeGreaterThan(3); // Cache adds one, plus 3 historical
+        result.CurrentSpreadPercent.Should().Be(2.0m); // Last spread
+        result.MinSpreadPercent.Should().Be(1.0m);
+        result.MaxSpreadPercent.Should().Be(3.0m);
+        result.AverageSpreadPercent.Should().BeApproximately(2.0m, 0.0001m);
+    }
+
+    /// <summary>
+    /// Verifies that GetAllSpreadsAsync handles empty repository correctly.
+    /// </summary>
+    [Fact]
+    public async Task GetAllSpreadsAsync_EmptyRepository_ReturnsEmptyDictionary()
+    {
+        // Arrange
+        _priceRepositoryMock.Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<Price>());
+
+        // Act
+        var result = await _service.GetAllSpreadsAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Verifies that GetCrossCurrencySpreadAsync returns the spread when given valid data.
     /// </summary>
     [Fact]
     public async Task GetCrossCurrencySpreadAsync_ValidData_ReturnsSpread()
@@ -110,7 +311,7 @@ public class SpreadAnalysisServiceTests
     }
 
     /// <summary>
-    /// Verifies that the GetCrossCurrencySpreadAsync method returns null when given missing data.
+    /// Verifies that GetCrossCurrencySpreadAsync returns null when given missing data.
     /// </summary>
     [Fact]
     public async Task GetCrossCurrencySpreadAsync_MissingData_ReturnsNull()
@@ -126,5 +327,50 @@ public class SpreadAnalysisServiceTests
         var result = await _service.GetCrossCurrencySpreadAsync(asset, baseFiat, quoteFiat, conversionRate);
 
         result.Should().BeNull();
+    }
+
+    /// <summary>
+    /// Verifies that FindAnomalousSpreadAsync handles empty spreads correctly.
+    /// </summary>
+    [Fact]
+    public async Task FindAnomalousSpreadAsync_EmptySpreads_ReturnsEmptyCollection()
+    {
+        // Arrange
+        _priceRepositoryMock.Setup(r => r.GetAllActiveAsync())
+            .ReturnsAsync(new List<Price>());
+
+        // Act
+        var result = await _service.FindAnomalousSpreadAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Verifies that UpdateSpreadAsync updates spread statistics correctly.
+    /// </summary>
+    [Fact]
+    public async Task UpdateSpreadAsync_UpdatesStatistics_Correctly()
+    {
+        // Arrange
+        var spread = new Spread
+        {
+            Asset = "BTC",
+            Fiat = "USD",
+            CurrentSpreadPercent = 1.0m,
+            AverageSpreadPercent = 1.0m,
+            MinSpreadPercent = 1.0m,
+            MaxSpreadPercent = 1.0m,
+            SampleCount = 1,
+            LastUpdatedAt = DateTime.UtcNow.AddDays(-1),
+            CreatedAt = DateTime.UtcNow.AddDays(-1)
+        };
+
+        // Act
+        var result = await _service.UpdateSpreadAsync(spread);
+
+        // Assert
+        result.Should().BeTrue();
     }
 }
