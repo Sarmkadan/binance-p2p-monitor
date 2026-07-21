@@ -41,7 +41,7 @@ Examples:
         return new List<string>();
     }
 
-    public Task<int> ExecuteAsync(CommandContext context)
+    public Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
     {
         _output.WriteHeader("Binance P2P Monitor");
 

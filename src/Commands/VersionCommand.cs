@@ -33,7 +33,7 @@ Examples:
         return new List<string>();
     }
 
-    public Task<int> ExecuteAsync(CommandContext context)
+    public Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
     {
         var version = typeof(VersionCommand).Assembly.GetName().Version?.ToString() ?? "1.0.0";
 

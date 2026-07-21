@@ -82,7 +82,7 @@ binance-p2p-monitor compare --asset=USDT --from=USD --to=CNY --format=json
         return errors;
     }
 
-    public async Task<int> ExecuteAsync(CommandContext context)
+    public async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
     {
         _output.WriteHeader("Price Comparison");
 

@@ -65,7 +65,7 @@ binance-p2p-monitor summary --format=markdown
         return errors;
     }
 
-    public async Task<int> ExecuteAsync(CommandContext context)
+    public async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
     {
         try
         {

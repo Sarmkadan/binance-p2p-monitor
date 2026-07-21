@@ -77,7 +77,7 @@ errors.Add("--asset and --fiat must be provided together if either is used for f
 return errors;
 }
 
-public async Task<int> ExecuteAsync(CommandContext context)
+public async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
 {
 try
 {

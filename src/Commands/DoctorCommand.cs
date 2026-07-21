@@ -53,7 +53,7 @@ Examples:
         return new List<string>();
     }
 
-    public async Task<int> ExecuteAsync(CommandContext context)
+    public async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
     {
         _output.WriteHeader("System Health Check");
         _output.WriteBlankLine();

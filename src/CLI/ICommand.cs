@@ -1,4 +1,8 @@
 #nullable enable
+
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace BinanceP2pMonitor.CLI;
 
 /// <summary>
@@ -30,5 +34,7 @@ public interface ICommand
     /// <summary>
     /// Executes the command asynchronously
     /// </summary>
-    Task<int> ExecuteAsync(CommandContext context);
+    /// <param name="context">Command context with arguments and services</param>
+    /// <param name="cancellationToken">Cancellation token for cooperative cancellation</param>
+    Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default);
 }
