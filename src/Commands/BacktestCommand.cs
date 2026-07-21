@@ -121,7 +121,7 @@ Examples:
     }
 
     /// <inheritdoc />
-    public async Task<int> ExecuteAsync(CommandContext context)
+    public async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
     {
         var asset = context.GetOption("asset")!;
         var fiat = context.GetOption("fiat")!;

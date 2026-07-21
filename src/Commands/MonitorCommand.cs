@@ -79,7 +79,7 @@ binance-p2p-monitor monitor --interval=60 --format=markdown
         return errors;
     }
 
-    public async Task<int> ExecuteAsync(CommandContext context)
+    public async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
     {
         _output.WriteHeader("P2P Price Monitor");
 

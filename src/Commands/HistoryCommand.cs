@@ -69,7 +69,7 @@ Examples:
         return errors;
     }
 
-    public async Task<int> ExecuteAsync(CommandContext context)
+    public async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
     {
         try
         {
