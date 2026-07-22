@@ -23,6 +23,7 @@ public class WebSocketService : IWebSocketService, IDisposable
     private readonly HashSet<string> _subscribedPairs;
     private CancellationTokenSource? _cancellationTokenSource;
     private Timer? _keepaliveTimer;
+    private Task? _receiveLoopTask;
 
     public event EventHandler<PriceUpdateEventArgs>? OnPriceUpdate;
 
@@ -44,10 +45,13 @@ public class WebSocketService : IWebSocketService, IDisposable
             if (IsConnected)
                 return;
 
-            _webSocket?.Dispose();
-            _webSocket = new ClientWebSocket();
+            // Cancel and dispose old cancellation token source before creating new one
+            _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = new CancellationTokenSource();
+
+            _webSocket?.Dispose();
+            _webSocket = new ClientWebSocket();
 
             // Connect to Binance WebSocket endpoint
             var uri = new Uri("wss://stream.binance.com:9443/ws");
@@ -79,7 +83,7 @@ public class WebSocketService : IWebSocketService, IDisposable
             StartKeepaliveTimer();
 
             // Start listening for messages
-            _ = ListenForMessagesAsync(_cancellationTokenSource.Token);
+            _receiveLoopTask = ListenForMessagesAsync(_cancellationTokenSource.Token);
         }
         catch (Exception ex) when (ex is not ApiException)
         {
@@ -158,7 +162,6 @@ public class WebSocketService : IWebSocketService, IDisposable
 
             if (_webSocket?.State == WebSocketState.Open)
             {
-                _cancellationTokenSource?.Cancel();
                 await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,
                     "Closing", CancellationToken.None);
             }
@@ -250,11 +253,18 @@ public class WebSocketService : IWebSocketService, IDisposable
             var buffer = new byte[4096];
             using var messageStream = new MemoryStream();
 
-            while (!cancellationToken.IsCancellationRequested && IsConnected)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var result = await _webSocket!.ReceiveAsync(
+                    // Check if socket is still valid before attempting to receive
+                    if (_webSocket == null || _webSocket.State != WebSocketState.Open)
+                    {
+                        _logger.LogDebug("WebSocket is not open, stopping receive loop");
+                        break;
+                    }
+
+                    var result = await _webSocket.ReceiveAsync(
                         new ArraySegment<byte>(buffer), cancellationToken);
 
                     if (result.MessageType == WebSocketMessageType.Text)
@@ -289,6 +299,14 @@ public class WebSocketService : IWebSocketService, IDisposable
                 }
                 catch (OperationCanceledException)
                 {
+                    _logger.LogDebug("Receive loop cancelled");
+                    break;
+                }
+                catch (WebSocketException wsEx) when (wsEx.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely ||
+                                                     wsEx.WebSocketErrorCode == WebSocketError.InvalidState)
+                {
+                    _isConnected = false;
+                    _logger.LogWarning(wsEx, "WebSocket connection closed or in invalid state. Stopping receive loop.");
                     break;
                 }
                 catch (WebSocketException wsEx)
@@ -302,6 +320,11 @@ public class WebSocketService : IWebSocketService, IDisposable
                     if (!cancellationToken.IsCancellationRequested)
                         _ = ReconnectAsync(cancellationToken);
 
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in receive loop");
                     break;
                 }
             }
@@ -378,7 +401,7 @@ public class WebSocketService : IWebSocketService, IDisposable
                 throw new InvalidOperationException("WebSocket is not connected");
 
             var bytes = Encoding.UTF8.GetBytes(message);
-            await _webSocket!.SendAsync(
+            await _webSocket.SendAsync(
                 new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true,
                 _cancellationTokenSource!.Token);
         }
@@ -423,10 +446,11 @@ public class WebSocketService : IWebSocketService, IDisposable
     public void Dispose()
     {
         _keepaliveTimer?.Dispose();
+        _keepaliveTimer = null;
 
         try
         {
-            // Stop the receive loop before tearing the socket down
+            // Cancel the cancellation token to stop the receive loop
             _cancellationTokenSource?.Cancel();
         }
         catch (ObjectDisposedException)
@@ -434,8 +458,29 @@ public class WebSocketService : IWebSocketService, IDisposable
             // Already disposed; nothing left to cancel
         }
 
+        // Wait for receive loop to complete if it's running
+        try
+        {
+            if (_receiveLoopTask != null && !_receiveLoopTask.IsCompleted)
+            {
+                // Give it a moment to complete gracefully
+                if (!_receiveLoopTask.Wait(TimeSpan.FromSeconds(2)))
+                {
+                    _logger.LogWarning("Receive loop did not complete gracefully within timeout");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error waiting for receive loop to complete");
+        }
+
         _webSocket?.Dispose();
+        _webSocket = null;
+
         _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = null;
+
         GC.SuppressFinalize(this);
     }
 }
