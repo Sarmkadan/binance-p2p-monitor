@@ -22,93 +22,93 @@ public static class StringExtensionsBenchmarksValidation
         var problems = new List<string>();
 
         // Validate SplitCamelCase - should split camelCase into space-separated words
-        if (string.IsNullOrWhiteSpace(value.SplitCamelCase))
+        if (string.IsNullOrWhiteSpace(value.SplitCamelCase()))
         {
             problems.Add("SplitCamelCase returned null or whitespace");
         }
-        else if (value.SplitCamelCase.Contains(PascalInput))
+        else if (value.SplitCamelCase().Contains(PascalInput))
         {
             // If the original PascalCase string appears in the result, validation failed
             problems.Add("SplitCamelCase did not properly split camelCase input");
         }
 
         // Validate ToSnakeCase - should convert PascalCase to snake_case
-        if (string.IsNullOrWhiteSpace(value.ToSnakeCase))
+        if (string.IsNullOrWhiteSpace(value.ToSnakeCase()))
         {
             problems.Add($"ToSnakeCase returned null or whitespace");
         }
-        else if (value.ToSnakeCase != "binance_price_monitoring_service")
+        else if (value.ToSnakeCase() != "binance_price_monitoring_service")
         {
-            problems.Add($"ToSnakeCase returned unexpected value: '{value.ToSnakeCase}'");
+            problems.Add($"ToSnakeCase returned unexpected value: '{value.ToSnakeCase()}'");
         }
 
         // Validate ToPascalCase - should convert snake_case to PascalCase
-        if (string.IsNullOrWhiteSpace(value.ToPascalCase))
+        if (string.IsNullOrWhiteSpace(value.ToPascalCase()))
         {
             problems.Add($"ToPascalCase returned null or whitespace");
         }
-        else if (value.ToPascalCase != PascalInput)
+        else if (value.ToPascalCase() != PascalInput)
         {
-            problems.Add($"ToPascalCase returned unexpected value: '{value.ToPascalCase}'");
+            problems.Add($"ToPascalCase returned unexpected value: '{value.ToPascalCase()}'");
         }
 
         // Validate Truncate_Triggered - should truncate to 30 chars
-        if (value.Truncate_Triggered.Length != 30)
+        if (value.Truncate_Triggered().Length != 30)
         {
-            problems.Add($"Truncate_Triggered returned string with length {value.Truncate_Triggered.Length}, expected 30");
+            problems.Add($"Truncate_Triggered returned string with length {value.Truncate_Triggered().Length}, expected 30");
         }
-        else if (!value.Truncate_Triggered.EndsWith("..."))
+        else if (!value.Truncate_Triggered().EndsWith("..."))
         {
             problems.Add($"Truncate_Triggered did not append suffix correctly");
         }
 
         // Validate Truncate_NoOp - should not truncate
-        if (value.Truncate_NoOp.Length != LongText.Length)
+        if (value.Truncate_NoOp().Length != LongText.Length)
         {
-            problems.Add($"Truncate_NoOp changed string length from {LongText.Length} to {value.Truncate_NoOp.Length}");
+            problems.Add($"Truncate_NoOp changed string length from {LongText.Length} to {value.Truncate_NoOp().Length}");
         }
-        else if (value.Truncate_NoOp != LongText)
+        else if (value.Truncate_NoOp() != LongText)
         {
             problems.Add($"Truncate_NoOp returned unexpected value");
         }
 
         // Validate ToDecimalOrNull_Valid - should parse valid decimal
-        if (!value.ToDecimalOrNull_Valid.HasValue)
+        if (!value.ToDecimalOrNull_Valid().HasValue)
         {
             problems.Add($"ToDecimalOrNull_Valid returned null instead of valid decimal");
         }
-        else if (value.ToDecimalOrNull_Valid != 42345.6789m)
+        else if (value.ToDecimalOrNull_Valid() != 42345.6789m)
         {
-            problems.Add($"ToDecimalOrNull_Valid returned {value.ToDecimalOrNull_Valid} instead of 42345.6789");
+            problems.Add($"ToDecimalOrNull_Valid returned {value.ToDecimalOrNull_Valid()} instead of 42345.6789");
         }
 
         // Validate ToDecimalOrNull_Invalid - should return null for invalid input
-        if (value.ToDecimalOrNull_Invalid.HasValue)
+        if (value.ToDecimalOrNull_Invalid().HasValue)
         {
-            problems.Add($"ToDecimalOrNull_Invalid returned {value.ToDecimalOrNull_Invalid} instead of null");
+            problems.Add($"ToDecimalOrNull_Invalid returned {value.ToDecimalOrNull_Invalid()} instead of null");
         }
 
         // Validate ToIntOrNull_Valid - should parse valid integer
-        if (!value.ToIntOrNull_Valid.HasValue)
+        if (!value.ToIntOrNull_Valid().HasValue)
         {
             problems.Add($"ToIntOrNull_Valid returned null instead of valid integer");
         }
-        else if (value.ToIntOrNull_Valid != 98765)
+        else if (value.ToIntOrNull_Valid() != 98765)
         {
-            problems.Add($"ToIntOrNull_Valid returned {value.ToIntOrNull_Valid} instead of 98765");
+            problems.Add($"ToIntOrNull_Valid returned {value.ToIntOrNull_Valid()} instead of 98765");
         }
 
         // Validate Mask - should mask all but first 4 characters
         const string apiKeyPrefix = "sk-live-";
-        if (value.Mask.Length != apiKeyPrefix.Length + 4)
+        if (value.Mask().Length != apiKeyPrefix.Length + 4)
         {
-            problems.Add($"Mask returned string with unexpected length: {value.Mask.Length}");
+            problems.Add($"Mask returned string with unexpected length: {value.Mask().Length}");
         }
-        else if (!value.Mask.StartsWith(apiKeyPrefix))
+        else if (!value.Mask().StartsWith(apiKeyPrefix))
         {
             problems.Add("Mask did not preserve first 4 characters correctly");
         }
-        else if (value.Mask.Skip(apiKeyPrefix.Length).Any(c => char.IsLetter(c) && !char.IsUpper(c)))
+        else if (value.Mask().Skip(apiKeyPrefix.Length).Any(c => char.IsLetter(c) && !char.IsUpper(c)))
         {
             problems.Add("Mask did not mask all characters after first 4");
         }

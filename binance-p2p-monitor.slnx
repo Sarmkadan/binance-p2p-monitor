@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/binance-p2p-monitor.Benchmarks/binance-p2p-monitor.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
   <Project Path="binance-p2p-monitor.csproj" />
   <Project Path="tests/binance-p2p-monitor.Tests/binance-p2p-monitor.Tests.csproj" />
 </Solution>
