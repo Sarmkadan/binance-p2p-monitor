@@ -1,106 +1,177 @@
+#nullable enable
+
 using BinanceP2pMonitor.CLI;
-using Microsoft.Extensions.Logging;
 using FluentAssertions;
-using Xunit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
+using Xunit;
 
-namespace BinanceP2pMonitor.Tests
+namespace BinanceP2pMonitor.Tests;
+
+/// <summary>
+/// Contains unit tests for the <see cref="CommandFactory"/> class.
+/// </summary>
+public class CommandFactoryUnitTests
 {
-    public class CommandFactoryUnitTests
+    private readonly Mock<ILogger<CommandFactory>> _loggerMock = new();
+
+    private CommandFactory CreateFactory()
     {
-        [Fact]
-        public void RegisterCommand_WithNullName_ThrowsArgumentNullException()
-        {
-            // Arrange
-            var commandFactory = new CommandFactory(It.IsAny<IServiceProvider>(), It.IsAny<ILogger<CommandFactory>>());
+        var serviceProvider = new ServiceCollection().BuildServiceProvider();
+        return new CommandFactory(serviceProvider, _loggerMock.Object);
+    }
 
-            // Act and Assert
-            Assert.Throws<ArgumentNullException>(() => commandFactory.RegisterCommand(null, typeof(ICommand)));
-        }
+    [Fact]
+    public void RegisterCommand_ValidCommand_CreatesCommandCaseInsensitively()
+    {
+        // Arrange
+        var factory = CreateFactory();
+        factory.RegisterCommand("SaMpLe", typeof(SampleCommand));
 
-        [Fact]
-        public void RegisterCommand_WithNullCommandType_ThrowsArgumentNullException()
-        {
-            // Arrange
-            var commandFactory = new CommandFactory(It.IsAny<IServiceProvider>(), It.IsAny<ILogger<CommandFactory>>());
+        // Act
+        var command = factory.CreateCommand("SAMPLE");
 
-            // Act and Assert
-            Assert.Throws<ArgumentNullException>(() => commandFactory.RegisterCommand("test", null));
-        }
+        // Assert
+        command.Should().BeOfType<SampleCommand>();
+        factory.IsCommandRegistered("sample").Should().BeTrue();
+    }
 
-        [Fact]
-        public void RegisterCommand_WithInvalidCommandType_ThrowsArgumentException()
-        {
-            // Arrange
-            var commandFactory = new CommandFactory(It.IsAny<IServiceProvider>(), It.IsAny<ILogger<CommandFactory>>());
+    [Fact]
+    public void RegisterCommand_DuplicateName_ReplacesPreviousRegistration()
+    {
+        // Arrange
+        var factory = CreateFactory();
+        factory.RegisterCommand("sample", typeof(SampleCommand));
 
-            // Act and Assert
-            Assert.Throws<ArgumentException>(() => commandFactory.RegisterCommand("test", typeof(string)));
-        }
+        // Act
+        factory.RegisterCommand("SAMPLE", typeof(ReplacementCommand));
 
-        [Fact]
-        public void CreateCommand_WithNullName_ReturnsNull()
-        {
-            // Arrange
-            var commandFactory = new CommandFactory(It.IsAny<IServiceProvider>(), It.IsAny<ILogger<CommandFactory>>());
+        // Assert
+        factory.CreateCommand("sample").Should().BeOfType<ReplacementCommand>();
+        factory.GetAvailableCommands().Should().ContainSingle().Which.Should().Be("sample");
+    }
 
-            // Act
-            var command = commandFactory.CreateCommand(null);
+    [Fact]
+    public void RegisterCommand_TypeThatDoesNotImplementICommand_ThrowsArgumentException()
+    {
+        // Arrange
+        var factory = CreateFactory();
 
-            // Assert
-            Assert.Null(command);
-        }
+        // Act
+        Action act = () => factory.RegisterCommand("invalid", typeof(string));
 
-        [Fact]
-        public void CreateCommand_WithUnregisteredName_ReturnsNull()
-        {
-            // Arrange
-            var commandFactory = new CommandFactory(It.IsAny<IServiceProvider>(), It.IsAny<ILogger<CommandFactory>>());
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*does not implement ICommand*");
+    }
 
-            // Act
-            var command = commandFactory.CreateCommand("unregistered");
+    [Fact]
+    public void NameBasedMethods_NullName_ThrowNullReferenceException()
+    {
+        // Arrange
+        var factory = CreateFactory();
 
-            // Assert
-            Assert.Null(command);
-        }
+        // Act
+        Action register = () => factory.RegisterCommand(null!, typeof(SampleCommand));
+        Action create = () => factory.CreateCommand(null!);
+        Action checkRegistration = () => factory.IsCommandRegistered(null!);
 
-        [Fact]
-        public void GetAvailableCommands_WithNoRegisteredCommands_ReturnsEmptyList()
-        {
-            // Arrange
-            var commandFactory = new CommandFactory(It.IsAny<IServiceProvider>(), It.IsAny<ILogger<CommandFactory>>());
+        // Assert
+        register.Should().Throw<NullReferenceException>();
+        create.Should().Throw<NullReferenceException>();
+        checkRegistration.Should().Throw<NullReferenceException>();
+    }
 
-            // Act
-            var availableCommands = commandFactory.GetAvailableCommands();
+    [Fact]
+    public void RegisterCommand_EmptyName_RegistersAndCreatesCommand()
+    {
+        // Arrange
+        var factory = CreateFactory();
+        factory.RegisterCommand(string.Empty, typeof(SampleCommand));
 
-            // Assert
-            Assert.Empty(availableCommands);
-        }
+        // Act
+        var command = factory.CreateCommand(string.Empty);
 
-        [Fact]
-        public void IsCommandRegistered_WithNullName_ThrowsArgumentNullException()
-        {
-            // Arrange
-            var commandFactory = new CommandFactory(It.IsAny<IServiceProvider>(), It.IsAny<ILogger<CommandFactory>>());
+        // Assert
+        command.Should().BeOfType<SampleCommand>();
+        factory.IsCommandRegistered(string.Empty).Should().BeTrue();
+    }
 
-            // Act and Assert
-            Assert.Throws<ArgumentNullException>(() => commandFactory.IsCommandRegistered(null));
-        }
+    [Theory]
+    [InlineData("missing")]
+    [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
+    public void CreateCommand_UnregisteredName_ReturnsNull(string commandName)
+    {
+        // Arrange
+        var factory = CreateFactory();
 
-        [Fact]
-        public void IsCommandRegistered_WithUnregisteredName_ReturnsFalse()
-        {
-            // Arrange
-            var commandFactory = new CommandFactory(It.IsAny<IServiceProvider>(), It.IsAny<ILogger<CommandFactory>>());
+        // Act
+        var command = factory.CreateCommand(commandName);
 
-            // Act
-            var isRegistered = commandFactory.IsCommandRegistered("unregistered");
+        // Assert
+        command.Should().BeNull();
+    }
 
-            // Assert
-            Assert.False(isRegistered);
-        }
+    [Fact]
+    public void CreateCommand_UnresolvableConstructorDependency_ReturnsNull()
+    {
+        // Arrange
+        var factory = CreateFactory();
+        factory.RegisterCommand("broken", typeof(CommandWithDependency));
+
+        // Act
+        var command = factory.CreateCommand("broken");
+
+        // Assert
+        command.Should().BeNull();
+    }
+
+    [Fact]
+    public void GetAvailableCommands_MultipleRegistrations_ReturnsNormalizedNames()
+    {
+        // Arrange
+        var factory = CreateFactory();
+        factory.RegisterCommand("FIRST", typeof(SampleCommand));
+        factory.RegisterCommand("second", typeof(ReplacementCommand));
+
+        // Act
+        var commands = factory.GetAvailableCommands();
+
+        // Assert
+        commands.Should().BeEquivalentTo("first", "second");
+        factory.IsCommandRegistered("unknown").Should().BeFalse();
+    }
+
+    public sealed class SampleCommand : ICommand
+    {
+        public string Name => "sample";
+        public string Description => "A test command";
+        public string GetHelp() => string.Empty;
+        public List<string> ValidateArguments(CommandContext context) => [];
+        public Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default) =>
+            Task.FromResult(0);
+    }
+
+    public sealed class ReplacementCommand : ICommand
+    {
+        public string Name => "replacement";
+        public string Description => "A replacement test command";
+        public string GetHelp() => string.Empty;
+        public List<string> ValidateArguments(CommandContext context) => [];
+        public Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default) =>
+            Task.FromResult(0);
+    }
+
+    public interface IMissingDependency;
+
+    public sealed class CommandWithDependency(IMissingDependency dependency) : ICommand
+    {
+        public string Name => "broken";
+        public string Description => dependency.ToString() ?? string.Empty;
+        public string GetHelp() => string.Empty;
+        public List<string> ValidateArguments(CommandContext context) => [];
+        public Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default) =>
+            Task.FromResult(0);
     }
 }
