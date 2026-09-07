@@ -12,7 +12,7 @@ public class DataExporter
 
     public DataExporter(ILogger<DataExporter> logger)
     {
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -20,6 +20,11 @@ public class DataExporter
     /// </summary>
     public async Task ExportJsonAsync<T>(string filePath, T data, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path cannot be null or whitespace", nameof(filePath));
+        if (data is null)
+            throw new ArgumentNullException(nameof(data));
+
         try
         {
             _logger.LogInformation("Exporting data to JSON: {FilePath}", filePath);
@@ -39,6 +44,11 @@ public class DataExporter
     /// </summary>
     public async Task ExportCsvAsync(string filePath, IEnumerable<Dictionary<string, string>> rows, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path cannot be null or whitespace", nameof(filePath));
+        if (rows is null)
+            throw new ArgumentNullException(nameof(rows));
+
         try
         {
             _logger.LogInformation("Exporting data to CSV: {FilePath}", filePath);
@@ -76,6 +86,11 @@ public class DataExporter
     /// </summary>
     public async Task ExportCsvGzAsync(string filePath, IEnumerable<Dictionary<string, string>> rows, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path cannot be null or whitespace", nameof(filePath));
+        if (rows is null)
+            throw new ArgumentNullException(nameof(rows));
+
         try
         {
             _logger.LogInformation("Exporting compressed CSV to: {FilePath}", filePath);
@@ -124,6 +139,11 @@ public class DataExporter
     /// </summary>
     public async Task ExportJsonGzAsync<T>(string filePath, T data, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path cannot be null or whitespace", nameof(filePath));
+        if (data is null)
+            throw new ArgumentNullException(nameof(data));
+
         try
         {
             _logger.LogInformation("Exporting compressed JSON to: {FilePath}", filePath);
@@ -151,6 +171,9 @@ public class DataExporter
     /// </summary>
     public string GenerateSummary(int recordCount, string exportType)
     {
+        if (string.IsNullOrWhiteSpace(exportType))
+            throw new ArgumentException("Export type cannot be null or whitespace", nameof(exportType));
+
         var report = new System.Text.StringBuilder();
         report.AppendLine($"Export Summary: {exportType}");
         report.AppendLine($"Records: {recordCount}");
