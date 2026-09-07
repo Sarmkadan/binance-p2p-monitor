@@ -27,9 +27,28 @@ public static class ApplicationConstants
     public const int DefaultPriceChangeThreshold = 2; // percentage
 
     // Spread analysis
+    /// <summary>Multiplier used to convert a decimal ratio to a percentage.</summary>
+    public const decimal PercentageMultiplier = 100m;
+
+    /// <summary>Default number of decimal places retained for spread calculations.</summary>
+    public const int DefaultSpreadDecimalPlaces = 4;
+
+    /// <summary>Default Z-score threshold used to identify an anomalous spread.</summary>
+    public const decimal DefaultSpreadAnomalyZScoreThreshold = 2.0m;
+
+    /// <summary>Default maximum spread percentage accepted for spread alerts.</summary>
+    public const decimal DefaultMaxSpreadThresholdPercent = 5.0m;
+
     public const decimal DefaultSpreadThresholdPercent = 1.5m;
     public const decimal MinSpreadAlertPercent = 0.1m;
     public const decimal MaxSpreadAlertPercent = 5.0m;
+
+    // Display formatting
+    /// <summary>Default number of decimal places used when displaying monetary values.</summary>
+    public const int DefaultDecimalDisplayPlaces = 2;
+
+    /// <summary>Default number of decimal places used when rounding stored price values.</summary>
+    public const int DefaultPriceDecimalPlaces = 8;
 
     // Database
     public const int DatabaseCommandTimeoutSeconds = 30;
@@ -50,10 +69,25 @@ public static class ApplicationConstants
     public const int MaxUsernameLength = 100;
 
     // Cache
+    /// <summary>Default time-to-live, in seconds, for short-lived cached price data.</summary>
+    public const int DefaultCacheTtlSeconds = 30;
+
     public const int CacheExpirationMinutes = 15;
     public const int MaxCacheSize = 1000;
 
     // Error handling
+    /// <summary>Default number of retry attempts for transient operations.</summary>
+    public const int DefaultRetryCount = 3;
+
+    /// <summary>Default initial delay, in milliseconds, between retry attempts.</summary>
+    public const int DefaultRetryDelayMilliseconds = 1000;
+
+    /// <summary>Default maximum delay, in seconds, allowed between retry attempts.</summary>
+    public const int DefaultMaxRetryDelaySeconds = 30;
+
+    /// <summary>Default multiplier applied to successive retry delays.</summary>
+    public const double DefaultRetryBackoffMultiplier = 2.0;
+
     public const int MaxRetryAttempts = 3;
     public const int RetryDelayMilliseconds = 1000;
     public const int MaxExceptionLogLength = 2000;
