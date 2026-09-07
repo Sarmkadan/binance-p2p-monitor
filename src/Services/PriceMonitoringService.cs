@@ -53,12 +53,15 @@ public class PriceMonitoringService : IPriceMonitoringService
 		if (string.IsNullOrWhiteSpace(fiat))
 			throw new ArgumentException("Fiat cannot be null or whitespace", nameof(fiat));
 
+		_logger.LogDebug("Getting current price for {Asset}/{Fiat}", asset, fiat);
+
 		try
 		{
 			return await _priceRepository.GetLatestByAssetAndFiatAsync(asset, fiat).ConfigureAwait(false);
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
+			_logger.LogWarning(ex, "Failed to retrieve current price for {Asset}/{Fiat}", asset, fiat);
 			throw new DataAccessException("Failed to retrieve current price", ex);
 		}
 	}
@@ -68,12 +71,15 @@ public class PriceMonitoringService : IPriceMonitoringService
 	/// </summary>
 	public async Task<IEnumerable<Price>> GetAllCurrentPricesAsync()
 	{
+		_logger.LogDebug("Getting all current prices");
+
 		try
 		{
 			return await _priceRepository.GetAllActiveAsync().ConfigureAwait(false);
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
+			_logger.LogWarning(ex, "Failed to retrieve all current prices");
 			throw new DataAccessException("Failed to retrieve all prices", ex);
 		}
 	}
@@ -119,6 +125,7 @@ var added = await _priceRepository.AddAsync(price).ConfigureAwait(false);
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
+			_logger.LogWarning(ex, "Failed to update price for {Asset}/{Fiat}", price.Asset, price.Fiat);
 			throw new DataAccessException("Failed to update price", ex);
 		}
 	}
@@ -141,6 +148,7 @@ var added = await _priceRepository.AddAsync(price).ConfigureAwait(false);
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
+			_logger.LogWarning(ex, "Failed to calculate average price for {Asset}/{Fiat}", asset, fiat);
 			throw new DataAccessException("Failed to calculate average price", ex);
 		}
 	}
@@ -163,6 +171,7 @@ var added = await _priceRepository.AddAsync(price).ConfigureAwait(false);
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
+			_logger.LogWarning(ex, "Failed to retrieve prices with significant change");
 			throw new DataAccessException("Failed to retrieve prices with significant change", ex);
 		}
 	}
@@ -183,6 +192,7 @@ var added = await _priceRepository.AddAsync(price).ConfigureAwait(false);
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
+			_logger.LogWarning(ex, "Failed to analyze spread for {Asset}/{Fiat}", asset, fiat);
 			throw new DataAccessException("Failed to analyze spread", ex);
 		}
 	}
@@ -243,6 +253,7 @@ var added = await _priceRepository.AddAsync(price).ConfigureAwait(false);
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
+			_logger.LogWarning(ex, "Failed to stop price monitoring service");
 			throw new DataAccessException("Failed to stop monitoring service", ex);
 		}
 	}
