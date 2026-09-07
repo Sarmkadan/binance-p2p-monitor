@@ -13,6 +13,12 @@ public sealed class RateLimiter
 
 	public RateLimiter(int maxRequests, TimeSpan timeWindow)
 	{
+		if (maxRequests <= 0)
+			throw new ArgumentOutOfRangeException(nameof(maxRequests));
+
+		if (timeWindow <= TimeSpan.Zero)
+			throw new ArgumentOutOfRangeException(nameof(timeWindow));
+
 		_maxRequests = maxRequests;
 		_timeWindow = timeWindow;
 	}
@@ -91,6 +97,31 @@ public sealed class RateLimiter
 	}
 
 	/// <summary>
+	/// Removes buckets that have not been accessed within the specified interval
+	/// </summary>
+	public int CleanupStaleBuckets(TimeSpan maxIdle)
+	{
+		_lock.EnterWriteLock();
+		try
+		{
+			var cutoff = DateTime.UtcNow - maxIdle;
+			var staleKeys = _buckets
+				.Where(pair => pair.Value.LastAccessTime < cutoff)
+				.Select(pair => pair.Key)
+				.ToList();
+
+			foreach (var key in staleKeys)
+				_buckets.Remove(key);
+
+			return staleKeys.Count;
+		}
+		finally
+		{
+			_lock.ExitWriteLock();
+		}
+	}
+
+	/// <summary>
 	/// Gets time until next token is available
 	/// </summary>
 	public TimeSpan? GetTimeUntilNextToken(string key)
@@ -115,7 +146,10 @@ public sealed class RateLimiter
 		private readonly TimeSpan _refillPeriod;
 		private int _tokens;
 		private DateTime _lastRefillTime;
+		private DateTime _lastAccessTime;
 		private readonly object _syncLock = new object();
+
+		public DateTime LastAccessTime => _lastAccessTime;
 
 		public TokenBucket(int capacity, TimeSpan refillPeriod)
 		{
@@ -123,12 +157,14 @@ public sealed class RateLimiter
 			_refillPeriod = refillPeriod;
 			_tokens = capacity;
 			_lastRefillTime = DateTime.UtcNow;
+			_lastAccessTime = _lastRefillTime;
 		}
 
 		public bool TryConsumeToken()
 		{
 			lock (_syncLock)
 			{
+				_lastAccessTime = DateTime.UtcNow;
 				Refill();
 				if (_tokens > 0)
 				{
@@ -143,6 +179,7 @@ public sealed class RateLimiter
 		{
 			lock (_syncLock)
 			{
+				_lastAccessTime = DateTime.UtcNow;
 				Refill();
 				return _tokens;
 			}
@@ -152,6 +189,7 @@ public sealed class RateLimiter
 		{
 			lock (_syncLock)
 			{
+				_lastAccessTime = DateTime.UtcNow;
 				Refill();
 				if (_tokens > 0)
 					return TimeSpan.Zero;
