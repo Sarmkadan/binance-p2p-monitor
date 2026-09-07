@@ -15,6 +15,23 @@ namespace BinanceP2pMonitor;
 
 sealed class Program
 {
+    private static readonly (string Name, Type CommandType)[] Commands =
+    [
+        ("monitor", typeof(MonitorCommand)),
+        ("status", typeof(StatusCommand)),
+        ("help", typeof(HelpCommand)),
+        ("alert", typeof(AlertCommand)),
+        ("summary", typeof(SummaryCommand)),
+        ("history", typeof(HistoryCommand)),
+        ("export", typeof(ExportCommand)),
+        ("version", typeof(VersionCommand)),
+        ("backtest", typeof(BacktestCommand)),
+        ("spread", typeof(SpreadCommand)),
+        ("compare", typeof(CompareCommand)),
+        ("doctor", typeof(DoctorCommand)),
+        ("prune", typeof(PruneCommand))
+    ];
+
     static async Task Main(string[] args)
     {
         var host = Host.CreateDefaultBuilder(args)
@@ -30,38 +47,46 @@ sealed class Program
 
         try
         {
-            // Initialize database
-            var dbContext = host.Services.GetRequiredService<DatabaseContext>();
-            dbContext.Initialize();
+            InitializeDatabase(host.Services);
 
             // Register commands after host is built
             var commandFactory = host.Services.GetRequiredService<CommandFactory>();
-            commandFactory.RegisterCommand("monitor", typeof(MonitorCommand));
-            commandFactory.RegisterCommand("status", typeof(StatusCommand));
-            commandFactory.RegisterCommand("help", typeof(HelpCommand));
-            commandFactory.RegisterCommand("alert", typeof(AlertCommand));
-            commandFactory.RegisterCommand("summary", typeof(SummaryCommand));
-            commandFactory.RegisterCommand("history", typeof(HistoryCommand));
-            commandFactory.RegisterCommand("export", typeof(ExportCommand));
-            commandFactory.RegisterCommand("version", typeof(VersionCommand));
-            commandFactory.RegisterCommand("backtest", typeof(BacktestCommand));
-            commandFactory.RegisterCommand("spread", typeof(SpreadCommand));
-            commandFactory.RegisterCommand("compare", typeof(CompareCommand));
-            commandFactory.RegisterCommand("doctor", typeof(DoctorCommand));
-            commandFactory.RegisterCommand("prune", typeof(PruneCommand));
+            RegisterCommands(commandFactory);
 
             await host.RunAsync();
         }
         catch (Exception ex)
         {
-            var logger = host.Services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "Application terminated with error");
+            try
+            {
+                var logger = host.Services.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "Application terminated with error");
+            }
+            catch
+            {
+                // Preserve the original application exception if logging fails.
+            }
+
             throw;
         }
         finally
         {
             host.Dispose();
         }
+    }
+
+    private static void RegisterCommands(CommandFactory factory)
+    {
+        foreach (var (name, commandType) in Commands)
+        {
+            factory.RegisterCommand(name, commandType);
+        }
+    }
+
+    private static void InitializeDatabase(IServiceProvider services)
+    {
+        var dbContext = services.GetRequiredService<DatabaseContext>();
+        dbContext.Initialize();
     }
 
     private static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
