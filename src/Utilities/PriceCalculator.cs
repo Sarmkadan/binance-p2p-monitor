@@ -140,4 +140,41 @@ public static class PriceCalculator
 
         return (decimal)Math.Sqrt((double)(variance / count));
     }
+
+    /// <summary>
+    /// Calculates the volume-weighted average price (VWAP) from a collection of price-volume pairs.
+    /// </summary>
+    /// <param name="entries">A collection of price-volume tuples.</param>
+    /// <returns>The volume-weighted average price, or 0 if the collection is empty or total volume is zero.</returns>
+    /// <exception cref="ArgumentNullException">If <paramref name="entries"/> is null.</exception>
+    public static decimal CalculateVwap(IEnumerable<(decimal price, decimal volume)> entries)
+    {
+        if (entries is null)
+            throw new ArgumentNullException(nameof(entries), "Entries collection cannot be null");
+
+        decimal totalValue = 0;
+        decimal totalVolume = 0;
+
+        foreach (var (price, volume) in entries)
+        {
+            totalValue += price * volume;
+            totalVolume += volume;
+        }
+
+        if (totalVolume == 0)
+            return 0;
+
+        return totalValue / totalVolume;
+    }
+
+    /// <summary>
+    /// Calculates the absolute spread between buy and sell prices.
+    /// </summary>
+    /// <param name="buyPrice">The buy price.</param>
+    /// <param name="sellPrice">The sell price.</param>
+    /// <returns>The absolute spread (sellPrice - buyPrice).</returns>
+    public static decimal CalculateSpreadAbsolute(decimal buyPrice, decimal sellPrice)
+    {
+        return sellPrice - buyPrice;
+    }
 }
