@@ -37,6 +37,7 @@ public class RetryPolicy
         Func<Exception, bool>? shouldRetry = null,
         CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(operation);
         var attempt = 0;
         var delay = _initialDelay;
 
@@ -71,6 +72,7 @@ public class RetryPolicy
         Func<Exception, bool>? shouldRetry = null,
         CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(operation);
         await ExecuteAsync(
             async token => { await operation(token).ConfigureAwait(false); return true; },
             shouldRetry,
