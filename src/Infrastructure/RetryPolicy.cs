@@ -32,6 +32,12 @@ public class RetryPolicy
     /// <summary>
     /// Executes operation with retry logic
     /// </summary>
+    /// <typeparam name="T">The return type of the operation.</typeparam>
+    /// <param name="operation">The asynchronous operation to execute.</param>
+    /// <param name="shouldRetry">An optional predicate that determines whether an exception should trigger a retry.</param>
+    /// <param name="ct">A cancellation token to observe while waiting for the operation or retry delay to complete.</param>
+    /// <returns>The result of the operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="operation"/> is null.</exception>
     public async Task<T> ExecuteAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         Func<Exception, bool>? shouldRetry = null,
@@ -67,6 +73,11 @@ public class RetryPolicy
     /// <summary>
     /// Executes operation without return value
     /// </summary>
+    /// <param name="operation">The asynchronous operation to execute.</param>
+    /// <param name="shouldRetry">An optional predicate that determines whether an exception should trigger a retry.</param>
+    /// <param name="ct">A cancellation token to observe while waiting for the operation or retry delay to complete.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="operation"/> is null.</exception>
     public async Task ExecuteAsync(
         Func<CancellationToken, Task> operation,
         Func<Exception, bool>? shouldRetry = null,
@@ -82,6 +93,8 @@ public class RetryPolicy
     /// <summary>
     /// Predicate for transient errors (network, timeouts)
     /// </summary>
+    /// <param name="ex">The exception to evaluate.</param>
+    /// <returns>True if the exception is transient and should be retried; otherwise, false.</returns>
     public static bool IsTransientError(Exception ex)
     {
         return ex switch
