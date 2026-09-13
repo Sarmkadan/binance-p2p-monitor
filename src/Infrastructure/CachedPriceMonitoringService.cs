@@ -26,6 +26,9 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 
 	public async Task<Price?> GetCurrentPriceAsync(string asset, string fiat)
 	{
+		ArgumentNullException.ThrowIfNull(asset);
+		ArgumentNullException.ThrowIfNull(fiat);
+
 		if (string.IsNullOrWhiteSpace(asset))
 			throw new ArgumentException("Asset cannot be null or whitespace", nameof(asset));
 		if (string.IsNullOrWhiteSpace(fiat))
@@ -87,6 +90,9 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 
 	public async Task<decimal?> GetAveragePriceAsync(string asset, string fiat, int hours)
 	{
+		ArgumentNullException.ThrowIfNull(asset);
+		ArgumentNullException.ThrowIfNull(fiat);
+
 		if (string.IsNullOrWhiteSpace(asset))
 			throw new ArgumentException("Asset cannot be null or whitespace", nameof(asset));
 		if (string.IsNullOrWhiteSpace(fiat))
@@ -125,6 +131,9 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 
 	public async Task<Spread?> GetSpreadAnalysisAsync(string asset, string fiat)
 	{
+		ArgumentNullException.ThrowIfNull(asset);
+		ArgumentNullException.ThrowIfNull(fiat);
+
 		if (string.IsNullOrWhiteSpace(asset))
 			throw new ArgumentException("Asset cannot be null or whitespace", nameof(asset));
 		if (string.IsNullOrWhiteSpace(fiat))
