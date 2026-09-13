@@ -13,6 +13,9 @@ using BinanceP2pMonitor.Data;
 
 namespace BinanceP2pMonitor;
 
+/// <summary>
+/// Configures and runs the Binance P2P monitoring application
+/// </summary>
 sealed class Program
 {
     private static readonly (string Name, Type CommandType)[] Commands =
@@ -32,6 +35,11 @@ sealed class Program
         ("prune", typeof(PruneCommand))
     ];
 
+    /// <summary>
+    /// Serves as the application entry point
+    /// </summary>
+    /// <param name="args">Command-line arguments used to configure the application.</param>
+    /// <returns>A task that represents the lifetime of the application.</returns>
     static async Task Main(string[] args)
     {
         var host = Host.CreateDefaultBuilder(args)
