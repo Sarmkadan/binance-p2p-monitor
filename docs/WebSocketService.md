@@ -1,36 +1,146 @@
 # WebSocketService
-The `WebSocketService` class is designed to establish and manage WebSocket connections, enabling real-time communication for monitoring and tracking purposes, specifically within the context of the Binance P2P monitor project. It provides methods for connecting, disconnecting, subscribing to, and unsubscribing from specific pairs, as well as properties to access current state information.
 
-## API
-- `public WebSocketService`: The constructor for the `WebSocketService` class, used to create a new instance.
-- `public async Task ConnectAsync`: Establishes a WebSocket connection asynchronously. This method does not take any parameters and does not return a value. It may throw exceptions if the connection attempt fails.
-- `public async Task DisconnectAsync`: Closes the existing WebSocket connection asynchronously. Like `ConnectAsync`, it does not take parameters or return a value and may throw if the disconnection attempt fails.
-- `public async Task SubscribeToPairAsync`: Subscribes to a specific pair for real-time updates. The method parameters and exact behavior are not specified, but it is expected to throw if the subscription attempt fails.
-- `public async Task UnsubscribeFromPairAsync`: Unsubscribes from a previously subscribed pair. Similar to `SubscribeToPairAsync`, the parameters are not detailed, but it may throw exceptions on failure.
-- `public string s`: A property that presumably holds a string value related to the service's state or configuration.
-- `public decimal b`: A property that holds a decimal value, potentially related to the best price or another financial metric.
-- `public decimal a`: Another decimal property, possibly representing the ask price or a similar metric.
-- `public long E`: A property with a long value, which could represent an event number, timestamp, or another significant long integer value.
-- `public void Dispose`: Disposes of the `WebSocketService` instance, releasing any held resources. This method does not return a value and does not throw exceptions as part of its normal operation.
+`WebSocketService` implements `IWebSocketService` and `IDisposable` for Binance ticker updates. It connects to `wss://stream.binance.com:9443/ws`, maintains a set of subscribed symbols, receives ticker messages, and publishes parsed prices through `OnPriceUpdate`.
 
-## Usage
+The type is in the `BinanceP2pMonitor.Services` namespace.
+
+## Construction
+
 ```csharp
-// Example 1: Basic Connection and Disconnection
-var service = new WebSocketService();
-await service.ConnectAsync();
-// Perform operations
-await service.DisconnectAsync();
-service.Dispose();
-
-// Example 2: Subscribing to a Pair
-var pairService = new WebSocketService();
-await pairService.ConnectAsync();
-await pairService.SubscribeToPairAsync(); // Assuming SubscribeToPairAsync has parameters in a real implementation
-// Monitor the pair
-await pairService.UnsubscribeFromPairAsync(); // Assuming UnsubscribeFromPairAsync has parameters
-await pairService.DisconnectAsync();
-pairService.Dispose();
+public WebSocketService(ILogger<WebSocketService> logger)
 ```
 
-## Notes
-The `WebSocketService` class seems designed for use in a multi-threaded environment, given the asynchronous nature of its connection and disconnection methods. However, the thread-safety of accessing its properties (`s`, `b`, `a`, `E`) is not explicitly stated and should be assumed to require synchronization unless documented otherwise. Edge cases, such as attempting to subscribe to a pair without an active connection or unsubscribing from a pair that was never subscribed to, may result in exceptions or undefined behavior. The `Dispose` method is crucial for releasing resources, especially in environments where the service instance may be long-lived or created frequently.
+The constructor requires an `ILogger<WebSocketService>`. Passing `null` throws `ArgumentNullException`. The application registers the implementation as a scoped service for `IWebSocketService`.
+
+## Public API
+
+### `IsConnected`
+
+```csharp
+public bool IsConnected { get; }
+```
+
+Returns `true` only when the service's connection flag is set and the underlying `ClientWebSocket` is in the `Open` state. It is `false` before connection, after a detected disconnect, and after `DisconnectAsync`.
+
+### `OnPriceUpdate`
+
+```csharp
+public event EventHandler<PriceUpdateEventArgs>? OnPriceUpdate;
+```
+
+Raised for each valid ticker message whose symbol can be split into an asset and quote currency. The sender is the `WebSocketService` instance.
+
+`PriceUpdateEventArgs` provides:
+
+| Property | Type | Value |
+| --- | --- | --- |
+| `Asset` | `string` | Uppercase base-asset symbol parsed from the ticker symbol. |
+| `Fiat` | `string` | Uppercase quote symbol parsed from the ticker symbol. |
+| `BuyPrice` | `decimal` | Binance ticker field `b`, the best bid price. |
+| `SellPrice` | `decimal` | Binance ticker field `a`, the best ask price. |
+| `UpdateTime` | `DateTime` | Binance event time `E`, converted from Unix milliseconds to UTC. |
+
+Known quote suffixes are checked in this order: `USDT`, `BUSD`, `DAI`, `EUR`, `RUB`, and `GBP`. For other symbols longer than three characters, the final three characters are treated as the quote and the preceding characters as the asset. Malformed JSON, blank symbols, and symbols that cannot be split are logged and do not raise the event.
+
+Event handlers run synchronously on the receive-loop call path. Exceptions thrown by a handler are caught by message processing and logged rather than propagated to the caller that initiated the connection.
+
+### `ConnectAsync`
+
+```csharp
+public Task ConnectAsync()
+```
+
+Connects to the Binance WebSocket endpoint. If already connected, it returns without doing anything. A successful connection:
+
+1. Creates a new cancellation source and `ClientWebSocket`, disposing the previous instances.
+2. Re-subscribes to every pair retained in the service's subscription set.
+3. Starts a keepalive timer that sends a JSON ping every 20 minutes.
+4. Starts the background receive loop.
+
+Connection failures are logged and wrapped in an `ApiException` with message `Failed to connect to WebSocket` and error code `WEBSOCKET_CONNECT_FAILED`. An `ApiException` already raised while re-subscribing is allowed to propagate unchanged.
+
+The method has no cancellation-token parameter. Its internal token is controlled by the service and is cancelled by `Dispose`; `DisconnectAsync` does not cancel it.
+
+### `DisconnectAsync`
+
+```csharp
+public Task DisconnectAsync()
+```
+
+Stops the keepalive timer and, when the socket is open, sends a normal WebSocket close with description `Closing`. It then marks the service disconnected. Errors are logged and rethrown unchanged.
+
+Calling this method when the socket is absent or not open still marks the service disconnected and completes normally. The subscribed-pair set is retained, so a later `ConnectAsync` attempts to restore those subscriptions.
+
+### `SubscribeToPairAsync`
+
+```csharp
+public Task SubscribeToPairAsync(string asset, string fiat)
+```
+
+Subscribes to the lowercase stream `<asset><fiat>@ticker` by sending a Binance `SUBSCRIBE` message. If the service is disconnected, it first calls `ConnectAsync`. A pair already present in the subscription set is ignored.
+
+The pair is added to the set only after the subscription message is sent successfully. Errors are logged and rethrown; send failures are represented by `ApiException`. The method performs no explicit null, empty-string, or symbol-format validation.
+
+### `UnsubscribeFromPairAsync`
+
+```csharp
+public Task UnsubscribeFromPairAsync(string asset, string fiat)
+```
+
+Sends an `UNSUBSCRIBE` message for the lowercase stream `<asset><fiat>@ticker`, then removes the pair from the subscription set. If the pair is not currently recorded, the method returns without sending a message.
+
+This method does not connect automatically. If a recorded pair is unsubscribed while no connection is open, sending fails with `ApiException` and the pair remains in the set. Other errors are logged and rethrown. As with subscription, there is no explicit argument validation.
+
+### `Dispose`
+
+```csharp
+public void Dispose()
+```
+
+Disposes the keepalive timer, cancels the receive-loop token, waits up to two seconds for the receive loop, and disposes the socket and cancellation source. It suppresses finalization and tolerates repeated calls.
+
+`Dispose` does not send a normal close frame and does not explicitly reset the internal connection flag. Because the socket is removed, `IsConnected` nevertheless returns `false` after disposal. The class does not expose a separate disposed-state check; using it again after disposal is not documented as a supported lifecycle.
+
+## Extensibility API
+
+```csharp
+protected virtual void OnPriceUpdateRaised(PriceUpdateEventArgs args)
+```
+
+Derived classes can override this method to customize event dispatch. The base implementation invokes `OnPriceUpdate` with the current service as sender and the supplied event arguments.
+
+## Reconnection behavior
+
+When the server sends a close frame, the service marks itself disconnected and starts reconnection in the background unless cancellation was requested. Other unexpected WebSocket errors also trigger reconnection, except premature-close and invalid-state errors, which stop the receive loop without starting a reconnect attempt.
+
+Reconnection uses up to ten attempts with exponential delays beginning at five seconds (5, 10, 20 seconds, and so on). On a successful connection, all retained subscriptions are sent again. Reconnection is background work and is not directly awaitable through the public API.
+
+## Example
+
+```csharp
+using BinanceP2pMonitor.Services;
+using Microsoft.Extensions.Logging;
+
+using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+    builder.AddConsole());
+
+using var service = new WebSocketService(
+    loggerFactory.CreateLogger<WebSocketService>());
+
+service.OnPriceUpdate += (_, update) =>
+{
+    Console.WriteLine(
+        $"{update.Asset}/{update.Fiat}: bid {update.BuyPrice}, " +
+        $"ask {update.SellPrice} at {update.UpdateTime:O}");
+};
+
+await service.ConnectAsync();
+await service.SubscribeToPairAsync("BTC", "USDT");
+
+// Keep the application alive while updates are required.
+
+await service.UnsubscribeFromPairAsync("BTC", "USDT");
+await service.DisconnectAsync();
+```
+
+The service itself does not buffer updates for consumers. Subscribe to `OnPriceUpdate` before requesting a pair if the first received update must not be missed.
