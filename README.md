@@ -13,6 +13,17 @@ Every token after the command name is classified as follows:
 
 Options, flags, and positional arguments can be interspersed. Repeated keys overwrite earlier values in the same dictionary. The parser does not validate or normalize command and option names, split a raw command-line string, combine short flags, or treat `--` as an end-of-options marker. After parsing non-empty input, it writes a debug log containing the command name and the final option and flag counts.
 
+## Output Formatters
+
+The implementations in `src/Formatters/` share the `IOutputFormatter` interface. Each exposes a `FormatType` and can format a single object, a collection, or a collection with explicit headers:
+
+- `CsvOutputFormatter` (`csv`) uses public property names as the default header row, emits one row per object, formats `IFormattable` values with the invariant culture, and applies CSV quoting and quote escaping. A null single value or an empty inferred collection produces an empty string.
+- `JsonOutputFormatter` (`json`) uses indented `System.Text.Json` output. Collections become JSON arrays; the explicit-header overload produces an object containing `headers` and `data`. A null single value produces `null`, and serialization failures produce a JSON object with an `error` property.
+- `MarkdownOutputFormatter` (`markdown`) renders public properties as a Markdown table. Values are converted with `ToString()`, null properties appear as `(null)`, and cells are truncated to 50 characters. A null single value produces `(empty)`, while an empty collection produces `(no data)`.
+- `TableOutputFormatter` (`table`) renders the same reflected properties, null marker, and 50-character cell truncation as an ASCII table with borders. Its null and empty results are also `(empty)` and `(no data)` respectively.
+
+Users select a formatter with `--format=FORMAT`, for example `binance-p2p-monitor history --asset=BTC --fiat=USDT --format=csv`. `monitor` and `history` accept `table`, `json`, `csv`, and `markdown` (default `table`). `spread`, `compare`, and `summary` accept `table`, `json`, and `markdown` (default `table`). `export` accepts `csv`, `json`, and `markdown` (default `csv`). The application registers all four formatters and these commands look up the requested value by `FormatType`; lookups during execution are case-insensitive, although `monitor` and `history` validate their format values case-sensitively.
+
 ## UtilityExtensionsTests
 
 The `UtilityExtensionsTests` class provides comprehensive unit tests for various utility extension methods used throughout the application, including date/time manipulation, enumerable processing, numeric calculations, string formatting, and data validation helpers. These tests ensure the reliability and correct behavior of these foundational extension methods.
