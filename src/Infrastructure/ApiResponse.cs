@@ -31,6 +31,8 @@ public class ApiResponse<T>
     /// </summary>
     public static ApiResponse<T> SuccessResult(T data, string? message = null)
     {
+        ArgumentNullException.ThrowIfNull(data);
+
         return new ApiResponse<T>
         {
             Success = true,
@@ -44,6 +46,8 @@ public class ApiResponse<T>
     /// </summary>
     public static ApiResponse<T> ErrorResult(string error, string? message = null)
     {
+        ArgumentNullException.ThrowIfNull(error);
+
         return new ApiResponse<T>
         {
             Success = false,
@@ -57,6 +61,8 @@ public class ApiResponse<T>
     /// </summary>
     public static ApiResponse<T> ErrorResult(List<string> errors, string? message = null)
     {
+        ArgumentNullException.ThrowIfNull(errors);
+
         return new ApiResponse<T>
         {
             Success = false,
@@ -83,6 +89,8 @@ public class ApiResponse : ApiResponse<object?>
 
     public static new ApiResponse ErrorResult(string error, string? message = null)
     {
+        ArgumentNullException.ThrowIfNull(error);
+
         return new ApiResponse
         {
             Success = false,
@@ -93,6 +101,8 @@ public class ApiResponse : ApiResponse<object?>
 
     public static new ApiResponse ErrorResult(List<string> errors, string? message = null)
     {
+        ArgumentNullException.ThrowIfNull(errors);
+
         return new ApiResponse
         {
             Success = false,
