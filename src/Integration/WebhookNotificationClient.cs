@@ -30,6 +30,8 @@ public class WebhookNotificationClient : IWebhookNotificationClient
         AppSettings appSettings,
         ILogger<WebhookNotificationClient> logger)
     {
+        ArgumentNullException.ThrowIfNull(httpClientFactory);
+
         _httpClient = httpClientFactory.CreateClient(nameof(WebhookNotificationClient));
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -41,6 +43,8 @@ public class WebhookNotificationClient : IWebhookNotificationClient
     /// </summary>
     public async Task<bool> SendAlertAsync(WebhookPayload payload, CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(payload);
+
         if (string.IsNullOrWhiteSpace(_appSettings.WebhookUrl))
         {
             _logger.LogDebug("Webhook URL is not configured; skipping webhook delivery");
@@ -82,6 +86,10 @@ public class WebhookNotificationClient : IWebhookNotificationClient
         string alertReason,
         CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(asset);
+        ArgumentNullException.ThrowIfNull(fiat);
+        ArgumentNullException.ThrowIfNull(alertReason);
+
         var payload = new WebhookPayload
         {
             Event = "price_alert",
