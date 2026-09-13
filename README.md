@@ -1,3 +1,18 @@
+## Command Parsing
+
+`src/CLI/CommandParser.cs` converts an already-tokenized `string[]` into a new `CommandContext`. The first token is copied verbatim to `CommandName`; when no tokens are supplied, the command name defaults to `help`. The supplied `IServiceProvider` is stored on the context.
+
+Every token after the command name is classified as follows:
+
+- `--key=value` adds `key` to `Options` with `value`; only the first `=` is used as the separator.
+- `--key` adds `key` to `Options` with the string value `"true"`. Long options do not consume the following token.
+- A two-character short option such as `-f` consumes the next token as its value when that token does not start with `-`, storing the pair in `Options`.
+- A two-character short option without such a following value is stored in `Flags` with the string value `"true"`.
+- Tokens that do not start with `-`, plus dash-prefixed numeric tokens such as `-5` and `-123`, become positional `Arguments`.
+- Other dash-prefixed forms, such as `-ab` or `-x=value`, are ignored.
+
+Options, flags, and positional arguments can be interspersed. Repeated keys overwrite earlier values in the same dictionary. The parser does not validate or normalize command and option names, split a raw command-line string, combine short flags, or treat `--` as an end-of-options marker. After parsing non-empty input, it writes a debug log containing the command name and the final option and flag counts.
+
 ## UtilityExtensionsTests
 
 The `UtilityExtensionsTests` class provides comprehensive unit tests for various utility extension methods used throughout the application, including date/time manipulation, enumerable processing, numeric calculations, string formatting, and data validation helpers. These tests ensure the reliability and correct behavior of these foundational extension methods.
