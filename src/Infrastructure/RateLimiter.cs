@@ -10,13 +10,15 @@ public sealed class RateLimiter
 	private readonly TimeSpan _timeWindow;
 	private readonly Dictionary<string, TokenBucket> _buckets = new();
 	private readonly ReaderWriterLockSlim _lock = new();
+	private const int Zero = 0;
+	private static readonly TimeSpan ZeroTimeSpan = TimeSpan.Zero;
 
 	public RateLimiter(int maxRequests, TimeSpan timeWindow)
 	{
-		if (maxRequests <= 0)
+		if (maxRequests <= Zero)
 			throw new ArgumentOutOfRangeException(nameof(maxRequests));
 
-		if (timeWindow <= TimeSpan.Zero)
+		if (timeWindow <= ZeroTimeSpan)
 			throw new ArgumentOutOfRangeException(nameof(timeWindow));
 
 		_maxRequests = maxRequests;
@@ -166,7 +168,7 @@ public sealed class RateLimiter
 			{
 				_lastAccessTime = DateTime.UtcNow;
 				Refill();
-				if (_tokens > 0)
+				if (_tokens > Zero)
 				{
 					_tokens--;
 					return true;
@@ -191,8 +193,8 @@ public sealed class RateLimiter
 			{
 				_lastAccessTime = DateTime.UtcNow;
 				Refill();
-				if (_tokens > 0)
-					return TimeSpan.Zero;
+				if (_tokens > Zero)
+					return ZeroTimeSpan;
 
 				return _lastRefillTime.Add(_refillPeriod) - DateTime.UtcNow;
 			}
