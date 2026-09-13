@@ -52,6 +52,14 @@ public class Spread
     public decimal PercentileRank { get; set; }
 
     /// <summary>
+    /// Returns a readable representation of the spread analysis data.
+    /// </summary>
+    public override string ToString()
+    {
+        return $"{Asset}/{Fiat}: Current={CurrentSpreadPercent}%, Average={AverageSpreadPercent}%, LastUpdated={LastUpdatedAt:O}";
+    }
+
+    /// <summary>
     /// Determines if spread is unusually high
     /// </summary>
     /// <param name="threshold">The threshold percentage to consider as high spread (default 1.5%).</param>
