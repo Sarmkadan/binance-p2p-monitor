@@ -6,6 +6,13 @@ namespace BinanceP2pMonitor.Infrastructure;
 /// </summary>
 public class RetryPolicy
 {
+    private const int DefaultMaxRetries = 3;
+    private const double DefaultBackoffMultiplier = 2.0;
+    private const string FailureLogMessage = "Operation failed after {Attempts} attempts";
+    private const string RetryLogMessage = "Attempt {Attempt}/{MaxAttempts} failed, retrying in {DelayMs}ms";
+    private static readonly TimeSpan DefaultInitialDelay = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan DefaultMaxDelay = TimeSpan.FromSeconds(30);
+
     private readonly int _maxRetries;
     private readonly TimeSpan _initialDelay;
     private readonly TimeSpan _maxDelay;
@@ -20,11 +27,11 @@ public class RetryPolicy
     /// <param name="backoffMultiplier">Multiplier applied to the delay after each retry.</param>
     /// <param name="maxDelay">Maximum delay between retries to prevent unbounded waits. Defaults to 30 seconds.</param>
     /// <param name="logger">Optional logger instance.</param>
-    public RetryPolicy(int maxRetries = 3, TimeSpan? initialDelay = null, double backoffMultiplier = 2.0, TimeSpan? maxDelay = null, ILogger? logger = null)
+    public RetryPolicy(int maxRetries = DefaultMaxRetries, TimeSpan? initialDelay = null, double backoffMultiplier = DefaultBackoffMultiplier, TimeSpan? maxDelay = null, ILogger? logger = null)
     {
         _maxRetries = maxRetries;
-        _initialDelay = initialDelay ?? TimeSpan.FromSeconds(1);
-        _maxDelay = maxDelay ?? TimeSpan.FromSeconds(30);
+        _initialDelay = initialDelay ?? DefaultInitialDelay;
+        _maxDelay = maxDelay ?? DefaultMaxDelay;
         _backoffMultiplier = backoffMultiplier;
         _logger = logger ?? new NullLogger();
     }
@@ -58,12 +65,12 @@ public class RetryPolicy
             {
                 if (attempt >= _maxRetries || (shouldRetry is not null && !shouldRetry(ex)))
                 {
-                    _logger.LogError(ex, "Operation failed after {Attempts} attempts", attempt);
+                    _logger.LogError(ex, FailureLogMessage, attempt);
                     throw;
                 }
 
                 var actualDelay = delay > _maxDelay ? _maxDelay : delay;
-                _logger.LogWarning(ex, "Attempt {Attempt}/{MaxAttempts} failed, retrying in {DelayMs}ms", attempt, _maxRetries, actualDelay.TotalMilliseconds);
+                _logger.LogWarning(ex, RetryLogMessage, attempt, _maxRetries, actualDelay.TotalMilliseconds);
                 await Task.Delay(actualDelay, ct).ConfigureAwait(false);
                 delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * _backoffMultiplier);
             }
