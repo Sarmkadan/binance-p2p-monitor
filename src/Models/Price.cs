@@ -52,6 +52,14 @@ public class Price
     public ICollection<PriceHistory> History { get; set; } = new List<PriceHistory>();
 
     /// <summary>
+    /// Returns a readable representation of the price quote.
+    /// </summary>
+    public override string ToString()
+    {
+        return $"{Asset}/{Fiat}: Buy={BuyPrice}, Sell={SellPrice}, Timestamp={Timestamp:O}";
+    }
+
+    /// <summary>
     /// Calculates the bid-ask spread in percentage
     /// </summary>
     /// <returns>The spread percentage between buy and sell prices</returns>
