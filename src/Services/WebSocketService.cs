@@ -16,6 +16,15 @@ public class WebSocketService : IWebSocketService, IDisposable
     private static readonly TimeSpan KeepaliveInterval = TimeSpan.FromMinutes(20);
     private static readonly TimeSpan ReconnectBaseDelay = TimeSpan.FromSeconds(5);
     private const int MaxReconnectAttempts = 10;
+    private const string WebSocketEndpointUrl = "wss://stream.binance.com:9443/ws";
+    private const string SubscribeMethod = "SUBSCRIBE";
+    private const string UnsubscribeMethod = "UNSUBSCRIBE";
+    private const string TickerSuffix = "@ticker";
+    private const string CloseReason = "Closing";
+    private const int ReceiveBufferSize = 4096;
+    private const int BackoffBase = 2;
+    private const int DefaultFiatCodeLength = 3;
+    private static readonly TimeSpan ReceiveLoopShutdownTimeout = TimeSpan.FromSeconds(2);
 
     private readonly ILogger<WebSocketService> _logger;
     private ClientWebSocket? _webSocket;
@@ -54,7 +63,7 @@ public class WebSocketService : IWebSocketService, IDisposable
             _webSocket = new ClientWebSocket();
 
             // Connect to Binance WebSocket endpoint
-            var uri = new Uri("wss://stream.binance.com:9443/ws");
+            var uri = new Uri(WebSocketEndpointUrl);
             await _webSocket.ConnectAsync(uri, _cancellationTokenSource.Token).ConfigureAwait(false);
 
             _isConnected = true;
@@ -70,8 +79,8 @@ public class WebSocketService : IWebSocketService, IDisposable
                     _logger.LogInformation("Re-subscribing to {Asset}/{Fiat} after reconnection", asset, fiat);
                     var subscriptionMessage = new
                     {
-                        method = "SUBSCRIBE",
-                        @params = new[] { $"{pairKey}@ticker" },
+                        method = SubscribeMethod,
+                        @params = new[] { $"{pairKey}{TickerSuffix}" },
                         id = DateTime.UtcNow.Ticks
                     };
                     var json = System.Text.Json.JsonSerializer.Serialize(subscriptionMessage);
@@ -126,7 +135,7 @@ public class WebSocketService : IWebSocketService, IDisposable
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            var delay = TimeSpan.FromSeconds(ReconnectBaseDelay.TotalSeconds * Math.Pow(2, attempt - 1));
+            var delay = TimeSpan.FromSeconds(ReconnectBaseDelay.TotalSeconds * Math.Pow(BackoffBase, attempt - 1));
             _logger.LogWarning("WebSocket reconnect attempt {Attempt}/{Max} in {Delay}s...",
                 attempt, MaxReconnectAttempts, (int)delay.TotalSeconds);
 
@@ -163,7 +172,7 @@ public class WebSocketService : IWebSocketService, IDisposable
             if (_webSocket?.State == WebSocketState.Open)
             {
                 await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,
-                    "Closing", CancellationToken.None);
+                    CloseReason, CancellationToken.None);
             }
 
             _isConnected = false;
@@ -193,8 +202,8 @@ public class WebSocketService : IWebSocketService, IDisposable
 
             var subscriptionMessage = new
             {
-                method = "SUBSCRIBE",
-                @params = new[] { $"{pairKey}@ticker" },
+                method = SubscribeMethod,
+                @params = new[] { $"{pairKey}{TickerSuffix}" },
                 id = DateTime.UtcNow.Ticks
             };
 
@@ -225,8 +234,8 @@ public class WebSocketService : IWebSocketService, IDisposable
 
             var unsubscriptionMessage = new
             {
-                method = "UNSUBSCRIBE",
-                @params = new[] { $"{pairKey}@ticker" },
+                method = UnsubscribeMethod,
+                @params = new[] { $"{pairKey}{TickerSuffix}" },
                 id = DateTime.UtcNow.Ticks
             };
 
@@ -250,7 +259,7 @@ public class WebSocketService : IWebSocketService, IDisposable
     {
         try
         {
-            var buffer = new byte[4096];
+            var buffer = new byte[ReceiveBufferSize];
             using var messageStream = new MemoryStream();
 
             while (!cancellationToken.IsCancellationRequested)
@@ -436,8 +445,8 @@ public class WebSocketService : IWebSocketService, IDisposable
         }
 
         // Fallback: assume the last 3 characters are the fiat code
-        if (symbol.Length > 3)
-            return (symbol[..^3], symbol[^3..]);
+        if (symbol.Length > DefaultFiatCodeLength)
+            return (symbol[..^DefaultFiatCodeLength], symbol[^DefaultFiatCodeLength..]);
 
         _logger.LogWarning("Could not parse asset and fiat from pair key: {PairKey}", pairKey);
         return null;
@@ -464,7 +473,7 @@ public class WebSocketService : IWebSocketService, IDisposable
             if (_receiveLoopTask != null && !_receiveLoopTask.IsCompleted)
             {
                 // Give it a moment to complete gracefully
-                if (!_receiveLoopTask.Wait(TimeSpan.FromSeconds(2)))
+                if (!_receiveLoopTask.Wait(ReceiveLoopShutdownTimeout))
                 {
                     _logger.LogWarning("Receive loop did not complete gracefully within timeout");
                 }
