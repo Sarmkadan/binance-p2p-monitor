@@ -580,6 +580,79 @@ await _telegramClient.SendRateLimitedAsync(
 
 All methods return `true` if the message was sent successfully, `false` otherwise. Messages are formatted using HTML parse mode for rich text formatting.
 
+## Webhook Notification Client
+
+The `WebhookNotificationClient` (`src/Integration/WebhookNotificationClient.cs`) implements the `IWebhookNotificationClient` interface for sending HTTP POST notifications to a configured webhook endpoint. It provides methods for sending generic alerts and price alerts as JSON payloads.
+
+### Configuration
+
+The client requires the following settings in `AppSettings`:
+- `WebhookUrl`: The HTTP endpoint URL that will receive JSON POST requests on alerts
+- `EnableWebhookNotifications`: Boolean flag to enable/disable webhook notifications
+
+These settings are validated at startup to ensure the webhook URL is configured when notifications are enabled.
+
+### Usage
+
+The client is registered as a singleton service in the dependency injection container:
+
+```csharp
+services.AddSingleton<IWebhookNotificationClient, WebhookNotificationClient>();
+```
+
+It can be injected into any service or class that requires webhook notifications:
+
+```csharp
+public class MyService
+{
+    private readonly IWebhookNotificationClient _webhookClient;
+    
+    public MyService(IWebhookNotificationClient webhookClient)
+    {
+        _webhookClient = webhookClient;
+    }
+}
+```
+
+### Methods
+
+#### SendAlertAsync
+Posts a generic alert payload to the configured webhook URL:
+```csharp
+await _webhookClient.SendAlertAsync(new WebhookPayload
+{
+    Event = "custom_event",
+    Asset = "BTC",
+    Fiat = "USDT",
+    BuyPrice = 45000.00m,
+    SellPrice = 45500.00m,
+    AlertReason = "Price threshold breached",
+    CustomData = "additional info"
+}, cancellationToken);
+```
+
+#### SendPriceAlertAsync
+Convenience overload for price-alert events:
+```csharp
+await _webhookClient.SendPriceAlertAsync(
+    "BTC", 
+    "USDT", 
+    45000.00m, 
+    45500.00m, 
+    "Price spread exceeded threshold", 
+    cancellationToken);
+```
+
+Both methods return `true` if the webhook endpoint responded with an HTTP 2xx status code, `false` otherwise. The JSON payload is serialized with camelCase property naming and includes the following fields:
+- `Event`: The type of alert (defaults to "alert")
+- `Asset`: The asset symbol (e.g., "BTC")
+- `Fiat`: The fiat currency (e.g., "USDT")
+- `BuyPrice`: The buy price as decimal
+- `SellPrice`: The sell price as decimal
+- `AlertReason`: Description of why the alert was triggered
+- `Timestamp`: UTC timestamp when the alert was generated
+- `CustomData`: Optional additional data string
+
 ## DatabaseCleanupService
 
 The `DatabaseCleanupService` (`src/Services/DatabaseCleanupService.cs`) is responsible for maintaining database hygiene by removing outdated records. It implements the `IDatabaseCleanupService` interface and provides two primary methods:
