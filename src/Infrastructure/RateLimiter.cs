@@ -35,6 +35,9 @@ public RateLimiter(int maxRequests, TimeSpan timeWindow)
 	/// </summary>
 	public bool IsAllowed(string key)
 	{
+		if (key == null)
+			throw new ArgumentNullException(nameof(key));
+
 		_lock.EnterWriteLock();
 		try
 		{
@@ -57,6 +60,9 @@ public RateLimiter(int maxRequests, TimeSpan timeWindow)
 	/// </summary>
 	public int GetRemainingTokens(string key)
 	{
+		if (key == null)
+			throw new ArgumentNullException(nameof(key));
+
 		// Write lock: reading token state triggers a refill, which mutates the bucket.
 		_lock.EnterWriteLock();
 		try
@@ -76,6 +82,9 @@ public RateLimiter(int maxRequests, TimeSpan timeWindow)
 	/// </summary>
 	public void Reset(string key)
 	{
+		if (key == null)
+			throw new ArgumentNullException(nameof(key));
+
 		_lock.EnterWriteLock();
 		try
 		{
@@ -108,6 +117,9 @@ public RateLimiter(int maxRequests, TimeSpan timeWindow)
 	/// </summary>
 	public int CleanupStaleBuckets(TimeSpan maxIdle)
 	{
+		if (maxIdle < ZeroTimeSpan)
+			throw new ArgumentOutOfRangeException(nameof(maxIdle));
+
 		_lock.EnterWriteLock();
 		try
 		{
@@ -133,6 +145,9 @@ public RateLimiter(int maxRequests, TimeSpan timeWindow)
 	/// </summary>
 	public TimeSpan? GetTimeUntilNextToken(string key)
 	{
+		if (key == null)
+			throw new ArgumentNullException(nameof(key));
+
 		// Write lock: reading token state triggers a refill, which mutates the bucket.
 		_lock.EnterWriteLock();
 		try
