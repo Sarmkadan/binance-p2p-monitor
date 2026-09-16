@@ -9,10 +9,33 @@ namespace BinanceP2pMonitor.Infrastructure;
 /// </summary>
 public class CachedPriceMonitoringService : IPriceMonitoringService
 {
+	private const string PriceCacheKeyFormat = "price_{0}_{1}";
+	private const string AllPricesCacheKey = "all_prices";
+	private const string AveragePriceCacheKeyFormat = "avg_price_{0}_{1}_{2}h";
+	private const string SpreadCacheKeyFormat = "spread_{0}_{1}";
+
+	private const string AssetNullOrWhitespaceMessage = "Asset cannot be null or whitespace";
+	private const string FiatNullOrWhitespaceMessage = "Fiat cannot be null or whitespace";
+	private const string PriceAssetAndFiatMustBeSpecifiedMessage = "Price asset and fiat must be specified";
+	private const string HoursMustBePositiveMessage = "Hours must be positive";
+	private const string ThresholdCannotBeNegativeMessage = "Threshold cannot be negative";
+	private const string FailedToGetCachedPriceMessage = "Failed to get cached price";
+	private const string FailedToGetAllCachedPricesMessage = "Failed to get all cached prices";
+	private const string FailedToUpdateCachedPriceMessage = "Failed to update cached price";
+	private const string FailedToGetCachedAveragePriceMessage = "Failed to get cached average price";
+	private const string FailedToGetPricesWithSignificantChangeMessage = "Failed to get prices with significant change";
+	private const string FailedToGetCachedSpreadAnalysisMessage = "Failed to get cached spread analysis";
+	private const string FailedToStartMonitoringMessage = "Failed to start monitoring";
+	private const string FailedToStopMonitoringMessage = "Failed to stop monitoring";
+	private const string CacheInvalidatedMessage = "Cache invalidated for {Asset}/{Fiat}";
+
+	private static readonly TimeSpan DefaultCacheDuration = TimeSpan.FromSeconds(30);
+	private static readonly TimeSpan AveragePriceCacheDuration = TimeSpan.FromMinutes(5);
+
 	private readonly IPriceMonitoringService _innerService;
 	private readonly ICache _cache;
 	private readonly ILogger<CachedPriceMonitoringService> _logger;
-	private readonly TimeSpan _cacheDuration = TimeSpan.FromSeconds(30);
+	private readonly TimeSpan _cacheDuration = DefaultCacheDuration;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="CachedPriceMonitoringService"/> class.
@@ -40,13 +63,13 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		ArgumentNullException.ThrowIfNull(fiat);
 
 		if (string.IsNullOrWhiteSpace(asset))
-			throw new ArgumentException("Asset cannot be null or whitespace", nameof(asset));
+			throw new ArgumentException(AssetNullOrWhitespaceMessage, nameof(asset));
 		if (string.IsNullOrWhiteSpace(fiat))
-			throw new ArgumentException("Fiat cannot be null or whitespace", nameof(fiat));
+			throw new ArgumentException(FiatNullOrWhitespaceMessage, nameof(fiat));
 
 		try
 		{
-			var cacheKey = $"price_{asset}_{fiat}";
+			var cacheKey = string.Format(PriceCacheKeyFormat, asset, fiat);
 			return await _cache.GetOrCreateAsync(
 				cacheKey,
 				async token => await _innerService.GetCurrentPriceAsync(asset, fiat).ConfigureAwait(false),
@@ -54,7 +77,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
-			throw new DataAccessException("Failed to get cached price", ex);
+			throw new DataAccessException(FailedToGetCachedPriceMessage, ex);
 		}
 	}
 
@@ -63,7 +86,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 	{
 		try
 		{
-			var cacheKey = "all_prices";
+			var cacheKey = AllPricesCacheKey;
 			return await _cache.GetOrCreateAsync(
 				cacheKey,
 				async token => (await _innerService.GetAllCurrentPricesAsync().ConfigureAwait(false)).ToList() as IEnumerable<Price>,
@@ -71,7 +94,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
-			throw new DataAccessException("Failed to get all cached prices", ex);
+			throw new DataAccessException(FailedToGetAllCachedPricesMessage, ex);
 		}
 	}
 
@@ -81,22 +104,22 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		if (price is null)
 			throw new ArgumentNullException(nameof(price));
 		if (string.IsNullOrWhiteSpace(price.Asset) || string.IsNullOrWhiteSpace(price.Fiat))
-			throw new ArgumentException("Price asset and fiat must be specified");
+			throw new ArgumentException(PriceAssetAndFiatMustBeSpecifiedMessage);
 
 		try
 		{
 			var result = await _innerService.UpdatePriceAsync(price).ConfigureAwait(false);
 			if (result)
 			{
-				await _cache.RemoveAsync($"price_{price.Asset}_{price.Fiat}").ConfigureAwait(false);
-				await _cache.RemoveAsync("all_prices").ConfigureAwait(false);
-				_logger.LogDebug("Cache invalidated for {Asset}/{Fiat}", price.Asset, price.Fiat);
+				await _cache.RemoveAsync(string.Format(PriceCacheKeyFormat, price.Asset, price.Fiat)).ConfigureAwait(false);
+				await _cache.RemoveAsync(AllPricesCacheKey).ConfigureAwait(false);
+				_logger.LogDebug(CacheInvalidatedMessage, price.Asset, price.Fiat);
 			}
 			return result;
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
-			throw new DataAccessException("Failed to update cached price", ex);
+			throw new DataAccessException(FailedToUpdateCachedPriceMessage, ex);
 		}
 	}
 
@@ -107,23 +130,23 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		ArgumentNullException.ThrowIfNull(fiat);
 
 		if (string.IsNullOrWhiteSpace(asset))
-			throw new ArgumentException("Asset cannot be null or whitespace", nameof(asset));
+			throw new ArgumentException(AssetNullOrWhitespaceMessage, nameof(asset));
 		if (string.IsNullOrWhiteSpace(fiat))
-			throw new ArgumentException("Fiat cannot be null or whitespace", nameof(fiat));
+			throw new ArgumentException(FiatNullOrWhitespaceMessage, nameof(fiat));
 		if (hours <= 0)
-			throw new ArgumentException("Hours must be positive", nameof(hours));
+			throw new ArgumentException(HoursMustBePositiveMessage, nameof(hours));
 
 		try
 		{
-			var cacheKey = $"avg_price_{asset}_{fiat}_{hours}h";
+			var cacheKey = string.Format(AveragePriceCacheKeyFormat, asset, fiat, hours);
 			return await _cache.GetOrCreateAsync(
 				cacheKey,
 				async token => await _innerService.GetAveragePriceAsync(asset, fiat, hours),
-				TimeSpan.FromMinutes(5));
+				AveragePriceCacheDuration);
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
-			throw new DataAccessException("Failed to get cached average price", ex);
+			throw new DataAccessException(FailedToGetCachedAveragePriceMessage, ex);
 		}
 	}
 
@@ -131,7 +154,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 	public async Task<IEnumerable<Price>> GetPricesWithSignificantChangeAsync(decimal changePercentThreshold)
 	{
 		if (changePercentThreshold < 0)
-			throw new ArgumentException("Threshold cannot be negative", nameof(changePercentThreshold));
+			throw new ArgumentException(ThresholdCannotBeNegativeMessage, nameof(changePercentThreshold));
 
 		try
 		{
@@ -139,7 +162,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
-			throw new DataAccessException("Failed to get prices with significant change", ex);
+			throw new DataAccessException(FailedToGetPricesWithSignificantChangeMessage, ex);
 		}
 	}
 
@@ -150,13 +173,13 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		ArgumentNullException.ThrowIfNull(fiat);
 
 		if (string.IsNullOrWhiteSpace(asset))
-			throw new ArgumentException("Asset cannot be null or whitespace", nameof(asset));
+			throw new ArgumentException(AssetNullOrWhitespaceMessage, nameof(asset));
 		if (string.IsNullOrWhiteSpace(fiat))
-			throw new ArgumentException("Fiat cannot be null or whitespace", nameof(fiat));
+			throw new ArgumentException(FiatNullOrWhitespaceMessage, nameof(fiat));
 
 		try
 		{
-			var cacheKey = $"spread_{asset}_{fiat}";
+			var cacheKey = string.Format(SpreadCacheKeyFormat, asset, fiat);
 			return await _cache.GetOrCreateAsync(
 				cacheKey,
 				async token => await _innerService.GetSpreadAnalysisAsync(asset, fiat),
@@ -164,7 +187,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
-			throw new DataAccessException("Failed to get cached spread analysis", ex);
+			throw new DataAccessException(FailedToGetCachedSpreadAnalysisMessage, ex);
 		}
 	}
 
@@ -177,7 +200,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
-			throw new ApiException("Failed to start monitoring", ex);
+			throw new ApiException(FailedToStartMonitoringMessage, ex);
 		}
 	}
 
@@ -191,7 +214,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 		catch (Exception ex) when (ex is not BinanceP2pException)
 		{
-			throw new DataAccessException("Failed to stop monitoring", ex);
+			throw new DataAccessException(FailedToStopMonitoringMessage, ex);
 		}
 	}
 }
