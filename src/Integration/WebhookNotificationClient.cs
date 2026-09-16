@@ -7,12 +7,35 @@ using Microsoft.Extensions.Logging;
 
 namespace BinanceP2pMonitor.Integration;
 
+/// <summary>
+/// Defines operations for sending notifications to a webhook endpoint.
+/// </summary>
 public interface IWebhookNotificationClient
 {
+    /// <summary>
+    /// Sends an alert payload to the configured webhook endpoint.
+    /// </summary>
+    /// <param name="payload">The alert payload to send.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns><see langword="true"/> if the alert was delivered successfully; otherwise, <see langword="false"/>.</returns>
     Task<bool> SendAlertAsync(WebhookPayload payload, CancellationToken ct = default);
+
+    /// <summary>
+    /// Sends a price alert to the configured webhook endpoint.
+    /// </summary>
+    /// <param name="asset">The asset being monitored.</param>
+    /// <param name="fiat">The fiat currency used to price the asset.</param>
+    /// <param name="buyPrice">The current buy price.</param>
+    /// <param name="sellPrice">The current sell price.</param>
+    /// <param name="alertReason">The reason the alert was triggered.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns><see langword="true"/> if the alert was delivered successfully; otherwise, <see langword="false"/>.</returns>
     Task<bool> SendPriceAlertAsync(string asset, string fiat, decimal buyPrice, decimal sellPrice, string alertReason, CancellationToken ct = default);
 }
 
+/// <summary>
+/// Sends alert notifications to a configured webhook endpoint.
+/// </summary>
 public class WebhookNotificationClient : IWebhookNotificationClient
 {
     private readonly HttpClient _httpClient;
@@ -25,6 +48,12 @@ public class WebhookNotificationClient : IWebhookNotificationClient
         WriteIndented = false
     };
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WebhookNotificationClient"/> class.
+    /// </summary>
+    /// <param name="httpClientFactory">The factory used to create the HTTP client.</param>
+    /// <param name="appSettings">The application settings containing the webhook configuration.</param>
+    /// <param name="logger">The logger used to record webhook delivery activity.</param>
     public WebhookNotificationClient(
         IHttpClientFactory httpClientFactory,
         AppSettings appSettings,
@@ -110,12 +139,43 @@ public class WebhookNotificationClient : IWebhookNotificationClient
 /// </summary>
 public sealed class WebhookPayload
 {
+    /// <summary>
+    /// Gets or sets the name of the webhook event.
+    /// </summary>
     public string Event { get; set; } = "alert";
+
+    /// <summary>
+    /// Gets or sets the asset associated with the alert.
+    /// </summary>
     public string Asset { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the fiat currency used to price the asset.
+    /// </summary>
     public string Fiat { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the buy price associated with the alert.
+    /// </summary>
     public decimal BuyPrice { get; set; }
+
+    /// <summary>
+    /// Gets or sets the sell price associated with the alert.
+    /// </summary>
     public decimal SellPrice { get; set; }
+
+    /// <summary>
+    /// Gets or sets the reason the alert was triggered.
+    /// </summary>
     public string AlertReason { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the time at which the alert was created.
+    /// </summary>
     public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// Gets or sets optional custom data associated with the alert.
+    /// </summary>
     public string? CustomData { get; set; }
 }
