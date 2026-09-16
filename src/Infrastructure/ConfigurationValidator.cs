@@ -14,10 +14,11 @@ public sealed class ConfigurationValidator
     /// </summary>
     /// <param name="appSettings">The application settings to validate.</param>
     /// <param name="logger">The logger used to report validation progress and results.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="appSettings"/> or <paramref name="logger"/> is <see langword="null"/>.</exception>
     public ConfigurationValidator(AppSettings appSettings, ILogger<ConfigurationValidator> logger)
     {
-        _appSettings = appSettings;
-        _logger = logger;
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
