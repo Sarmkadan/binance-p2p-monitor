@@ -127,4 +127,15 @@ public class UserProfile
     {
         return Alerts?.Where(a => a.Asset == asset && a.Fiat == fiat) ?? Enumerable.Empty<PriceAlert>();
     }
+
+    /// <summary>
+    /// Returns a string representation of the user profile
+    /// </summary>
+    /// <returns>A formatted string with key profile properties</returns>
+    public override string ToString() =>
+        $"UserProfile: Id={Id}, TelegramChatId={TelegramChatId}, Username={TelegramUsername}, " +
+        $"Name={GetFullName()}, Email={Email}, IsActive={IsActive}, " +
+        $"ReceiveNotifications={ReceiveNotifications}, ReceiveDailyReport={ReceiveDailyReport}, " +
+        $"DailyReportHourUtc={DailyReportHourUtc}, ActiveAlerts={GetActiveAlertCount()}, " +
+        $"CreatedAt={CreatedAt:u}, UpdatedAt={UpdatedAt:u}";
 }
