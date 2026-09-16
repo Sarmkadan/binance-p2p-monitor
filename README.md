@@ -513,6 +513,22 @@ Console.WriteLine($"Average mid price: {avgMidPrice:F4}"); // 1.0125
 
 The `PriceHistoryExtensions` class provides utility methods for working with historical price data, enabling time-based filtering, spread analysis, and price change calculations across different time windows. These extensions help analyze price trends, calculate average changes, and filter price history records based on temporal criteria.
 
+## DatabaseCleanupService
+
+The `DatabaseCleanupService` (`src/Services/DatabaseCleanupService.cs`) is responsible for maintaining database hygiene by removing outdated records. It implements the `IDatabaseCleanupService` interface and provides two primary methods:
+
+1. **DeleteOldRecordsAsync(int daysOld)** - Deletes history records older than the specified number of days and returns the count of deleted records
+2. **GetTotalHistoryCountAsync()** - Returns the total number of history records currently in the database
+
+The service works by:
+- Recording the initial count of history records
+- Calling the repository to delete records older than the specified threshold
+- Recording the remaining count after deletion
+- Calculating and returning the difference as the number of deleted records
+- Logging all operations for monitoring and debugging
+
+This service is typically used in scheduled maintenance tasks to prevent the database from growing indefinitely with historical price data that is no longer needed for analysis or reporting.
+
 ## PriceAlertTestsValidation
 
 The `PriceAlertTestsValidation` class provides validation utilities for price alert tests, ensuring test data and configurations are valid before execution. It offers methods to validate alert conditions, thresholds, and test scenarios, returning lists of validation problems or boolean validity checks. The class helps maintain test reliability by catching invalid configurations early.
