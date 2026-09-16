@@ -52,6 +52,15 @@ public interface ITelegramNotificationClient
 /// </summary>
 public class TelegramNotificationClient : ITelegramNotificationClient
 {
+    private const int MaxLogMessageLength = 100;
+    private const string RateLimitCacheKeyPrefix = "telegram_ratelimit_";
+    private const string PriceAlertMessageFormat =
+        "<b>Price Alert: {0}/{1}</b>\n\n" +
+        "<b>Buy:</b> {2:F4}\n" +
+        "<b>Sell:</b> {3:F4}\n\n" +
+        "<b>Reason:</b> {4}\n" +
+        "<b>Time:</b> {5:yyyy-MM-dd HH:mm:ss} UTC";
+
     private readonly TelegramBotClient _botClient;
     private readonly ILogger<TelegramNotificationClient> _logger;
     private readonly ICache _cache;
@@ -85,7 +94,7 @@ public class TelegramNotificationClient : ITelegramNotificationClient
     {
         try
         {
-            _logger.LogDebug("Sending Telegram message to {ChatId}: {Message}", chatId, message.Truncate(100));
+            _logger.LogDebug("Sending Telegram message to {ChatId}: {Message}", chatId, message.Truncate(MaxLogMessageLength));
             var sentMessage = await _botClient.SendTextMessageAsync(
                 chatId: chatId,
                 text: message,
@@ -114,11 +123,15 @@ public class TelegramNotificationClient : ITelegramNotificationClient
     /// <returns>True if the message was sent successfully, false otherwise.</returns>
     public async Task<bool> SendPriceAlertAsync(string asset, string fiat, decimal buyPrice, decimal sellPrice, string alertReason, CancellationToken ct = default)
     {
-        var message = $"<b>Price Alert: {asset}/{fiat}</b>\n\n" +
-                      $"<b>Buy:</b> {buyPrice:F4}\n" +
-                      $"<b>Sell:</b> {sellPrice:F4}\n\n" +
-                      $"<b>Reason:</b> {alertReason}\n" +
-                      $"<b>Time:</b> {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
+        var message = string.Format(
+            CultureInfo.CurrentCulture,
+            PriceAlertMessageFormat,
+            asset,
+            fiat,
+            buyPrice,
+            sellPrice,
+            alertReason,
+            DateTime.UtcNow);
         return await SendMessageAsync(long.Parse(_appSettings.TelegramAdminChatId, CultureInfo.InvariantCulture), message, ct).ConfigureAwait(false);
     }
 
@@ -132,7 +145,7 @@ public class TelegramNotificationClient : ITelegramNotificationClient
     /// <returns>True if the message was sent successfully, false otherwise.</returns>
     public async Task<bool> SendRateLimitedAsync(string cacheKey, string message, TimeSpan rateLimitWindow, CancellationToken ct = default)
     {
-        var lastSentKey = $"telegram_ratelimit_{cacheKey}";
+        var lastSentKey = $"{RateLimitCacheKeyPrefix}{cacheKey}";
         var exists = await _cache.ExistsAsync(lastSentKey, ct).ConfigureAwait(false);
         if (exists)
         {
