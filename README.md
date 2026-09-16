@@ -833,3 +833,30 @@ else
     }
 }
 ```
+
+## WebSocketService
+
+`WebSocketService` (`src/Services/WebSocketService.cs`) manages a real-time WebSocket connection to Binance's market-stream endpoint and raises price-update events as ticker messages arrive. It implements `IWebSocketService` and `IDisposable`, and is the live data source that feeds the rest of the monitoring pipeline.
+
+### Connection lifecycle
+
+- **`ConnectAsync()`** opens a `ClientWebSocket` to `wss://stream.binance.com:9443/ws`. It is idempotent — if already connected it returns immediately. On failure it throws an `ApiException` with code `WEBSOCKET_CONNECT_FAILED`.
+- **`DisconnectAsync()`** stops the keepalive timer and closes the socket with a `NormalClosure` status.
+- **`Dispose()`** cancels the receive loop, waits up to 2 seconds for it to drain, then disposes the socket, timer, and cancellation token source.
+
+### Subscribing to pairs
+
+- **`SubscribeToPairAsync(asset, fiat)`** builds a pair key from the lowercased asset and fiat (e.g. `btcusdt`), connects first if needed, and sends a Binance `SUBSCRIBE` request for the `<pair>@ticker` stream. Subscribed pairs are tracked in a `HashSet<string>` so duplicates are ignored.
+- **`UnsubscribeFromPairAsync(asset, fiat)`** sends the matching `UNSUBSCRIBE` request and removes the pair from the set.
+- After a reconnection, `ConnectAsync` re-sends `SUBSCRIBE` for every pair still in the set, so subscriptions survive a dropped connection.
+
+### Streaming and message handling
+
+- `ListenForMessagesAsync` runs a receive loop on a 4096-byte buffer, accumulating text fragments into a `MemoryStream` until `EndOfMessage`. Binary frames are ignored.
+- Each complete text message is deserialized into a `BinanceTickerMessage` (`s` symbol, `b` best bid, `a` best ask, `E` event time). The symbol is split into asset/fiat via `ParsePairKey`, which matches known quote suffixes (`USDT`, `BUSD`, `DAI`, `EUR`, `RUB`, `GBP`) longest-first, falling back to the last 3 characters as the fiat code.
+- Valid updates raise the `OnPriceUpdate` event with a `PriceUpdateEventArgs` carrying `Asset`, `Fiat`, `BuyPrice`, `SellPrice`, and `UpdateTime`.
+
+### Keepalive and reconnection
+
+- A `Timer` sends a JSON `ping` every 20 minutes to prevent the server-side ~30-minute idle timeout.
+- On an unexpected close or `WebSocketException`, the service stops the keepalive timer and attempts to reconnect with exponential backoff (5s, 10s, 20s, …) up to `MaxReconnectAttempts` (10). If the server closes the connection, reconnection is triggered the same way.
