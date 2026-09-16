@@ -6,6 +6,10 @@ namespace BinanceP2pMonitor.Infrastructure;
 /// </summary>
 public sealed class ConsoleOutputWriter
 {
+    /// <summary>
+    /// Writes a cyan header surrounded by separator lines.
+    /// </summary>
+    /// <param name="text">The header text to write.</param>
     public void WriteHeader(string text)
     {
         var originalForeground = Console.ForegroundColor;
@@ -16,6 +20,10 @@ public sealed class ConsoleOutputWriter
         Console.ForegroundColor = originalForeground;
     }
 
+    /// <summary>
+    /// Writes a success message in green.
+    /// </summary>
+    /// <param name="text">The success message to write.</param>
     public void WriteSuccess(string text)
     {
         var originalForeground = Console.ForegroundColor;
@@ -24,6 +32,10 @@ public sealed class ConsoleOutputWriter
         Console.ForegroundColor = originalForeground;
     }
 
+    /// <summary>
+    /// Writes an error message to standard error in red.
+    /// </summary>
+    /// <param name="text">The error message to write.</param>
     public void WriteError(string text)
     {
         var originalForeground = Console.ForegroundColor;
@@ -32,6 +44,10 @@ public sealed class ConsoleOutputWriter
         Console.ForegroundColor = originalForeground;
     }
 
+    /// <summary>
+    /// Writes a warning message in yellow.
+    /// </summary>
+    /// <param name="text">The warning message to write.</param>
     public void WriteWarning(string text)
     {
         var originalForeground = Console.ForegroundColor;
@@ -40,6 +56,10 @@ public sealed class ConsoleOutputWriter
         Console.ForegroundColor = originalForeground;
     }
 
+    /// <summary>
+    /// Writes an informational message in blue.
+    /// </summary>
+    /// <param name="text">The informational message to write.</param>
     public void WriteInfo(string text)
     {
         var originalForeground = Console.ForegroundColor;
@@ -48,6 +68,10 @@ public sealed class ConsoleOutputWriter
         Console.ForegroundColor = originalForeground;
     }
 
+    /// <summary>
+    /// Writes a section title in magenta.
+    /// </summary>
+    /// <param name="title">The section title to write.</param>
     public void WriteSection(string title)
     {
         var originalForeground = Console.ForegroundColor;
@@ -56,11 +80,21 @@ public sealed class ConsoleOutputWriter
         Console.ForegroundColor = originalForeground;
     }
 
+    /// <summary>
+    /// Writes a key and value with the key padded to a specified width.
+    /// </summary>
+    /// <param name="key">The key to write.</param>
+    /// <param name="value">The value associated with the key.</param>
+    /// <param name="keyWidth">The width to which the key is padded.</param>
     public void WriteKeyValue(string key, string value, int keyWidth = 20)
     {
         Console.WriteLine($"{key.PadRight(keyWidth)} : {value}");
     }
 
+    /// <summary>
+    /// Writes rows of key-value pairs as a table.
+    /// </summary>
+    /// <param name="rows">The rows to write, with dictionary keys used as column headers.</param>
     public void WriteTable(IEnumerable<Dictionary<string, string>> rows)
     {
         if (!rows.Any())
@@ -98,6 +132,9 @@ public sealed class ConsoleOutputWriter
         }
     }
 
+    /// <summary>
+    /// Writes a blank line.
+    /// </summary>
     public void WriteBlankLine()
     {
         Console.WriteLine();
