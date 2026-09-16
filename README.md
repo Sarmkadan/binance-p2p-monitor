@@ -33,6 +33,32 @@ After the formatted row, the command always writes an `Analysis` section. It rep
 
 If either price lookup returns no data, the command reports that one or both pairs could not be retrieved and exits with status `1`. Unsupported formats and unexpected errors also return `1`; a successful comparison returns `0`.
 
+## Spread Command
+
+`spread` displays the current buy/sell spread analysis for every available trading pair or for a filtered subset:
+
+```text
+binance-p2p-monitor spread
+binance-p2p-monitor spread --asset=BTC
+binance-p2p-monitor spread --fiat=USD
+binance-p2p-monitor spread --pair=BTC/USD
+binance-p2p-monitor spread --format=json
+```
+
+The command accepts these options:
+
+- `--asset=ASSET` — includes only spreads whose asset matches the value, case-insensitively.
+- `--fiat=FIAT` — includes only spreads whose fiat currency matches the value, case-insensitively. It can be combined with `--asset`.
+- `--pair=ASSET/FIAT` — requests one pair directly. The separator may be `/` or `\`; surrounding whitespace is trimmed. When supplied, this option takes precedence over `--asset` and `--fiat`.
+- `--format=FORMAT` — selects `table`, `json`, or `markdown`; the default is `table`, and format names are case-insensitive.
+- `-h, --help` — shows the command help.
+
+Each formatted result contains the asset, fiat, pair, current/average/minimum/maximum spread, standard deviation, sample count, risk level, percentage variance from the average, high- and low-spread indicators, and a human-readable last-updated time. Spread values and standard deviation are rendered to four decimal places; variance is rendered to two decimal places. Risk levels are based on the current spread (`Very Low` below 0.3%, `Low` below 0.6%, `Medium` below 1.0%, `High` below 1.5%, and `Very High` otherwise). The high indicator uses a fixed threshold above 1.5%, while the low indicator uses a fixed threshold below 0.3%.
+
+After successful formatted output, the command prints a `Configuration` section containing `DefaultSpreadThreshold` and `SpreadAnalysisHistoryHours`. These settings describe the configured analysis, but the displayed high/low indicators use the fixed model thresholds described above.
+
+With no filters, or with only `--asset` and/or `--fiat`, the command retrieves all spread analyses and filters them locally. With `--pair`, it performs a single-pair lookup. No matching data is informational and returns exit code `0`; an invalid pair, unsupported format, or unexpected error returns `1`. A successful result returns `0`.
+
 ## Output Formatters
 
 The implementations in `src/Formatters/` share the `IOutputFormatter` interface. Each exposes a `FormatType` and can format a single object, a collection, or a collection with explicit headers:
