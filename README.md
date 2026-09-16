@@ -1000,3 +1000,21 @@ else
 
 - A `Timer` sends a JSON `ping` every 20 minutes to prevent the server-side ~30-minute idle timeout.
 - On an unexpected close or `WebSocketException`, the service stops the keepalive timer and attempts to reconnect with exponential backoff (5s, 10s, 20s, …) up to `MaxReconnectAttempts` (10). If the server closes the connection, reconnection is triggered the same way.
+
+## Doctor Command
+
+The `doctor` command (`src/Commands/DoctorCommand.cs`) validates the application configuration and checks system health. It is a read-only diagnostic command that runs a series of checks and reports a pass/fail summary, exiting with code `0` when every check passes and `1` when any check fails.
+
+```
+binance-p2p-monitor doctor
+binance-p2p-monitor doctor --help
+```
+
+The command runs four checks in sequence:
+
+1. **Configuration Validation** — runs the `ConfigurationValidator` and reports the number of configuration errors found, printing each error individually when validation fails.
+2. **Database Connection** — opens a connection through `DatabaseContext` and verifies it is in the `Open` state. On success it prints the connection state and a redacted connection string (the password portion, if present, is masked as `***REDACTED***`; otherwise the string is truncated to 50 characters for security).
+3. **Database Schema** — queries `sqlite_master` to confirm the `Prices` table exists, then reports the number of tables found and the current record count in `Prices`.
+4. **Configuration Values** — prints the effective runtime settings (monitoring interval, alert cooldown, WebSocket/Telegram toggles, history retention, max alerts per user, price/spread thresholds, database timeout) and the first five monitored assets and fiats. It fails if no monitored assets or no monitored fiats are configured.
+
+After the checks, the command prints a summary table of every check with a `✓ PASS` or `✗ FAIL` status. If all checks pass it prints `All N checks passed! System is healthy.` and returns `0`; otherwise it prints `N of M checks failed. Please review the errors above.` and returns `1`. Failures are also logged through the injected `ILogger<DoctorCommand>`.
