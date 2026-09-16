@@ -10,6 +10,11 @@ public class DataExporter
 {
     private readonly ILogger<DataExporter> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataExporter"/> class.
+    /// </summary>
+    /// <param name="logger">The logger used to record export activity and failures.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="logger"/> is <see langword="null"/>.</exception>
     public DataExporter(ILogger<DataExporter> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
