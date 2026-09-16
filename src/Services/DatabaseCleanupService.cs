@@ -10,6 +10,14 @@ namespace BinanceP2pMonitor.Services;
 /// </summary>
 public class DatabaseCleanupService : IDatabaseCleanupService
 {
+    private const int MinimumDaysOld = 0;
+    private const string NegativeDaysOldLogMessage = "DeleteOldRecordsAsync called with negative daysOld: {DaysOld}";
+    private const string NonNegativeDaysOldErrorMessage = "Days old must be non-negative";
+    private const string DeletingRecordsLogMessage = "Deleting records older than {DaysOld} days";
+    private const string DeletedRecordsLogMessage = "Deleted {DeletedCount} records older than {DaysOld} days. Remaining: {RemainingCount}";
+    private const string FailedToDeleteOldRecordsMessage = "Failed to delete old records";
+    private const string FailedToGetHistoryCountMessage = "Failed to get history count";
+
     private readonly IHistoryRepository _historyRepository;
     private readonly ILogger<DatabaseCleanupService> _logger;
 
@@ -28,13 +36,13 @@ public class DatabaseCleanupService : IDatabaseCleanupService
     /// <returns>Number of records deleted</returns>
     public async Task<int> DeleteOldRecordsAsync(int daysOld)
     {
-        if (daysOld < 0)
+        if (daysOld < MinimumDaysOld)
         {
-            _logger.LogWarning("DeleteOldRecordsAsync called with negative daysOld: {DaysOld}", daysOld);
-            throw new ArgumentException("Days old must be non-negative", nameof(daysOld));
+            _logger.LogWarning(NegativeDaysOldLogMessage, daysOld);
+            throw new ArgumentException(NonNegativeDaysOldErrorMessage, nameof(daysOld));
         }
 
-        _logger.LogInformation("Deleting records older than {DaysOld} days", daysOld);
+        _logger.LogInformation(DeletingRecordsLogMessage, daysOld);
 
         try
         {
@@ -47,15 +55,15 @@ public class DatabaseCleanupService : IDatabaseCleanupService
             var remainingCount = await _historyRepository.GetTotalHistoryCountAsync().ConfigureAwait(false);
             var deletedCount = (int)(initialCount - remainingCount);
 
-            _logger.LogInformation("Deleted {DeletedCount} records older than {DaysOld} days. Remaining: {RemainingCount}",
+            _logger.LogInformation(DeletedRecordsLogMessage,
                 deletedCount, daysOld, remainingCount);
 
             return deletedCount;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to delete old records");
-            throw new DataAccessException("Failed to delete old records", ex);
+            _logger.LogError(ex, FailedToDeleteOldRecordsMessage);
+            throw new DataAccessException(FailedToDeleteOldRecordsMessage, ex);
         }
     }
 
@@ -71,8 +79,8 @@ public class DatabaseCleanupService : IDatabaseCleanupService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get history count");
-            throw new DataAccessException("Failed to get history count", ex);
+            _logger.LogError(ex, FailedToGetHistoryCountMessage);
+            throw new DataAccessException(FailedToGetHistoryCountMessage, ex);
         }
     }
 }
