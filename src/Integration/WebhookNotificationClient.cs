@@ -42,6 +42,9 @@ public class WebhookNotificationClient : IWebhookNotificationClient
     private readonly AppSettings _appSettings;
     private readonly ILogger<WebhookNotificationClient> _logger;
 
+    private const string JsonMediaType = "application/json";
+    private const string PriceAlertEvent = "price_alert";
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -83,7 +86,7 @@ public class WebhookNotificationClient : IWebhookNotificationClient
         try
         {
             var json = JsonSerializer.Serialize(payload, JsonOptions);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var content = new StringContent(json, Encoding.UTF8, JsonMediaType);
 
             _logger.LogDebug("Sending webhook alert to {Url}", _appSettings.WebhookUrl);
             var response = await _httpClient.PostAsync(_appSettings.WebhookUrl, content, ct).ConfigureAwait(false);
@@ -121,7 +124,7 @@ public class WebhookNotificationClient : IWebhookNotificationClient
 
         var payload = new WebhookPayload
         {
-            Event = "price_alert",
+            Event = PriceAlertEvent,
             Asset = asset,
             Fiat = fiat,
             BuyPrice = buyPrice,
@@ -139,10 +142,12 @@ public class WebhookNotificationClient : IWebhookNotificationClient
 /// </summary>
 public sealed class WebhookPayload
 {
+    private const string DefaultEvent = "alert";
+
     /// <summary>
     /// Gets or sets the name of the webhook event.
     /// </summary>
-    public string Event { get; set; } = "alert";
+    public string Event { get; set; } = DefaultEvent;
 
     /// <summary>
     /// Gets or sets the asset associated with the alert.
