@@ -1018,3 +1018,31 @@ The command runs four checks in sequence:
 4. **Configuration Values** — prints the effective runtime settings (monitoring interval, alert cooldown, WebSocket/Telegram toggles, history retention, max alerts per user, price/spread thresholds, database timeout) and the first five monitored assets and fiats. It fails if no monitored assets or no monitored fiats are configured.
 
 After the checks, the command prints a summary table of every check with a `✓ PASS` or `✗ FAIL` status. If all checks pass it prints `All N checks passed! System is healthy.` and returns `0`; otherwise it prints `N of M checks failed. Please review the errors above.` and returns `1`. Failures are also logged through the injected `ILogger<DoctorCommand>`.
+
+## Prune Command
+
+The `prune` command (`src/Commands/PruneCommand.cs`) deletes historical price data older than a specified number of days. It is a destructive maintenance command that permanently removes records from the database, so it requires an interactive confirmation before anything is deleted.
+
+```
+binance-p2p-monitor prune --days=30
+binance-p2p-monitor prune --days=90
+binance-p2p-monitor prune --help
+```
+
+### Options
+
+- `--days=DAYS` — required. The number of days of history to keep; records older than this are deleted. Must be a positive integer.
+- `-h, --help` — shows the help message.
+
+### Behavior
+
+The command validates its arguments up front: `--days` is required, and its value must parse as a positive integer. If validation fails it prints an error and returns exit code `1` without touching the database.
+
+On a valid invocation it proceeds as follows:
+
+1. Prints a `Database Prune` header and records the current total history count via `IDatabaseCleanupService.GetTotalHistoryCountAsync()`.
+2. Prints a warning that the operation will permanently delete historical price data and prompts `Are you sure you want to continue? (yes/no)`. If the user does not answer `yes`, the operation is cancelled and the command returns `0`.
+3. On confirmation, calls `IDatabaseCleanupService.DeleteOldRecordsAsync(days)` to delete records older than the threshold.
+4. Re-queries the total history count, then prints the number of records deleted and the remaining total, returning exit code `0`.
+
+Any exception during execution is logged through the injected `ILogger<PruneCommand>`, printed as an error, and the command returns exit code `1`. The command depends on `IDatabaseCleanupService` (see the `DatabaseCleanupService` section above), which performs the actual deletion and count reporting.
