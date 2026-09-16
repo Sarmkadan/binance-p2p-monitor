@@ -9,6 +9,11 @@ public sealed class ConfigurationValidator
     private readonly AppSettings _appSettings;
     private readonly ILogger<ConfigurationValidator> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConfigurationValidator"/> class.
+    /// </summary>
+    /// <param name="appSettings">The application settings to validate.</param>
+    /// <param name="logger">The logger used to report validation progress and results.</param>
     public ConfigurationValidator(AppSettings appSettings, ILogger<ConfigurationValidator> logger)
     {
         _appSettings = appSettings;
