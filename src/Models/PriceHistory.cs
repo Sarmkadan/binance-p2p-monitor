@@ -100,6 +100,15 @@ public class PriceHistory
     }
 
     /// <summary>
+    /// Returns a string representation of the price history record.
+    /// </summary>
+    /// <returns>A formatted string with key properties.</returns>
+    public override string ToString()
+    {
+        return $"PriceHistory {{ Id={Id}, Asset={Asset}, Fiat={Fiat}, Buy={BuyPrice}, Sell={SellPrice}, Recorded={RecordedAt:yyyy-MM-dd HH:mm:ss}, Spread={SpreadPercentage}%, Change={PriceChangePercent}% }}";
+    }
+
+    /// <summary>
     /// Compares this history record with another to determine trend
     /// </summary>
     /// <param name="other">The other price history record to compare against.</param>
