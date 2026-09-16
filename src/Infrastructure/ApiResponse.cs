@@ -88,6 +88,14 @@ public class ApiResponse<T>
             Errors = errors
         };
     }
+
+    /// <summary>
+    /// Returns a string representation of the API response
+    /// </summary>
+    /// <returns>A formatted string with key response properties</returns>
+    public override string ToString() =>
+        $"ApiResponse: Success={Success}, Message={Message}, Errors={Errors.Count}, " +
+        $"Timestamp={Timestamp:u}, RequestId={RequestId}, Data={Data}";
 }
 
 /// <summary>
