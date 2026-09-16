@@ -13,7 +13,12 @@ public sealed class RateLimiter
 	private const int Zero = 0;
 	private static readonly TimeSpan ZeroTimeSpan = TimeSpan.Zero;
 
-	public RateLimiter(int maxRequests, TimeSpan timeWindow)
+	/// <summary>
+/// Initializes a new instance of the RateLimiter class with the specified maximum requests and time window.
+/// </summary>
+/// <param name="maxRequests">The maximum number of requests allowed in the time window.</param>
+/// <param name="timeWindow">The time window for the rate limit.</param>
+public RateLimiter(int maxRequests, TimeSpan timeWindow)
 	{
 		if (maxRequests <= Zero)
 			throw new ArgumentOutOfRangeException(nameof(maxRequests));
