@@ -12,6 +12,7 @@ public sealed class ConsoleOutputWriter
     /// <param name="text">The header text to write.</param>
     public void WriteHeader(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
         var originalForeground = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine($"\n{'='.ToString().PadRight(80, '=')}");
@@ -26,6 +27,7 @@ public sealed class ConsoleOutputWriter
     /// <param name="text">The success message to write.</param>
     public void WriteSuccess(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
         var originalForeground = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"✓ {text}");
@@ -38,6 +40,7 @@ public sealed class ConsoleOutputWriter
     /// <param name="text">The error message to write.</param>
     public void WriteError(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
         var originalForeground = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Red;
         Console.Error.WriteLine($"✗ {text}");
@@ -50,6 +53,7 @@ public sealed class ConsoleOutputWriter
     /// <param name="text">The warning message to write.</param>
     public void WriteWarning(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
         var originalForeground = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine($"⚠ {text}");
@@ -62,6 +66,7 @@ public sealed class ConsoleOutputWriter
     /// <param name="text">The informational message to write.</param>
     public void WriteInfo(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
         var originalForeground = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Blue;
         Console.WriteLine($"ℹ {text}");
@@ -74,6 +79,7 @@ public sealed class ConsoleOutputWriter
     /// <param name="title">The section title to write.</param>
     public void WriteSection(string title)
     {
+        ArgumentNullException.ThrowIfNull(title);
         var originalForeground = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Magenta;
         Console.WriteLine($"\n► {title}");
@@ -88,6 +94,8 @@ public sealed class ConsoleOutputWriter
     /// <param name="keyWidth">The width to which the key is padded.</param>
     public void WriteKeyValue(string key, string value, int keyWidth = 20)
     {
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(value);
         Console.WriteLine($"{key.PadRight(keyWidth)} : {value}");
     }
 
@@ -97,6 +105,7 @@ public sealed class ConsoleOutputWriter
     /// <param name="rows">The rows to write, with dictionary keys used as column headers.</param>
     public void WriteTable(IEnumerable<Dictionary<string, string>> rows)
     {
+        ArgumentNullException.ThrowIfNull(rows);
         if (!rows.Any())
         {
             WriteInfo("(no data)");
@@ -145,6 +154,7 @@ public sealed class ConsoleOutputWriter
     /// </summary>
     public void WriteRaw(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
         Console.WriteLine(text);
     }
 }
