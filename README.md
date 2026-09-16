@@ -513,6 +513,73 @@ Console.WriteLine($"Average mid price: {avgMidPrice:F4}"); // 1.0125
 
 The `PriceHistoryExtensions` class provides utility methods for working with historical price data, enabling time-based filtering, spread analysis, and price change calculations across different time windows. These extensions help analyze price trends, calculate average changes, and filter price history records based on temporal criteria.
 
+## Telegram Notification Client
+
+The `TelegramNotificationClient` (`src/Integration/TelegramNotificationClient.cs`) implements the `ITelegramNotificationClient` interface for sending notifications via Telegram. It provides methods for sending regular messages, price alerts, and rate-limited messages to a configured Telegram chat.
+
+### Configuration
+
+The client requires the following settings in `AppSettings`:
+- `TelegramBotToken`: The bot token obtained from @BotFather on Telegram
+- `TelegramAdminChatId`: The numeric chat ID where notifications will be sent
+- `EnableTelegramNotifications`: Boolean flag to enable/disable Telegram notifications
+
+These settings are validated at startup to ensure they are properly configured when notifications are enabled.
+
+### Usage
+
+The client is registered as a singleton service in the dependency injection container:
+
+```csharp
+services.AddSingleton<ITelegramNotificationClient, TelegramNotificationClient>();
+```
+
+It can be injected into any service or class that requires Telegram notifications:
+
+```csharp
+public class MyService
+{
+    private readonly ITelegramNotificationClient _telegramClient;
+    
+    public MyService(ITelegramNotificationClient telegramClient)
+    {
+        _telegramClient = telegramClient;
+    }
+}
+```
+
+### Methods
+
+#### SendMessageAsync
+Sends a plain text message to a specified chat ID:
+```csharp
+await _telegramClient.SendMessageAsync(chatId, "Hello World!", cancellationToken);
+```
+
+#### SendPriceAlertAsync
+Sends a formatted price alert to the configured admin chat:
+```csharp
+await _telegramClient.SendPriceAlertAsync(
+    "BTC", 
+    "USDT", 
+    45000.00m, 
+    45500.00m, 
+    "Price spread exceeded threshold", 
+    cancellationToken);
+```
+
+#### SendRateLimitedAsync
+Sends a message with rate limiting to prevent spam:
+```csharp
+await _telegramClient.SendRateLimitedAsync(
+    "daily_summary_key", 
+    "Daily market summary", 
+    TimeSpan.FromHours(24), 
+    cancellationToken);
+```
+
+All methods return `true` if the message was sent successfully, `false` otherwise. Messages are formatted using HTML parse mode for rich text formatting.
+
 ## DatabaseCleanupService
 
 The `DatabaseCleanupService` (`src/Services/DatabaseCleanupService.cs`) is responsible for maintaining database hygiene by removing outdated records. It implements the `IDatabaseCleanupService` interface and provides two primary methods:
