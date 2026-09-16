@@ -14,6 +14,15 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 	private readonly ILogger<CachedPriceMonitoringService> _logger;
 	private readonly TimeSpan _cacheDuration = TimeSpan.FromSeconds(30);
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CachedPriceMonitoringService"/> class.
+	/// </summary>
+	/// <param name="innerService">The price monitoring service to decorate.</param>
+	/// <param name="cache">The cache used to store price data.</param>
+	/// <param name="logger">The logger used to record cache activity.</param>
+	/// <exception cref="ArgumentNullException">
+	/// Thrown when <paramref name="innerService"/>, <paramref name="cache"/>, or <paramref name="logger"/> is <see langword="null"/>.
+	/// </exception>
 	public CachedPriceMonitoringService(
 		IPriceMonitoringService innerService,
 		ICache cache,
@@ -24,6 +33,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 
+	/// <inheritdoc/>
 	public async Task<Price?> GetCurrentPriceAsync(string asset, string fiat)
 	{
 		ArgumentNullException.ThrowIfNull(asset);
@@ -48,6 +58,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 	}
 
+	/// <inheritdoc/>
 	public async Task<IEnumerable<Price>> GetAllCurrentPricesAsync()
 	{
 		try
@@ -64,6 +75,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 	}
 
+	/// <inheritdoc/>
 	public async Task<bool> UpdatePriceAsync(Price price)
 	{
 		if (price is null)
@@ -88,6 +100,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 	}
 
+	/// <inheritdoc/>
 	public async Task<decimal?> GetAveragePriceAsync(string asset, string fiat, int hours)
 	{
 		ArgumentNullException.ThrowIfNull(asset);
@@ -114,6 +127,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 	}
 
+	/// <inheritdoc/>
 	public async Task<IEnumerable<Price>> GetPricesWithSignificantChangeAsync(decimal changePercentThreshold)
 	{
 		if (changePercentThreshold < 0)
@@ -129,6 +143,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 	}
 
+	/// <inheritdoc/>
 	public async Task<Spread?> GetSpreadAnalysisAsync(string asset, string fiat)
 	{
 		ArgumentNullException.ThrowIfNull(asset);
@@ -153,6 +168,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 	}
 
+	/// <inheritdoc/>
 	public async Task StartMonitoringAsync(CancellationToken cancellationToken)
 	{
 		try
@@ -165,6 +181,7 @@ public class CachedPriceMonitoringService : IPriceMonitoringService
 		}
 	}
 
+	/// <inheritdoc/>
 	public async Task StopMonitoringAsync()
 	{
 		try
