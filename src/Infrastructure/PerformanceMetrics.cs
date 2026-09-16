@@ -14,6 +14,7 @@ public sealed class PerformanceMetrics
     /// </summary>
     public void RecordOperation(string operationName, TimeSpan duration, bool success = true)
     {
+        ArgumentNullException.ThrowIfNull(operationName);
         _lock.EnterWriteLock();
         try
         {
@@ -49,6 +50,7 @@ public sealed class PerformanceMetrics
     /// </summary>
     public OperationMetrics? GetMetrics(string operationName)
     {
+        ArgumentNullException.ThrowIfNull(operationName);
         _lock.EnterReadLock();
         try
         {
