@@ -13,6 +13,26 @@ Every token after the command name is classified as follows:
 
 Options, flags, and positional arguments can be interspersed. Repeated keys overwrite earlier values in the same dictionary. The parser does not validate or normalize command and option names, split a raw command-line string, combine short flags, or treat `--` as an end-of-options marker. After parsing non-empty input, it writes a debug log containing the command name and the final option and flag counts.
 
+## Compare Command
+
+`compare` retrieves the current buy and sell prices for one asset in two fiat currencies and displays them side by side:
+
+```text
+binance-p2p-monitor compare --asset=BTC --from=USD --to=EUR
+```
+
+The `--asset`, `--from`, and `--to` options are required. Use `--format=table`, `--format=json`, or `--format=markdown` to select the comparison row's format; the default is `table`, and format names are matched case-insensitively. `-h` or `--help` displays the command help.
+
+The formatted row contains the asset and both fiat names; buy price, sell price, spread, and buy-price change for each pair; absolute and percentage buy/sell differences; and the local time when the row was created. Prices and absolute differences are shown to eight decimal places, spreads to four decimal places, and changes and percentage differences to two decimal places.
+
+After the formatted row, the command always writes an `Analysis` section. It reports:
+
+- The absolute buy-price difference, calculated as `from buy price - to buy price`, and its percentage relative to the `to` buy price.
+- Buy and sell price ratios, calculated as the corresponding `from` price divided by the `to` price.
+- The best buy location (the fiat with the lower buy price) and best sell location (the fiat with the higher sell price). Ties select the `to` fiat.
+
+If either price lookup returns no data, the command reports that one or both pairs could not be retrieved and exits with status `1`. Unsupported formats and unexpected errors also return `1`; a successful comparison returns `0`.
+
 ## Output Formatters
 
 The implementations in `src/Formatters/` share the `IOutputFormatter` interface. Each exposes a `FormatType` and can format a single object, a collection, or a collection with explicit headers:
