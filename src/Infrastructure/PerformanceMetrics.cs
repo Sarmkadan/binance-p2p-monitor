@@ -134,18 +134,59 @@ public sealed class PerformanceMetrics
         }
     }
 
+    /// <summary>
+    /// Contains aggregated performance data for an operation.
+    /// </summary>
     public class OperationMetrics
     {
+        /// <summary>
+        /// Gets or sets the name of the operation.
+        /// </summary>
         public string OperationName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the total number of recorded executions.
+        /// </summary>
         public int TotalCount { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of successful executions.
+        /// </summary>
         public int SuccessCount { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of failed executions.
+        /// </summary>
         public int FailureCount { get; set; }
+
+        /// <summary>
+        /// Gets or sets the total duration of all recorded executions.
+        /// </summary>
         public TimeSpan TotalDuration { get; set; }
+
+        /// <summary>
+        /// Gets or sets the shortest recorded execution duration.
+        /// </summary>
         public TimeSpan MinDuration { get; set; }
+
+        /// <summary>
+        /// Gets or sets the longest recorded execution duration.
+        /// </summary>
         public TimeSpan MaxDuration { get; set; }
+
+        /// <summary>
+        /// Gets or sets the time of the most recent execution.
+        /// </summary>
         public DateTime LastExecutionTime { get; set; }
 
+        /// <summary>
+        /// Gets the average execution duration in milliseconds.
+        /// </summary>
         public double GetAverageDurationMs => TotalCount > 0 ? TotalDuration.TotalMilliseconds / TotalCount : 0;
+
+        /// <summary>
+        /// Gets the percentage of recorded executions that succeeded.
+        /// </summary>
         public double GetSuccessRate => TotalCount > 0 ? (SuccessCount * 100.0 / TotalCount) : 0;
     }
 }
