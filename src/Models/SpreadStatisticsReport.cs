@@ -117,6 +117,16 @@ public class SpreadStatisticsReport
     public decimal GetVolatilityRange() => Percentile95 - Percentile5;
 
     /// <summary>
+    /// Returns a string representation of the spread statistics report
+    /// </summary>
+    /// <returns>A formatted string with key report properties</returns>
+    public override string ToString() =>
+        $"SpreadStatisticsReport: Asset={Asset}, Fiat={Fiat}, TimeWindow={TimeWindowHours}h, " +
+        $"Samples={SampleCount}, Mean={Mean:F4}%, Median={Median:F4}%, " +
+        $"Min={MinSpread:F4}%, Max={MaxSpread:F4}%, Current={CurrentSpread:F4}%, " +
+        $"ZScore={ZScore:F2}, Trend={GetTrendLabel()}, AnalyzedAt={AnalyzedAt:u}, IsAnomalous={IsAnomalous}";
+
+    /// <summary>
     /// Validates that the report contains consistent, non-default data
     /// </summary>
     /// <returns>True if the report data is valid; otherwise, false.</returns>
