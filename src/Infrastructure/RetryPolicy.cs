@@ -106,6 +106,7 @@ public class RetryPolicy
     {
         return ex switch
         {
+            BinanceP2pException bpex => bpex.IsTransient,
             TimeoutException => true,
             HttpRequestException => true,
             IOException => true,

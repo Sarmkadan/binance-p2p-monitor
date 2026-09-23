@@ -30,6 +30,11 @@ public class ArgumentValidationException : BinanceP2pException
         ValidationErrors = new Dictionary<string, string>();
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => false;
+
     public override string ToString()
     {
         var baseStr = base.ToString();

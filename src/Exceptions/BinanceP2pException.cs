@@ -4,8 +4,13 @@ namespace BinanceP2pMonitor.Exceptions;
 /// <summary>
 /// Base exception for all application-specific errors
 /// </summary>
-public class BinanceP2pException : Exception
+public abstract class BinanceP2pException : Exception
 {
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient (e.g. can be retried).
+    /// </summary>
+    public abstract bool IsTransient { get; }
+
     public string? ErrorCode { get; set; }
     public Dictionary<string, object>? Context { get; set; }
 
@@ -39,6 +44,11 @@ public class InvalidPriceException : BinanceP2pException
 {
     public InvalidPriceException(string message, string? errorCode = "INVALID_PRICE")
         : base(message, errorCode) { }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => false;
 }
 
 /// <summary>
@@ -48,6 +58,11 @@ public class InvalidAlertException : BinanceP2pException
 {
     public InvalidAlertException(string message, string? errorCode = "INVALID_ALERT")
         : base(message, errorCode) { }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => false;
 }
 
 /// <summary>
@@ -57,6 +72,11 @@ public class DataAccessException : BinanceP2pException
 {
     public DataAccessException(string message, Exception innerException,
         string? errorCode = "DB_ERROR") : base(message, innerException, errorCode) { }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => true;
 }
 
 /// <summary>
@@ -77,6 +97,15 @@ public class ApiException : BinanceP2pException
     {
         HttpStatusCode = statusCode;
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient =>
+        HttpStatusCode.HasValue &&
+        (HttpStatusCode.Value == 429 || // Too Many Requests
+         HttpStatusCode.Value == 408 || // Request Timeout
+         (HttpStatusCode.Value >= 500 && HttpStatusCode.Value <= 599)); // 5xx Server Errors
 }
 
 /// <summary>
@@ -86,6 +115,11 @@ public class ConfigurationException : BinanceP2pException
 {
     public ConfigurationException(string message, string? errorCode = "CONFIG_ERROR")
         : base(message, errorCode) { }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => false;
 }
 
 /// <summary>
@@ -95,6 +129,11 @@ public class ResourceNotFoundException : BinanceP2pException
 {
     public ResourceNotFoundException(string message, string? errorCode = "NOT_FOUND")
         : base(message, errorCode) { }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => false;
 }
 
 /// <summary>
@@ -109,4 +148,9 @@ public class ValidationException : BinanceP2pException
     {
         ValidationErrors = errors;
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => false;
 }

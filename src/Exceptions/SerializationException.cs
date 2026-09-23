@@ -23,6 +23,11 @@ public class SerializationException : BinanceP2pException
         DataType = dataType;
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => false;
+
     public override string ToString()
     {
         var baseStr = base.ToString();
@@ -51,6 +56,11 @@ public class JsonSerializationException : SerializationException
         JsonContent = jsonContent;
         DataType = "JSON";
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => false;
 
     public override string ToString()
     {

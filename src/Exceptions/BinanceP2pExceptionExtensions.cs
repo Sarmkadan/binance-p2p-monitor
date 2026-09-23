@@ -46,15 +46,7 @@ public static class BinanceP2pExceptionExtensions
     public static bool IsTransient(this BinanceP2pException exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-
-        return exception switch
-        {
-            ApiException apiEx => apiEx.HttpStatusCode is null or >= 500,
-            DataAccessException => true,
-            InvalidPriceException => false,
-            InvalidAlertException => false,
-            _ => false
-        };
+        return exception.IsTransient;
     }
 
     /// <summary>
