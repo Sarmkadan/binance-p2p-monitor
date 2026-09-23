@@ -35,4 +35,30 @@ public static class NotificationExceptionExtensions
 
         return exception is WebhookNotificationException;
     }
+
+    /// <summary>
+    /// Determines if the notification exception is transient (e.g. can be retried).
+    /// Notification delivery failures are considered transient with a cap.
+    /// </summary>
+    /// <param name="exception">The notification exception.</param>
+    /// <returns><c>true</c> as all notification exceptions are transient.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is null.</exception>
+    public static bool IsTransient(this NotificationException exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        return true;
+    }
+
+    /// <summary>
+    /// Determines if the notification exception is fatal (should not be retried).
+    /// Notification delivery failures are transient, not fatal.
+    /// </summary>
+    /// <param name="exception">The notification exception.</param>
+    /// <returns><c>false</c> as notification exceptions are not fatal.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="exception"/> is null.</exception>
+    public static bool IsFatal(this NotificationException exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        return false;
+    }
 }
