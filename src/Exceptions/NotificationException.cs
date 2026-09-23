@@ -21,6 +21,11 @@ public class NotificationException : BinanceP2pException
         ArgumentNullException.ThrowIfNull(message);
         ArgumentNullException.ThrowIfNull(innerException);
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => true;
 }
 
 /// <summary>
@@ -34,6 +39,11 @@ public class TelegramNotificationException : NotificationException
         ArgumentNullException.ThrowIfNull(message);
         ArgumentNullException.ThrowIfNull(innerException);
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => true;
 }
 
 /// <summary>
@@ -47,4 +57,9 @@ public class WebhookNotificationException : NotificationException
         ArgumentNullException.ThrowIfNull(message);
         ArgumentNullException.ThrowIfNull(innerException);
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the exception is transient.
+    /// </summary>
+    public override bool IsTransient => true;
 }
