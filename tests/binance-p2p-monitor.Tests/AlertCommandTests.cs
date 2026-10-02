@@ -79,9 +79,9 @@ public class AlertCommandTests
             {
                 { "asset", "BTC" },
                 { "fiat", "USDT" },
-                { "type", "price" },
+                { "type", "PriceChange" },
                 { "threshold", "50000" },
-                { "condition", "above" }
+                { "condition", "GreaterThan" }
             }
         };
         var errors = command.ValidateArguments(context);
@@ -98,9 +98,9 @@ public class AlertCommandTests
             Options = new Dictionary<string, string>
             {
                 { "fiat", "USDT" },
-                { "type", "price" },
+                { "type", "PriceChange" },
                 { "threshold", "50000" },
-                { "condition", "above" }
+                { "condition", "GreaterThan" }
             }
         };
         var errors = command.ValidateArguments(context);
@@ -119,9 +119,9 @@ public class AlertCommandTests
             {
                 { "asset", "BTC" },
                 { "fiat", "USDT" },
-                { "type", "price" },
+                { "type", "PriceChange" },
                 { "threshold", "invalid" },
-                { "condition", "above" }
+                { "condition", "GreaterThan" }
             }
         };
         var errors = command.ValidateArguments(context);
@@ -140,7 +140,7 @@ public class AlertCommandTests
             {
                 { "asset", "BTC" },
                 { "fiat", "USDT" },
-                { "type", "price" },
+                { "type", "PriceChange" },
                 { "threshold", "50000" },
                 { "condition", "invalid" }
             }

@@ -25,9 +25,7 @@ public class AlertRepository : IAlertRepository
         {
             const string sql = @"
                 SELECT Id, Asset, Fiat, AlertType, Threshold, Condition, IsEnabled,
-        IsMuted,
-                       UserId, CreatedAt, UpdatedAt, LastTriggeredAt, TriggerCount, Notes
-        IsMuted,
+                       IsMuted, UserId, CreatedAt, UpdatedAt, LastTriggeredAt, TriggerCount, Notes
                 FROM PriceAlerts WHERE Id = @Id";
 
             return await Task.Run(() =>
@@ -48,8 +46,7 @@ public class AlertRepository : IAlertRepository
         {
             const string sql = @"
                 SELECT Id, Asset, Fiat, AlertType, Threshold, Condition, IsEnabled,
-        IsMuted,
-                       UserId, CreatedAt, UpdatedAt, LastTriggeredAt, TriggerCount, Notes
+                       IsMuted, UserId, CreatedAt, UpdatedAt, LastTriggeredAt, TriggerCount, Notes
                 FROM PriceAlerts WHERE IsEnabled = 1";
 
             var alerts = new List<PriceAlert>();
@@ -76,8 +73,7 @@ public class AlertRepository : IAlertRepository
         {
             const string sql = @"
                 SELECT Id, Asset, Fiat, AlertType, Threshold, Condition, IsEnabled,
-        IsMuted,
-                       UserId, CreatedAt, UpdatedAt, LastTriggeredAt, TriggerCount, Notes
+                       IsMuted, UserId, CreatedAt, UpdatedAt, LastTriggeredAt, TriggerCount, Notes
                 FROM PriceAlerts WHERE UserId = @UserId ORDER BY CreatedAt DESC";
 
             var alerts = new List<PriceAlert>();
@@ -104,8 +100,7 @@ public class AlertRepository : IAlertRepository
         {
             const string sql = @"
                 SELECT Id, Asset, Fiat, AlertType, Threshold, Condition, IsEnabled,
-        IsMuted,
-                       UserId, CreatedAt, UpdatedAt, LastTriggeredAt, TriggerCount, Notes
+                       IsMuted, UserId, CreatedAt, UpdatedAt, LastTriggeredAt, TriggerCount, Notes
                 FROM PriceAlerts WHERE Asset = @Asset AND Fiat = @Fiat AND IsEnabled = 1";
 
             var alerts = new List<PriceAlert>();
@@ -137,11 +132,9 @@ public class AlertRepository : IAlertRepository
             const string sql = @"
                 INSERT INTO PriceAlerts
                 (Asset, Fiat, AlertType, Threshold, Condition, IsEnabled,
-        IsMuted, UserId,
-                 CreatedAt, UpdatedAt, LastTriggeredAt, TriggerCount, Notes)
+                 IsMuted, UserId, CreatedAt, UpdatedAt, LastTriggeredAt, TriggerCount, Notes)
                 VALUES (@Asset, @Fiat, @AlertType, @Threshold, @Condition, @IsEnabled,
-        IsMuted,
-                        @UserId, @CreatedAt, @UpdatedAt, @LastTriggeredAt, @TriggerCount, @Notes);
+                        @IsMuted, @UserId, @CreatedAt, @UpdatedAt, @LastTriggeredAt, @TriggerCount, @Notes);
                 SELECT last_insert_rowid();";
 
             var parameters = new Dictionary<string, object>
@@ -152,6 +145,7 @@ public class AlertRepository : IAlertRepository
                 { "Threshold", alert.Threshold },
                 { "Condition", alert.Condition },
                 { "IsEnabled", alert.IsEnabled ? 1 : 0 },
+                { "IsMuted", alert.IsMuted ? 1 : 0 },
                 { "UserId", alert.UserId },
                 { "CreatedAt", alert.CreatedAt },
                 { "UpdatedAt", alert.UpdatedAt },
@@ -182,7 +176,7 @@ public class AlertRepository : IAlertRepository
             const string sql = @"
                 UPDATE PriceAlerts
                 SET Threshold = @Threshold, Condition = @Condition, IsEnabled = @IsEnabled,
-        IsMuted,
+                    IsMuted = @IsMuted,
                     UpdatedAt = @UpdatedAt, LastTriggeredAt = @LastTriggeredAt,
                     TriggerCount = @TriggerCount, Notes = @Notes
                 WHERE Id = @Id";
@@ -193,6 +187,7 @@ public class AlertRepository : IAlertRepository
                 { "Threshold", alert.Threshold },
                 { "Condition", alert.Condition },
                 { "IsEnabled", alert.IsEnabled ? 1 : 0 },
+                { "IsMuted", alert.IsMuted ? 1 : 0 },
                 { "UpdatedAt", alert.UpdatedAt },
                 { "LastTriggeredAt", alert.LastTriggeredAt ?? (object)DBNull.Value },
                 { "TriggerCount", alert.TriggerCount },
@@ -207,31 +202,30 @@ public class AlertRepository : IAlertRepository
         }
     }
 
-public async Task<bool> SetMutedAsync(int alertId, bool isMuted)
-{
-    try
+    public async Task<bool> SetMutedAsync(int alertId, bool isMuted)
     {
-        const string sql = @"
-        UPDATE PriceAlerts
-        SET IsMuted = @IsMuted,
-            UpdatedAt = @UpdatedAt
-        WHERE Id = @Id";
-
-        var parameters = new Dictionary<string, object>
+        try
         {
-            { "Id", alertId },
-            { "IsMuted", isMuted ? 1 : 0 },
-            { "UpdatedAt", DateTime.UtcNow }
-        };
+            const string sql = @"
+                UPDATE PriceAlerts
+                SET IsMuted = @IsMuted,
+                    UpdatedAt = @UpdatedAt
+                WHERE Id = @Id";
 
-        return await Task.Run(() => _context.ExecuteCommand(sql, parameters) > 0).ConfigureAwait(false);
-    }
-    catch (Exception ex)
-    {
-        throw new DataAccessException("Failed to update alert mute status", ex);
-    }
-}
+            var parameters = new Dictionary<string, object>
+            {
+                { "Id", alertId },
+                { "IsMuted", isMuted ? 1 : 0 },
+                { "UpdatedAt", DateTime.UtcNow }
+            };
 
+            return await Task.Run(() => _context.ExecuteCommand(sql, parameters) > 0).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException("Failed to update alert mute status", ex);
+        }
+    }
 
     public async Task<bool> DeleteAsync(int id)
     {
@@ -287,13 +281,13 @@ public async Task<bool> SetMutedAsync(int alertId, bool isMuted)
             Threshold = (decimal)reader.GetDouble(4),
             Condition = (AlertCondition)reader.GetInt32(5),
             IsEnabled = reader.GetBoolean(6),
-        IsMuted = reader.GetBoolean(7),
+            IsMuted = reader.GetBoolean(7),
             UserId = reader.GetInt32(8),
             CreatedAt = reader.GetDateTime(9),
             UpdatedAt = reader.GetDateTime(10),
-            LastTriggeredAt = reader.IsDBNull(11) ? null : reader.GetInt64(10),
+            LastTriggeredAt = reader.IsDBNull(11) ? null : reader.GetInt64(11),
             TriggerCount = reader.GetInt32(12),
-            Notes = reader.IsDBNull(13) ? null : reader.GetString(12)
+            Notes = reader.IsDBNull(13) ? null : reader.GetString(13)
         };
     }
 }

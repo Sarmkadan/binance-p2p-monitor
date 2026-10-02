@@ -83,15 +83,14 @@ public static class LoggingExtensionsValidation
     /// <exception cref="ArgumentException">Thrown when logPath is empty or whitespace</exception>
     public static IReadOnlyList<string> Validate(string logPath)
     {
-        ArgumentException.ThrowIfNullOrEmpty(logPath);
+        ArgumentNullException.ThrowIfNull(logPath);
+        if (string.IsNullOrWhiteSpace(logPath))
+            throw new ArgumentException("Log path cannot be empty or whitespace.", nameof(logPath));
 
         var problems = new List<string>();
 
-        if (string.IsNullOrWhiteSpace(logPath))
-        {
-            problems.Add("Log path cannot be null, empty, or whitespace");
-        }
-        else if (logPath.Any(c => Path.GetInvalidPathChars().Contains(c)))
+        var invalidChars = Path.GetInvalidPathChars().Concat(new[] { '<', '>' }).Distinct().ToArray();
+        if (logPath.Any(c => invalidChars.Contains(c)))
         {
             problems.Add("Log path contains invalid characters");
         }
@@ -118,12 +117,10 @@ public static class LoggingExtensionsValidation
         bool isSuccess = true,
         string? metadata = null)
     {
-        var problems = new List<string>();
-
         if (string.IsNullOrWhiteSpace(operationName))
-        {
-            problems.Add("Operation name cannot be null, empty, or whitespace");
-        }
+            throw new ArgumentException("Operation name cannot be null, empty, or whitespace.", nameof(operationName));
+
+        var problems = new List<string>();
 
         if (elapsed < TimeSpan.Zero)
         {
@@ -158,17 +155,12 @@ public static class LoggingExtensionsValidation
         decimal previousPrice,
         decimal currentPrice)
     {
-        var problems = new List<string>();
-
         if (string.IsNullOrWhiteSpace(asset))
-        {
-            problems.Add("Asset symbol cannot be null, empty, or whitespace");
-        }
-
+            throw new ArgumentException("Asset symbol cannot be null, empty, or whitespace.", nameof(asset));
         if (string.IsNullOrWhiteSpace(fiat))
-        {
-            problems.Add("Fiat currency cannot be null, empty, or whitespace");
-        }
+            throw new ArgumentException("Fiat currency cannot be null, empty, or whitespace.", nameof(fiat));
+
+        var problems = new List<string>();
 
         if (previousPrice < 0)
         {
@@ -211,28 +203,18 @@ public static class LoggingExtensionsValidation
         string reason,
         Dictionary<string, string>? metadata = null)
     {
+        if (string.IsNullOrWhiteSpace(alertType))
+            throw new ArgumentException("Alert type cannot be null, empty, or whitespace.", nameof(alertType));
+        if (string.IsNullOrWhiteSpace(asset))
+            throw new ArgumentException("Asset symbol cannot be null, empty, or whitespace.", nameof(asset));
+        if (string.IsNullOrWhiteSpace(fiat))
+            throw new ArgumentException("Fiat currency cannot be null, empty, or whitespace.", nameof(fiat));
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("Alert reason cannot be null, empty, or whitespace.", nameof(reason));
+
         var problems = new List<string>();
 
-        if (string.IsNullOrWhiteSpace(alertType))
-        {
-            problems.Add("Alert type cannot be null, empty, or whitespace");
-        }
-
-        if (string.IsNullOrWhiteSpace(asset))
-        {
-            problems.Add("Asset symbol cannot be null, empty, or whitespace");
-        }
-
-        if (string.IsNullOrWhiteSpace(fiat))
-        {
-            problems.Add("Fiat currency cannot be null, empty, or whitespace");
-        }
-
-        if (string.IsNullOrWhiteSpace(reason))
-        {
-            problems.Add("Alert reason cannot be null, empty, or whitespace");
-        }
-        else if (reason.Length > MaxReasonLength)
+        if (reason.Length > MaxReasonLength)
         {
             problems.Add($"Alert reason exceeds maximum length of {MaxReasonLength} characters");
         }
@@ -278,17 +260,12 @@ public static class LoggingExtensionsValidation
         int affectedRows,
         TimeSpan elapsed)
     {
-        var problems = new List<string>();
-
         if (string.IsNullOrWhiteSpace(operation))
-        {
-            problems.Add("Database operation type cannot be null, empty, or whitespace");
-        }
-
+            throw new ArgumentException("Database operation type cannot be null, empty, or whitespace.", nameof(operation));
         if (string.IsNullOrWhiteSpace(table))
-        {
-            problems.Add("Table name cannot be null, empty, or whitespace");
-        }
+            throw new ArgumentException("Table name cannot be null, empty, or whitespace.", nameof(table));
+
+        var problems = new List<string>();
 
         if (affectedRows < 0)
         {
@@ -347,7 +324,11 @@ public static class LoggingExtensionsValidation
         string operationName,
         TimeSpan elapsed,
         bool isSuccess = true,
-        string? metadata = null) => Validate(operationName, elapsed, isSuccess, metadata) is [];
+        string? metadata = null)
+    {
+        try { return Validate(operationName, elapsed, isSuccess, metadata) is []; }
+        catch (ArgumentException) { return false; }
+    }
 
     /// <summary>
     /// Determines whether the specified parameters for LogPriceChange are valid
@@ -361,7 +342,11 @@ public static class LoggingExtensionsValidation
         string asset,
         string fiat,
         decimal previousPrice,
-        decimal currentPrice) => Validate(asset, fiat, previousPrice, currentPrice) is [];
+        decimal currentPrice)
+    {
+        try { return Validate(asset, fiat, previousPrice, currentPrice) is []; }
+        catch (ArgumentException) { return false; }
+    }
 
     /// <summary>
     /// Determines whether the specified parameters for LogAlert are valid
@@ -377,7 +362,11 @@ public static class LoggingExtensionsValidation
         string asset,
         string fiat,
         string reason,
-        Dictionary<string, string>? metadata = null) => Validate(alertType, asset, fiat, reason, metadata) is [];
+        Dictionary<string, string>? metadata = null)
+    {
+        try { return Validate(alertType, asset, fiat, reason, metadata) is []; }
+        catch (ArgumentException) { return false; }
+    }
 
     /// <summary>
     /// Determines whether the specified parameters for LogDatabaseOperation are valid
@@ -391,7 +380,11 @@ public static class LoggingExtensionsValidation
         string operation,
         string table,
         int affectedRows,
-        TimeSpan elapsed) => Validate(operation, table, affectedRows, elapsed) is [];
+        TimeSpan elapsed)
+    {
+        try { return Validate(operation, table, affectedRows, elapsed) is []; }
+        catch (ArgumentException) { return false; }
+    }
 
     /// <summary>
     /// Ensures that the specified <see cref="ILoggingBuilder"/> instance is valid, throwing an exception if not
