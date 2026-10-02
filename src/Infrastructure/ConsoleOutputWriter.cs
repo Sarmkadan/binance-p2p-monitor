@@ -4,13 +4,13 @@ namespace BinanceP2pMonitor.Infrastructure;
 /// <summary>
 /// Writes colored output to console for better readability
 /// </summary>
-public sealed class ConsoleOutputWriter
+public class ConsoleOutputWriter
 {
     /// <summary>
     /// Writes a cyan header surrounded by separator lines.
     /// </summary>
     /// <param name="text">The header text to write.</param>
-    public void WriteHeader(string text)
+    public virtual void WriteHeader(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
         var originalForeground = Console.ForegroundColor;
@@ -25,7 +25,7 @@ public sealed class ConsoleOutputWriter
     /// Writes a success message in green.
     /// </summary>
     /// <param name="text">The success message to write.</param>
-    public void WriteSuccess(string text)
+    public virtual void WriteSuccess(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
         var originalForeground = Console.ForegroundColor;
@@ -38,7 +38,7 @@ public sealed class ConsoleOutputWriter
     /// Writes an error message to standard error in red.
     /// </summary>
     /// <param name="text">The error message to write.</param>
-    public void WriteError(string text)
+    public virtual void WriteError(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
         var originalForeground = Console.ForegroundColor;
@@ -51,7 +51,7 @@ public sealed class ConsoleOutputWriter
     /// Writes a warning message in yellow.
     /// </summary>
     /// <param name="text">The warning message to write.</param>
-    public void WriteWarning(string text)
+    public virtual void WriteWarning(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
         var originalForeground = Console.ForegroundColor;
@@ -64,7 +64,7 @@ public sealed class ConsoleOutputWriter
     /// Writes an informational message in blue.
     /// </summary>
     /// <param name="text">The informational message to write.</param>
-    public void WriteInfo(string text)
+    public virtual void WriteInfo(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
         var originalForeground = Console.ForegroundColor;
@@ -77,7 +77,7 @@ public sealed class ConsoleOutputWriter
     /// Writes a section title in magenta.
     /// </summary>
     /// <param name="title">The section title to write.</param>
-    public void WriteSection(string title)
+    public virtual void WriteSection(string title)
     {
         ArgumentNullException.ThrowIfNull(title);
         var originalForeground = Console.ForegroundColor;
@@ -92,7 +92,7 @@ public sealed class ConsoleOutputWriter
     /// <param name="key">The key to write.</param>
     /// <param name="value">The value associated with the key.</param>
     /// <param name="keyWidth">The width to which the key is padded.</param>
-    public void WriteKeyValue(string key, string value, int keyWidth = 20)
+    public virtual void WriteKeyValue(string key, string value, int keyWidth = 20)
     {
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(value);
@@ -103,7 +103,7 @@ public sealed class ConsoleOutputWriter
     /// Writes rows of key-value pairs as a table.
     /// </summary>
     /// <param name="rows">The rows to write, with dictionary keys used as column headers.</param>
-    public void WriteTable(IEnumerable<Dictionary<string, string>> rows)
+    public virtual void WriteTable(IEnumerable<Dictionary<string, string>> rows)
     {
         ArgumentNullException.ThrowIfNull(rows);
         if (!rows.Any())
@@ -144,7 +144,7 @@ public sealed class ConsoleOutputWriter
     /// <summary>
     /// Writes a blank line.
     /// </summary>
-    public void WriteBlankLine()
+    public virtual void WriteBlankLine()
     {
         Console.WriteLine();
     }
@@ -152,7 +152,7 @@ public sealed class ConsoleOutputWriter
     /// <summary>
     /// Writes pre-formatted text directly to stdout without any decoration or colour.
     /// </summary>
-    public void WriteRaw(string text)
+    public virtual void WriteRaw(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
         Console.WriteLine(text);

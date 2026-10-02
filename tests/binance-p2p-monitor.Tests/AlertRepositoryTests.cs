@@ -37,6 +37,7 @@ public class AlertRepositoryTests : IDisposable
                 Threshold REAL NOT NULL,
                 Condition INTEGER NOT NULL,
                 IsEnabled INTEGER NOT NULL,
+                IsMuted INTEGER NOT NULL DEFAULT 0,
                 UserId INTEGER NOT NULL,
                 CreatedAt TEXT NOT NULL,
                 UpdatedAt TEXT NOT NULL,

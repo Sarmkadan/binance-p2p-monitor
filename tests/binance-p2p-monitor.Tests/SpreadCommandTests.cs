@@ -31,6 +31,8 @@ public class SpreadCommandTests
     /// </summary>
     public SpreadCommandTests()
     {
+        _tableFormatterMock.SetupGet(f => f.FormatType).Returns("table");
+        _jsonFormatterMock.SetupGet(f => f.FormatType).Returns("json");
         var formatters = new List<IOutputFormatter> { _tableFormatterMock.Object, _jsonFormatterMock.Object };
 
         _command = new SpreadCommand(
