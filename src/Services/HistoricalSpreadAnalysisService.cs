@@ -89,6 +89,7 @@ public class HistoricalSpreadAnalysisService : IHistoricalSpreadAnalysisService
 
             var mean = sortedSpreads.Average();
             var stdDev = CalculateStandardDeviation(sortedSpreads, mean);
+            var median = CalculatePercentile(sortedSpreads, 50);
 
             var report = new SpreadStatisticsReport
             {
@@ -97,13 +98,16 @@ public class HistoricalSpreadAnalysisService : IHistoricalSpreadAnalysisService
                 TimeWindowHours = hours,
                 SampleCount = sortedSpreads.Count,
                 Mean = Math.Round(mean, 4),
-                Median = CalculatePercentile(sortedSpreads, 50),
+                Median = median,
                 StandardDeviation = Math.Round(stdDev, 4),
                 Variance = Math.Round(stdDev * stdDev, 4),
                 MinSpread = sortedSpreads.Min(),
                 MaxSpread = sortedSpreads.Max(),
                 Percentile5 = CalculatePercentile(sortedSpreads, 5),
                 Percentile95 = CalculatePercentile(sortedSpreads, 95),
+                Percentile50 = median,
+                Percentile90 = CalculatePercentile(sortedSpreads, 90),
+                Percentile99 = CalculatePercentile(sortedSpreads, 99),
                 CurrentSpread = currentSpread,
                 ZScore = stdDev > 0 ? Math.Round((currentSpread - mean) / stdDev, 4) : 0,
                 TrendSlope = CalculateTrendSlope(history),
