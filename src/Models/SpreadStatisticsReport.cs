@@ -58,6 +58,18 @@ public class SpreadStatisticsReport
     [Range(0, double.MaxValue)]
     public decimal Percentile95 { get; set; }
 
+    /// <summary>Gets or sets the 50th percentile (median) of historical spread values</summary>
+    [Range(0, double.MaxValue)]
+    public decimal Percentile50 { get; set; }
+
+    /// <summary>Gets or sets the 90th percentile of historical spread values</summary>
+    [Range(0, double.MaxValue)]
+    public decimal Percentile90 { get; set; }
+
+    /// <summary>Gets or sets the 99th percentile of historical spread values</summary>
+    [Range(0, double.MaxValue)]
+    public decimal Percentile99 { get; set; }
+
     /// <summary>Gets or sets the most recently observed spread percentage</summary>
     public decimal CurrentSpread { get; set; }
 

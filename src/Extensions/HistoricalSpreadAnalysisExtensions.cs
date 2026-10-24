@@ -48,6 +48,7 @@ public static class HistoricalSpreadAnalysisExtensions
         sb.AppendLine($"│ Median : {report.Median:F4}% (50th percentile)");
         sb.AppendLine($"│ Range : [{report.MinSpread:F4}%, {report.MaxSpread:F4}%]");
         sb.AppendLine($"│ IQR : [{report.Percentile5:F4}%, {report.Percentile95:F4}%] (volatility range)");
+        sb.AppendLine($"│ Percentiles : P50={report.Percentile50:F4}%, P90={report.Percentile90:F4}%, P99={report.Percentile99:F4}%");
         sb.AppendLine($"│ Z-Score : {report.ZScore:F2} ({(report.IsAnomalous ? "ANOMALOUS" : "normal")})");
         sb.AppendLine($"│ Trend : {report.GetTrendLabel()} ({report.TrendSlope:+0.000000;-0.000000} %/min)");
         sb.Append("└──────────────────────────────────────────────────────────────────────");

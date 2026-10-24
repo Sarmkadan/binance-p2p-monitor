@@ -63,6 +63,9 @@ public static class SpreadStatisticsReportValidation
         ValidateNonNegativeDecimal(errors, nameof(value.MaxSpread), value.MaxSpread);
         ValidateNonNegativeDecimal(errors, nameof(value.Percentile5), value.Percentile5);
         ValidateNonNegativeDecimal(errors, nameof(value.Percentile95), value.Percentile95);
+        ValidateNonNegativeDecimal(errors, nameof(value.Percentile50), value.Percentile50);
+        ValidateNonNegativeDecimal(errors, nameof(value.Percentile90), value.Percentile90);
+        ValidateNonNegativeDecimal(errors, nameof(value.Percentile99), value.Percentile99);
 
         // CurrentSpread, ZScore, and TrendSlope can be any decimal value (positive or negative)
         // No specific validation needed beyond range consistency with MinSpread/MaxSpread
@@ -113,6 +116,22 @@ public static class SpreadStatisticsReportValidation
         if (value.Median > value.Percentile95)
         {
             errors.Add("Median cannot be greater than Percentile95.");
+        }
+
+        // Validate upper-tail percentile ordering: Percentile50 <= Percentile90 <= Percentile95 <= Percentile99
+        if (value.Percentile50 > value.Percentile90)
+        {
+            errors.Add("Percentile50 cannot be greater than Percentile90.");
+        }
+
+        if (value.Percentile90 > value.Percentile95)
+        {
+            errors.Add("Percentile90 cannot be greater than Percentile95.");
+        }
+
+        if (value.Percentile95 > value.Percentile99)
+        {
+            errors.Add("Percentile95 cannot be greater than Percentile99.");
         }
 
         // Validate that Percentile5 <= Mean <= Percentile95 (approximately)
