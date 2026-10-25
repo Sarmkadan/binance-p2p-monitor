@@ -27,7 +27,12 @@ public class RetryPolicy
     /// <param name="backoffMultiplier">Multiplier applied to the delay after each retry.</param>
     /// <param name="maxDelay">Maximum delay between retries to prevent unbounded waits. Defaults to 30 seconds.</param>
     /// <param name="logger">Optional logger instance.</param>
-    public RetryPolicy(int maxRetries = DefaultMaxRetries, TimeSpan? initialDelay = null, double backoffMultiplier = DefaultBackoffMultiplier, TimeSpan? maxDelay = null, ILogger? logger = null)
+    public RetryPolicy(
+        int maxRetries = DefaultMaxRetries,
+        TimeSpan? initialDelay = null,
+        double backoffMultiplier = DefaultBackoffMultiplier,
+        TimeSpan? maxDelay = null,
+        ILogger? logger = null)
     {
         _maxRetries = maxRetries;
         _initialDelay = initialDelay ?? DefaultInitialDelay;
@@ -124,6 +129,13 @@ public class RetryPolicy
 
         public IDisposable BeginScope<TState>(TState state) where TState : notnull => new NullScope();
         public bool IsEnabled(LogLevel logLevel) => false;
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) { }
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+        }
     }
 }
