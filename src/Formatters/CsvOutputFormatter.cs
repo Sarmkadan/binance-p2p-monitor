@@ -8,7 +8,14 @@ namespace BinanceP2pMonitor.Formatters;
 /// </summary>
 public class CsvOutputFormatter : IOutputFormatter
 {
-    public string FormatType => "csv";
+    private const string FormatTypeName = "csv";
+    private const string Delimiter = ",";
+    private const string Quote = "\"";
+    private const string EscapedQuote = Quote + Quote;
+    private const string EmptyField = Quote + Quote;
+    private const string Newline = "\n";
+
+    public string FormatType => FormatTypeName;
 
     public string Format(object? data)
     {
@@ -36,7 +43,7 @@ public class CsvOutputFormatter : IOutputFormatter
         var sb = new System.Text.StringBuilder();
 
         // Write header row
-        sb.AppendLine(string.Join(",", headerList.Select(EscapeCsv)));
+        sb.AppendLine(string.Join(Delimiter, headerList.Select(EscapeCsv)));
 
         // Write data rows
         foreach (var item in list)
@@ -59,7 +66,7 @@ public class CsvOutputFormatter : IOutputFormatter
                 values.Add(EscapeCsv(value));
             }
 
-            sb.AppendLine(string.Join(",", values));
+            sb.AppendLine(string.Join(Delimiter, values));
         }
 
         return sb.ToString();
@@ -68,11 +75,11 @@ public class CsvOutputFormatter : IOutputFormatter
     private string EscapeCsv(string value)
     {
         if (string.IsNullOrEmpty(value))
-            return "\"\"";
+            return EmptyField;
 
-        if (value.Contains("\"") || value.Contains(",") || value.Contains("\n"))
+        if (value.Contains(Quote) || value.Contains(Delimiter) || value.Contains(Newline))
         {
-            return "\"" + value.Replace("\"", "\"\"") + "\"";
+            return Quote + value.Replace(Quote, EscapedQuote) + Quote;
         }
 
         return value;
