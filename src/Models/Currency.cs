@@ -145,8 +145,10 @@ public class Currency
     /// <summary>
     /// Compares two currencies by popularity
     /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="other"/> is <see langword="null"/>.</exception>
     public int ComparePopularity(Currency other)
     {
+        ArgumentNullException.ThrowIfNull(other);
         return PopularityScore.CompareTo(other.PopularityScore);
     }
 }
