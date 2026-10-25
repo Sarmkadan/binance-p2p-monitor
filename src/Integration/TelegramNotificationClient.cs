@@ -90,8 +90,11 @@ public class TelegramNotificationClient : ITelegramNotificationClient
     /// <param name="message">The message to send.</param>
     /// <param name="ct">The cancellation token.</param>
     /// <returns>True if the message was sent successfully, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="message"/> is <see langword="null"/>.</exception>
     public async Task<bool> SendMessageAsync(long chatId, string message, CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(message);
+
         try
         {
             _logger.LogDebug("Sending Telegram message to {ChatId}: {Message}", chatId, message.Truncate(MaxLogMessageLength));
@@ -121,8 +124,13 @@ public class TelegramNotificationClient : ITelegramNotificationClient
     /// <param name="alertReason">The reason for the alert.</param>
     /// <param name="ct">The cancellation token.</param>
     /// <returns>True if the message was sent successfully, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="asset"/>, <paramref name="fiat"/> or <paramref name="alertReason"/> is <see langword="null"/>.</exception>
     public async Task<bool> SendPriceAlertAsync(string asset, string fiat, decimal buyPrice, decimal sellPrice, string alertReason, CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(asset);
+        ArgumentNullException.ThrowIfNull(fiat);
+        ArgumentNullException.ThrowIfNull(alertReason);
+
         var message = string.Format(
             CultureInfo.CurrentCulture,
             PriceAlertMessageFormat,
@@ -143,8 +151,12 @@ public class TelegramNotificationClient : ITelegramNotificationClient
     /// <param name="rateLimitWindow">The rate limit window.</param>
     /// <param name="ct">The cancellation token.</param>
     /// <returns>True if the message was sent successfully, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="cacheKey"/> or <paramref name="message"/> is <see langword="null"/>.</exception>
     public async Task<bool> SendRateLimitedAsync(string cacheKey, string message, TimeSpan rateLimitWindow, CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(cacheKey);
+        ArgumentNullException.ThrowIfNull(message);
+
         var lastSentKey = $"{RateLimitCacheKeyPrefix}{cacheKey}";
         var exists = await _cache.ExistsAsync(lastSentKey, ct).ConfigureAwait(false);
         if (exists)
