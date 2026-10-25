@@ -9,46 +9,82 @@ namespace BinanceP2pMonitor.Models;
 /// </summary>
 public class Price
 {
+    /// <summary>
+    /// Gets or sets the unique identifier for the price quote.
+    /// </summary>
     [Key]
     public int Id { get; set; }
 
+    /// <summary>
+    /// Gets or sets the crypto asset symbol (e.g. USDT, BTC).
+    /// </summary>
     [Required]
     [StringLength(20)]
     public string Asset { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the fiat currency code (e.g. USD, EUR).
+    /// </summary>
     [Required]
     [StringLength(10)]
     public string Fiat { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the price at which the asset can be bought.
+    /// </summary>
     [Required]
     [Range(0.00000001, double.MaxValue)]
     public decimal BuyPrice { get; set; }
 
+    /// <summary>
+    /// Gets or sets the price at which the asset can be sold.
+    /// </summary>
     [Required]
     [Range(0.00000001, double.MaxValue)]
     public decimal SellPrice { get; set; }
 
+    /// <summary>
+    /// Gets or sets the percentage change of the buy price.
+    /// </summary>
     [Required]
     [Range(0, 100)]
     public decimal BuyChangePercent { get; set; }
 
+    /// <summary>
+    /// Gets or sets the percentage change of the sell price.
+    /// </summary>
     [Required]
     [Range(0, 100)]
     public decimal SellChangePercent { get; set; }
 
+    /// <summary>
+    /// Gets or sets the time at which the price was observed.
+    /// </summary>
     [Required]
     public DateTime Timestamp { get; set; }
 
+    /// <summary>
+    /// Gets or sets the time at which the record was created.
+    /// </summary>
     [Required]
     public DateTime CreatedAt { get; set; }
 
+    /// <summary>
+    /// Gets or sets the time at which the record was last updated.
+    /// </summary>
     [Required]
     public DateTime UpdatedAt { get; set; }
 
+    /// <summary>
+    /// Gets or sets optional free-form metadata associated with the price quote.
+    /// </summary>
     [StringLength(1000)]
     public string? Metadata { get; set; }
 
     // Navigation properties
+    /// <summary>
+    /// Gets or sets the history entries recorded for this price quote.
+    /// </summary>
     public ICollection<PriceHistory> History { get; set; } = new List<PriceHistory>();
 
     /// <summary>
