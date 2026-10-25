@@ -8,46 +8,82 @@ namespace BinanceP2pMonitor.Models;
 /// </summary>
 public class Spread
 {
+    /// <summary>
+    /// Gets or sets the unique identifier for the spread record.
+    /// </summary>
     [Key]
     public int Id { get; set; }
 
+    /// <summary>
+    /// Gets or sets the asset symbol (e.g., USDT).
+    /// </summary>
     [Required]
     [StringLength(20)]
     public string Asset { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the fiat currency code (e.g., USD).
+    /// </summary>
     [Required]
     [StringLength(10)]
     public string Fiat { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the most recent spread percentage.
+    /// </summary>
     [Required]
     [Range(0, double.MaxValue)]
     public decimal CurrentSpreadPercent { get; set; }
 
+    /// <summary>
+    /// Gets or sets the average spread percentage across all samples.
+    /// </summary>
     [Required]
     [Range(0, double.MaxValue)]
     public decimal AverageSpreadPercent { get; set; }
 
+    /// <summary>
+    /// Gets or sets the minimum observed spread percentage.
+    /// </summary>
     [Required]
     [Range(0, double.MaxValue)]
     public decimal MinSpreadPercent { get; set; }
 
+    /// <summary>
+    /// Gets or sets the maximum observed spread percentage.
+    /// </summary>
     [Required]
     [Range(0, double.MaxValue)]
     public decimal MaxSpreadPercent { get; set; }
 
+    /// <summary>
+    /// Gets or sets the number of samples used to compute the statistics.
+    /// </summary>
     [Required]
     [Range(1, long.MaxValue)]
     public long SampleCount { get; set; }
 
+    /// <summary>
+    /// Gets or sets the UTC timestamp of the last statistics update.
+    /// </summary>
     [Required]
     public DateTime LastUpdatedAt { get; set; }
 
+    /// <summary>
+    /// Gets or sets the UTC timestamp when the record was created.
+    /// </summary>
     [Required]
     public DateTime CreatedAt { get; set; }
 
+    /// <summary>
+    /// Gets or sets the standard deviation of the spread percentage.
+    /// </summary>
     [Range(0, double.MaxValue)]
     public decimal StandardDeviation { get; set; }
 
+    /// <summary>
+    /// Gets or sets the percentile rank (0-100) of the current spread among observed samples.
+    /// </summary>
     [Range(0, 100)]
     public decimal PercentileRank { get; set; }
 
