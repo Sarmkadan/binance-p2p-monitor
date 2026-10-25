@@ -8,43 +8,79 @@ namespace BinanceP2pMonitor.Models;
 /// </summary>
 public class PriceHistory
 {
+    /// <summary>
+    /// Gets or sets the unique identifier for the price history record.
+    /// </summary>
     [Key]
     public int Id { get; set; }
 
+    /// <summary>
+    /// Gets or sets the identifier of the related price record.
+    /// </summary>
     [Required]
     public int PriceId { get; set; }
 
+    /// <summary>
+    /// Gets or sets the asset symbol (e.g., USDT).
+    /// </summary>
     [Required]
     [StringLength(20)]
     public string Asset { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the fiat currency code (e.g., USD).
+    /// </summary>
     [Required]
     [StringLength(10)]
     public string Fiat { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the buy price recorded for the asset.
+    /// </summary>
     [Required]
     [Range(0.00000001, double.MaxValue)]
     public decimal BuyPrice { get; set; }
 
+    /// <summary>
+    /// Gets or sets the sell price recorded for the asset.
+    /// </summary>
     [Required]
     [Range(0.00000001, double.MaxValue)]
     public decimal SellPrice { get; set; }
 
+    /// <summary>
+    /// Gets or sets the UTC timestamp at which the price was recorded.
+    /// </summary>
     [Required]
     public DateTime RecordedAt { get; set; }
 
+    /// <summary>
+    /// Gets or sets the UTC timestamp at which this record was created.
+    /// </summary>
     [Required]
     public DateTime CreatedAt { get; set; }
 
+    /// <summary>
+    /// Gets or sets the spread percentage between the buy and sell prices.
+    /// </summary>
     [Range(0, 100)]
     public decimal SpreadPercentage { get; set; }
 
+    /// <summary>
+    /// Gets or sets the percentage price change relative to a previous record.
+    /// </summary>
     [Range(0, 100)]
     public decimal PriceChangePercent { get; set; }
 
+    /// <summary>
+    /// Gets or sets optional notes about this record.
+    /// </summary>
     [StringLength(500)]
     public string? Notes { get; set; }
 
+    /// <summary>
+    /// Gets or sets the related price record.
+    /// </summary>
     public Price? Price { get; set; }
 
     /// <summary>
