@@ -8,38 +8,71 @@ namespace BinanceP2pMonitor.Models;
 /// </summary>
 public class Currency
 {
+    /// <summary>
+    /// Gets or sets the primary key
+    /// </summary>
     [Key]
     public int Id { get; set; }
 
+    /// <summary>
+    /// Gets or sets the currency code (e.g. USD, EUR)
+    /// </summary>
     [Required]
     [StringLength(10)]
     public string Code { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the full currency name
+    /// </summary>
     [Required]
     [StringLength(100)]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the optional currency symbol (e.g. $, €)
+    /// </summary>
     [StringLength(3)]
     public string? Symbol { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the currency is active
+    /// </summary>
     [Required]
     public bool IsActive { get; set; }
 
+    /// <summary>
+    /// Gets or sets the number of decimal places used for values in this currency
+    /// </summary>
     [Required]
     public int DecimalPlaces { get; set; }
 
+    /// <summary>
+    /// Gets or sets the creation timestamp
+    /// </summary>
     [Required]
     public DateTime CreatedAt { get; set; }
 
+    /// <summary>
+    /// Gets or sets the last update timestamp
+    /// </summary>
     [Required]
     public DateTime UpdatedAt { get; set; }
 
+    /// <summary>
+    /// Gets or sets the popularity score in the range 0-100
+    /// </summary>
     [Range(0, 100)]
     public decimal PopularityScore { get; set; }
 
+    /// <summary>
+    /// Gets or sets the display order in the range 1-100 (default 50)
+    /// </summary>
     [Range(1, 100)]
     public int DisplayOrder { get; set; } = 50;
 
+    /// <summary>
+    /// Gets or sets optional free-form notes
+    /// </summary>
     [StringLength(1000)]
     public string? Notes { get; set; }
 
