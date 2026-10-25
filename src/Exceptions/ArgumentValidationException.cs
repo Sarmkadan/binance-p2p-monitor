@@ -37,9 +37,13 @@ public class ArgumentValidationException : BinanceP2pException
     /// <param name="parameterName">The name of the parameter that failed validation.</param>
     /// <param name="errorMessage">The validation error description for the parameter.</param>
     /// <param name="errorCode">An optional error code. Defaults to "ARGUMENT_VALIDATION_ERROR".</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="message"/>, <paramref name="parameterName"/> or <paramref name="errorMessage"/> is null.</exception>
     public ArgumentValidationException(string message, string parameterName, string errorMessage, string? errorCode = "ARGUMENT_VALIDATION_ERROR")
         : base(message, errorCode)
     {
+        ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(parameterName);
+        ArgumentNullException.ThrowIfNull(errorMessage);
         ValidationErrors[parameterName] = errorMessage;
     }
 
