@@ -14,8 +14,13 @@ public class HttpClientFactory
     /// </summary>
     /// <param name="httpClient">The HTTP client used for all requests created by this factory</param>
     /// <param name="logger">The logger used to record request activity and failures</param>
+    /// <exception cref="ArgumentNullException"><paramref name="httpClient"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="logger"/> is <see langword="null"/>.</exception>
     public HttpClientFactory(HttpClient httpClient, ILogger<HttpClientFactory> logger)
     {
+        ArgumentNullException.ThrowIfNull(httpClient);
+        ArgumentNullException.ThrowIfNull(logger);
+
         _httpClient = httpClient;
         _logger = logger;
     }
@@ -23,8 +28,11 @@ public class HttpClientFactory
     /// <summary>
     /// Creates a configured HTTP client for API calls
     /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="baseUrl"/> is <see langword="null"/>.</exception>
     public HttpClient CreateApiClient(string baseUrl)
     {
+        ArgumentNullException.ThrowIfNull(baseUrl);
+
         _httpClient.BaseAddress = new Uri(baseUrl);
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "BinanceP2pMonitor/1.0");
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
@@ -38,8 +46,11 @@ public class HttpClientFactory
     /// <summary>
     /// Sends a GET request and returns deserialized response
     /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="url"/> is <see langword="null"/>.</exception>
     public async Task<T?> GetAsync<T>(string url, CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(url);
+
         try
         {
             _logger.LogDebug("GET request to {Url}", url);
@@ -61,8 +72,13 @@ public class HttpClientFactory
     /// <summary>
     /// Sends a POST request with JSON body
     /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="url"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="data"/> is <see langword="null"/>.</exception>
     public async Task<T?> PostAsync<T>(string url, object data, CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(url);
+        ArgumentNullException.ThrowIfNull(data);
+
         try
         {
             _logger.LogDebug("POST request to {Url}", url);
@@ -87,8 +103,11 @@ public class HttpClientFactory
     /// <summary>
     /// Gets raw response as string
     /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="url"/> is <see langword="null"/>.</exception>
     public async Task<string> GetStringAsync(string url, CancellationToken ct = default)
     {
+        ArgumentNullException.ThrowIfNull(url);
+
         try
         {
             return await _httpClient.GetStringAsync(url, ct).ConfigureAwait(false);
