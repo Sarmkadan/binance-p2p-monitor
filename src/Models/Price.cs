@@ -150,6 +150,9 @@ public class Price
     /// <returns>A new Price instance if successful; otherwise, null.</returns>
     public static Price? FromJson(string json)
     {
+        if (json is null)
+            return null;
+
         try
         {
             return JsonSerializer.Deserialize<Price>(json);
