@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace BinanceP2pMonitor.Models;
 
 /// <summary>
-/// Immutable statistical report produced by historical spread analysis over a defined time window
+/// Statistical report produced by historical spread analysis over a defined time window
 /// </summary>
 public class SpreadStatisticsReport
 {
@@ -123,7 +123,7 @@ public class SpreadStatisticsReport
     public bool IsAboveAverage() => CurrentSpread > Mean;
 
     /// <summary>
-    /// Returns the interquartile-range width (Percentile95 − Percentile5) as a measure of spread volatility
+    /// Returns the 5th–95th percentile width (Percentile95 − Percentile5) as a measure of spread volatility
     /// </summary>
     /// <returns>The volatility range as a decimal value.</returns>
     public decimal GetVolatilityRange() => Percentile95 - Percentile5;
