@@ -9,6 +9,11 @@ public class HttpClientFactory
     private readonly ILogger<HttpClientFactory> _logger;
     private readonly HttpClient _httpClient;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HttpClientFactory"/> class
+    /// </summary>
+    /// <param name="httpClient">The HTTP client used for all requests created by this factory</param>
+    /// <param name="logger">The logger used to record request activity and failures</param>
     public HttpClientFactory(HttpClient httpClient, ILogger<HttpClientFactory> logger)
     {
         _httpClient = httpClient;
