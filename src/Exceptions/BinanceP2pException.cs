@@ -30,6 +30,7 @@ public abstract class BinanceP2pException : Exception
     public BinanceP2pException(string message, string? errorCode = null,
         Dictionary<string, object>? context = null) : base(message)
     {
+        ArgumentNullException.ThrowIfNull(message);
         ErrorCode = errorCode;
         Context = context;
     }
@@ -43,6 +44,8 @@ public abstract class BinanceP2pException : Exception
     public BinanceP2pException(string message, Exception innerException,
         string? errorCode = null) : base(message, innerException)
     {
+        ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(innerException);
         ErrorCode = errorCode;
     }
 
@@ -70,7 +73,10 @@ public class InvalidPriceException : BinanceP2pException
     /// <param name="message">The error message.</param>
     /// <param name="errorCode">The error code; defaults to "INVALID_PRICE".</param>
     public InvalidPriceException(string message, string? errorCode = "INVALID_PRICE")
-        : base(message, errorCode) { }
+        : base(message, errorCode)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+    }
 
     /// <summary>
     /// Gets a value indicating whether the exception is transient.
@@ -89,7 +95,10 @@ public class InvalidAlertException : BinanceP2pException
     /// <param name="message">The error message.</param>
     /// <param name="errorCode">The error code; defaults to "INVALID_ALERT".</param>
     public InvalidAlertException(string message, string? errorCode = "INVALID_ALERT")
-        : base(message, errorCode) { }
+        : base(message, errorCode)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+    }
 
     /// <summary>
     /// Gets a value indicating whether the exception is transient.
@@ -109,7 +118,11 @@ public class DataAccessException : BinanceP2pException
     /// <param name="innerException">The database exception that caused this error.</param>
     /// <param name="errorCode">The error code; defaults to "DB_ERROR".</param>
     public DataAccessException(string message, Exception innerException,
-        string? errorCode = "DB_ERROR") : base(message, innerException, errorCode) { }
+        string? errorCode = "DB_ERROR") : base(message, innerException, errorCode)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(innerException);
+    }
 
     /// <summary>
     /// Gets a value indicating whether the exception is transient.
@@ -136,6 +149,7 @@ public class ApiException : BinanceP2pException
     public ApiException(string message, int? statusCode = null,
         string? errorCode = "API_ERROR") : base(message, errorCode)
     {
+        ArgumentNullException.ThrowIfNull(message);
         HttpStatusCode = statusCode;
     }
 
@@ -149,6 +163,8 @@ public class ApiException : BinanceP2pException
     public ApiException(string message, Exception innerException, string? errorCode = null, int? statusCode = null)
         : base(message, innerException, errorCode)
     {
+        ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(innerException);
         HttpStatusCode = statusCode;
     }
 
@@ -173,7 +189,10 @@ public class ConfigurationException : BinanceP2pException
     /// <param name="message">The error message.</param>
     /// <param name="errorCode">The error code; defaults to "CONFIG_ERROR".</param>
     public ConfigurationException(string message, string? errorCode = "CONFIG_ERROR")
-        : base(message, errorCode) { }
+        : base(message, errorCode)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+    }
 
     /// <summary>
     /// Gets a value indicating whether the exception is transient.
@@ -192,7 +211,10 @@ public class ResourceNotFoundException : BinanceP2pException
     /// <param name="message">The error message.</param>
     /// <param name="errorCode">The error code; defaults to "NOT_FOUND".</param>
     public ResourceNotFoundException(string message, string? errorCode = "NOT_FOUND")
-        : base(message, errorCode) { }
+        : base(message, errorCode)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+    }
 
     /// <summary>
     /// Gets a value indicating whether the exception is transient.
@@ -219,6 +241,8 @@ public class ValidationException : BinanceP2pException
     public ValidationException(string message, List<string> errors,
         string? errorCode = "VALIDATION_ERROR") : base(message, errorCode)
     {
+        ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(errors);
         ValidationErrors = errors;
     }
 
