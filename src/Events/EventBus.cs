@@ -10,11 +10,24 @@ public class EventBus : IEventBus
     private readonly ReaderWriterLockSlim _lock = new();
     private readonly ILogger<EventBus> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EventBus"/> class
+    /// </summary>
+    /// <param name="logger">Logger used for subscription, publishing and handler error diagnostics</param>
     public EventBus(ILogger<EventBus> logger)
     {
         _logger = logger;
     }
 
+    /// <summary>
+    /// Publishes an event to all handlers currently subscribed to <typeparamref name="TEvent"/>
+    /// and waits for all of them to complete
+    /// </summary>
+    /// <typeparam name="TEvent">Type of the event being published</typeparam>
+    /// <param name="event">Event to publish</param>
+    /// <param name="ct">Cancellation token passed to every handler</param>
+    /// <returns>A task that completes when all handlers have completed</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="event"/> is null</exception>
     public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken ct = default) where TEvent : IEvent
     {
         if (@event is null)
@@ -58,6 +71,13 @@ public class EventBus : IEventBus
         await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Publishes multiple events concurrently, each through <see cref="PublishAsync{TEvent}"/>
+    /// </summary>
+    /// <typeparam name="TEvent">Type of the events being published</typeparam>
+    /// <param name="events">Events to publish</param>
+    /// <param name="ct">Cancellation token passed to every handler</param>
+    /// <returns>A task that completes when all events have been published</returns>
     public async Task PublishManyAsync<TEvent>(IEnumerable<TEvent> events, CancellationToken ct = default) where TEvent : IEvent
     {
         var eventList = events.ToList();
@@ -67,6 +87,11 @@ public class EventBus : IEventBus
         await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Registers a handler for events of type <typeparamref name="TEvent"/>
+    /// </summary>
+    /// <typeparam name="TEvent">Type of the event to handle</typeparam>
+    /// <param name="handler">Handler invoked for each published event of this type</param>
     public void Subscribe<TEvent>(Func<TEvent, CancellationToken, Task> handler) where TEvent : IEvent
     {
         var eventType = typeof(TEvent);
@@ -85,6 +110,11 @@ public class EventBus : IEventBus
         }
     }
 
+    /// <summary>
+    /// Removes a previously registered handler for events of type <typeparamref name="TEvent"/>
+    /// </summary>
+    /// <typeparam name="TEvent">Type of the event the handler was registered for</typeparam>
+    /// <param name="handler">Handler instance to remove; no effect if it was not subscribed</param>
     public void Unsubscribe<TEvent>(Func<TEvent, CancellationToken, Task> handler) where TEvent : IEvent
     {
         var eventType = typeof(TEvent);
