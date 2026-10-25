@@ -78,8 +78,11 @@ public class EventBus : IEventBus
     /// <param name="events">Events to publish</param>
     /// <param name="ct">Cancellation token passed to every handler</param>
     /// <returns>A task that completes when all events have been published</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="events"/> is null</exception>
     public async Task PublishManyAsync<TEvent>(IEnumerable<TEvent> events, CancellationToken ct = default) where TEvent : IEvent
     {
+        ArgumentNullException.ThrowIfNull(events);
+
         var eventList = events.ToList();
         _logger.LogInformation("Publishing {Count} events", eventList.Count);
 
@@ -92,8 +95,11 @@ public class EventBus : IEventBus
     /// </summary>
     /// <typeparam name="TEvent">Type of the event to handle</typeparam>
     /// <param name="handler">Handler invoked for each published event of this type</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="handler"/> is null</exception>
     public void Subscribe<TEvent>(Func<TEvent, CancellationToken, Task> handler) where TEvent : IEvent
     {
+        ArgumentNullException.ThrowIfNull(handler);
+
         var eventType = typeof(TEvent);
         _lock.EnterWriteLock();
         try
@@ -115,8 +121,11 @@ public class EventBus : IEventBus
     /// </summary>
     /// <typeparam name="TEvent">Type of the event the handler was registered for</typeparam>
     /// <param name="handler">Handler instance to remove; no effect if it was not subscribed</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="handler"/> is null</exception>
     public void Unsubscribe<TEvent>(Func<TEvent, CancellationToken, Task> handler) where TEvent : IEvent
     {
+        ArgumentNullException.ThrowIfNull(handler);
+
         var eventType = typeof(TEvent);
         _lock.EnterWriteLock();
         try
