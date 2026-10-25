@@ -8,6 +8,18 @@ namespace BinanceP2pMonitor.Infrastructure;
 /// </summary>
 public class DataExporter
 {
+    private const string FilePathEmptyMessage = "File path cannot be null or whitespace";
+    private const string ExportTypeEmptyMessage = "Export type cannot be null or whitespace";
+    private const string CsvDelimiter = ",";
+    private const string CsvQuote = "\"";
+    private const string CsvEscapedQuote = "\"\"";
+    private const string CsvEmptyField = "\"\"";
+    private const string CsvNewline = "\n";
+    private const string SummaryTitlePrefix = "Export Summary: ";
+    private const string SummaryRecordsPrefix = "Records: ";
+    private const string SummaryGeneratedPrefix = "Generated: ";
+    private const string SummaryTimestampFormat = "yyyy-MM-dd HH:mm:ss";
+
     private readonly ILogger<DataExporter> _logger;
 
     /// <summary>
@@ -26,7 +38,7 @@ public class DataExporter
     public async Task ExportJsonAsync<T>(string filePath, T data, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-            throw new ArgumentException("File path cannot be null or whitespace", nameof(filePath));
+            throw new ArgumentException(FilePathEmptyMessage, nameof(filePath));
         if (data is null)
             throw new ArgumentNullException(nameof(data));
 
@@ -50,7 +62,7 @@ public class DataExporter
     public async Task ExportCsvAsync(string filePath, IEnumerable<Dictionary<string, string>> rows, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-            throw new ArgumentException("File path cannot be null or whitespace", nameof(filePath));
+            throw new ArgumentException(FilePathEmptyMessage, nameof(filePath));
         if (rows is null)
             throw new ArgumentNullException(nameof(rows));
 
@@ -68,12 +80,12 @@ public class DataExporter
             var headers = rowList.First().Keys.ToList();
             var csv = new System.Text.StringBuilder();
 
-            csv.AppendLine(string.Join(",", headers.Select(EscapeCsv)));
+            csv.AppendLine(string.Join(CsvDelimiter, headers.Select(EscapeCsv)));
 
             foreach (var row in rowList)
             {
                 var values = headers.Select(h => row.TryGetValue(h, out var value) ? EscapeCsv(value) : string.Empty);
-                csv.AppendLine(string.Join(",", values));
+                csv.AppendLine(string.Join(CsvDelimiter, values));
             }
 
             await File.WriteAllTextAsync(filePath, csv.ToString(), ct).ConfigureAwait(false);
@@ -92,7 +104,7 @@ public class DataExporter
     public async Task ExportCsvGzAsync(string filePath, IEnumerable<Dictionary<string, string>> rows, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-            throw new ArgumentException("File path cannot be null or whitespace", nameof(filePath));
+            throw new ArgumentException(FilePathEmptyMessage, nameof(filePath));
         if (rows is null)
             throw new ArgumentNullException(nameof(rows));
 
@@ -115,12 +127,12 @@ public class DataExporter
             var headers = rowList.First().Keys.ToList();
             var csv = new System.Text.StringBuilder();
 
-            csv.AppendLine(string.Join(",", headers.Select(EscapeCsv)));
+            csv.AppendLine(string.Join(CsvDelimiter, headers.Select(EscapeCsv)));
 
             foreach (var row in rowList)
             {
                 var values = headers.Select(h => row.TryGetValue(h, out var value) ? EscapeCsv(value) : string.Empty);
-                csv.AppendLine(string.Join(",", values));
+                csv.AppendLine(string.Join(CsvDelimiter, values));
             }
 
             using (var compressedFileStream = File.Create(filePath))
@@ -145,7 +157,7 @@ public class DataExporter
     public async Task ExportJsonGzAsync<T>(string filePath, T data, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-            throw new ArgumentException("File path cannot be null or whitespace", nameof(filePath));
+            throw new ArgumentException(FilePathEmptyMessage, nameof(filePath));
         if (data is null)
             throw new ArgumentNullException(nameof(data));
 
@@ -177,23 +189,23 @@ public class DataExporter
     public string GenerateSummary(int recordCount, string exportType)
     {
         if (string.IsNullOrWhiteSpace(exportType))
-            throw new ArgumentException("Export type cannot be null or whitespace", nameof(exportType));
+            throw new ArgumentException(ExportTypeEmptyMessage, nameof(exportType));
 
         var report = new System.Text.StringBuilder();
-        report.AppendLine($"Export Summary: {exportType}");
-        report.AppendLine($"Records: {recordCount}");
-        report.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        report.AppendLine($"{SummaryTitlePrefix}{exportType}");
+        report.AppendLine($"{SummaryRecordsPrefix}{recordCount}");
+        report.AppendLine($"{SummaryGeneratedPrefix}{DateTime.Now.ToString(SummaryTimestampFormat)}");
         return report.ToString();
     }
 
     private string EscapeCsv(string value)
     {
         if (string.IsNullOrEmpty(value))
-            return "\"\"";
+            return CsvEmptyField;
 
-        if (value.Contains("\"") || value.Contains(",") || value.Contains("\n"))
+        if (value.Contains(CsvQuote) || value.Contains(CsvDelimiter) || value.Contains(CsvNewline))
         {
-            return "\"" + value.Replace("\"", "\"\"") + "\"";
+            return CsvQuote + value.Replace(CsvQuote, CsvEscapedQuote) + CsvQuote;
         }
 
         return value;
