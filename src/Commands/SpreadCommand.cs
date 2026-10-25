@@ -17,9 +17,25 @@ public sealed class SpreadCommand : ICommand
     private readonly ILogger<SpreadCommand> _logger;
     private readonly AppSettings _appSettings;
 
+    /// <summary>
+    /// Gets the command name used on the command line (<c>spread</c>).
+    /// </summary>
     public string Name => "spread";
+
+    /// <summary>
+    /// Gets the short description shown in the command list.
+    /// </summary>
     public string Description => "Display current buy/sell spread for trading pairs";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SpreadCommand"/> class.
+    /// </summary>
+    /// <param name="spreadAnalysisService">Service that provides spread analysis data.</param>
+    /// <param name="output">Writer used for console output.</param>
+    /// <param name="formatters">Available output formatters, selected by the <c>--format</c> option.</param>
+    /// <param name="logger">Logger used to record command failures.</param>
+    /// <param name="appSettings">Application settings used for the configuration summary.</param>
+    /// <exception cref="ArgumentNullException">Thrown when any argument is <c>null</c>.</exception>
     public SpreadCommand(
         ISpreadAnalysisService spreadAnalysisService,
         ConsoleOutputWriter output,
@@ -34,6 +50,10 @@ public sealed class SpreadCommand : ICommand
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     }
 
+    /// <summary>
+    /// Returns the usage text for the <c>spread</c> command.
+    /// </summary>
+    /// <returns>The help text describing usage, options and examples.</returns>
     public string GetHelp()
     {
         return @"Usage: binance-p2p-monitor spread [options]
@@ -56,6 +76,11 @@ binance-p2p-monitor spread --format=json
 ";
     }
 
+    /// <summary>
+    /// Validates the command-line arguments before execution.
+    /// </summary>
+    /// <param name="context">The parsed command context.</param>
+    /// <returns>A list of validation error messages; empty when the arguments are valid.</returns>
     public List<string> ValidateArguments(CommandContext context)
     {
         var errors = new List<string>();
@@ -69,6 +94,12 @@ binance-p2p-monitor spread --format=json
         return errors;
     }
 
+    /// <summary>
+    /// Executes the spread command, printing spreads for the requested pair or all pairs, with optional asset and fiat filters.
+    /// </summary>
+    /// <param name="context">The parsed command context containing options.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>0 on success or when there is no data to show; 1 on invalid input or failure.</returns>
     public async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
     {
         _output.WriteHeader("Buy/Sell Spread Analysis");
