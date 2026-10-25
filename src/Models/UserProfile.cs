@@ -8,6 +8,12 @@ namespace BinanceP2pMonitor.Models;
 /// </summary>
 public class UserProfile
 {
+    private string _telegramUsername = string.Empty;
+    private string _email = string.Empty;
+    private string _firstName = string.Empty;
+    private string _lastName = string.Empty;
+    private ICollection<PriceAlert> _alerts = new List<PriceAlert>();
+
     /// <summary>
     /// Gets or sets the unique identifier for the user profile.
     /// </summary>
@@ -26,7 +32,15 @@ public class UserProfile
     /// </summary>
     [Required]
     [StringLength(100)]
-    public string TelegramUsername { get; set; } = string.Empty;
+    public string TelegramUsername
+    {
+        get => _telegramUsername;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _telegramUsername = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the email address for the user.
@@ -34,19 +48,43 @@ public class UserProfile
     [Required]
     [EmailAddress]
     [StringLength(255)]
-    public string Email { get; set; } = string.Empty;
+    public string Email
+    {
+        get => _email;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _email = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the first name of the user.
     /// </summary>
     [StringLength(100)]
-    public string FirstName { get; set; } = string.Empty;
+    public string FirstName
+    {
+        get => _firstName;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _firstName = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the last name of the user.
     /// </summary>
     [StringLength(100)]
-    public string LastName { get; set; } = string.Empty;
+    public string LastName
+    {
+        get => _lastName;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _lastName = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether the user profile is active.
@@ -99,7 +137,15 @@ public class UserProfile
     /// <summary>
     /// Gets or sets the collection of price alerts associated with this user.
     /// </summary>
-    public ICollection<PriceAlert> Alerts { get; set; } = new List<PriceAlert>();
+    public ICollection<PriceAlert> Alerts
+    {
+        get => _alerts;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _alerts = value;
+        }
+    }
 
     /// <summary>
     /// Gets the full name of the user
