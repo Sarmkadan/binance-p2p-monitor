@@ -81,8 +81,11 @@ binance-p2p-monitor spread --format=json
     /// </summary>
     /// <param name="context">The parsed command context.</param>
     /// <returns>A list of validation error messages; empty when the arguments are valid.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is <c>null</c>.</exception>
     public List<string> ValidateArguments(CommandContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         var errors = new List<string>();
         var validFormats = new[] { "table", "json", "markdown" };
 
@@ -100,8 +103,11 @@ binance-p2p-monitor spread --format=json
     /// <param name="context">The parsed command context containing options.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>0 on success or when there is no data to show; 1 on invalid input or failure.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="context"/> is <c>null</c>.</exception>
     public async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
         _output.WriteHeader("Buy/Sell Spread Analysis");
 
         try
