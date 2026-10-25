@@ -151,4 +151,11 @@ public class Currency
         ArgumentNullException.ThrowIfNull(other);
         return PopularityScore.CompareTo(other.PopularityScore);
     }
+
+    /// <summary>
+    /// Returns a readable summary of the currency
+    /// </summary>
+    public override string ToString() =>
+        $"Currency: Id={Id}, Code={Code}, Name={Name}, Symbol={Symbol}, IsActive={IsActive}, " +
+        $"DecimalPlaces={DecimalPlaces}, DisplayOrder={DisplayOrder}, PopularityScore={PopularityScore}";
 }
